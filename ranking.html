@@ -8,9 +8,15 @@
         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
         
         body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: #f4f6f9; color: #2c3e50; }
-        .header { background-color: #1a252f; color: white; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        
+        /* 헤더 & LIVE 시계 디자인 */
+        .header { position: relative; background-color: #1a252f; color: white; padding: 25px 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
         .header h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 1px; }
-        .header p { margin: 5px 0 0 0; color: #f1c40f; font-weight: bold; }
+        .header p { margin: 8px 0 0 0; color: #f1c40f; font-weight: bold; font-size: 15px; }
+        
+        .live-badge { position: absolute; top: 25px; right: 30px; text-align: right; font-weight: 900; color: #e74c3c; font-size: 20px; letter-spacing: 1px;}
+        .pulse { display: inline-block; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
         .ranking-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; } 
@@ -39,12 +45,23 @@
         .normal-score { font-size: 18px; font-weight: 900; color: #3b71ca;}
         
         .loading { text-align: center; padding: 50px; font-size: 20px; font-weight: bold; color: #7f8c8d; }
+
+        /* 모바일 화면에서는 시계를 가운데로 내림 */
+        @media (max-width: 768px) {
+            .live-badge { position: static; text-align: center; margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 15px; }
+            .live-badge div { margin-top: 0 !important; font-size: 18px !important; }
+        }
     </style>
 </head>
 <body>
     <header class="header">
         <h1>🏆 스마트시티 역량 인증 명예의 전당</h1>
-        <p>🔴 실시간 순위 집계 중 (1분마다 자동 갱신)</p>
+        <p>실시간 순위 집계 중 (1분마다 자동 갱신)</p>
+        
+        <div class="live-badge">
+            <span class="pulse">🔴</span> LIVE
+            <div id="currentTime" style="font-size: 14px; color: #bdc3c7; margin-top: 5px; font-weight: bold;">00:00:00</div>
+        </div>
     </header>
 
     <div class="container">
@@ -64,6 +81,18 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('currentTime').innerText = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -97,7 +126,7 @@
                     if(g && gradeStudents[g] && data[`year_${g}`]) {
                         let classNum = parseInt(String(data.current_studentId).substring(1, 3), 10);
                         let sc = data[`year_${g}`].total_score || 0;
-                        if(sc > 0) { // 점수가 0점인 학생은 제외
+                        if(sc > 0) { 
                             gradeStudents[g].push({
                                 name: data.name,
                                 classStr: `${g}-${classNum}`,
@@ -107,13 +136,12 @@
                     }
                 });
 
-                // 각 학년별로 렌더링
                 for(let g = 1; g <= 3; g++) {
-                    gradeStudents[g].sort((a, b) => b.score - a.score); // 점수 높은 순 정렬
-                    let top5 = gradeStudents[g].slice(0, 5); // 5등까지만 자르기
+                    gradeStudents[g].sort((a, b) => b.score - a.score); 
+                    let top5 = gradeStudents[g].slice(0, 5); 
                     
                     const listContainer = document.querySelector(`#panel-${g} .rank-list`);
-                    listContainer.innerHTML = ''; // 초기화
+                    listContainer.innerHTML = ''; 
 
                     if(top5.length === 0) {
                         listContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d; font-weight:bold;">아직 점수를 획득한 학생이 없습니다.</div>';
@@ -154,12 +182,8 @@
             }
         }
 
-        // 페이지 열리자마자 1번 실행
         loadLiveRankings();
-
-        // 60초(60000ms)마다 백그라운드에서 자동으로 순위 업데이트! (새로고침 불필요)
         setInterval(loadLiveRankings, 60000);
-
     </script>
 </body>
 </html>
