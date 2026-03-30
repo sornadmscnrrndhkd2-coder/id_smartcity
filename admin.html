@@ -57,9 +57,17 @@
         .filter-group { display: flex; gap: 10px; align-items: center; background: #f8f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; border: 1px solid #e0e6ed; }
         .filter-group select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold;}
         .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px;}
-        .data-table th, .data-table td { border: 1px solid #ddd; padding: 10px 4px; text-align: center; vertical-align: middle; }
+        
+        /* ★ [핵심 변경] 표 안의 글씨가 찌그러지며 줄바꿈 되는 것을 방지 (가로 스크롤 활성화) */
+        .data-table th, .data-table td { 
+            border: 1px solid #ddd; 
+            padding: 10px 8px; 
+            text-align: center; 
+            vertical-align: middle; 
+            white-space: nowrap; /* 줄바꿈 절대 금지 마법 */
+        }
         .data-table th { background-color: #f1f2f6; color: #2c3e50; position: sticky; top: 0; font-weight: 800; z-index: 5; }
-        .th-criteria { font-size: 10px; color: #e74c3c; display: block; margin-top: 2px; }
+        .th-criteria { font-size: 10px; color: #e74c3c; display: inline-block; margin-top: 4px; font-weight: bold;}
         
         .check-cell { width: 30px; text-align: center; }
         .student-checkbox { transform: scale(1.3); cursor: pointer; }
@@ -271,7 +279,7 @@
                     </div>
                 </div>
                 
-                <div style="overflow-x: auto;">
+                <div style="overflow-x: auto; width: 100%;">
                     <table class="data-table" id="studentTable">
                         <thead><tr id="tableHeaderRow"></tr></thead><tbody id="studentTableBody"></tbody>
                     </table>
@@ -790,10 +798,15 @@
             } catch(e) { console.log("DB 연결 대기중..."); }
         };
 
+        // ★ [핵심 변경] 헤더의 줄바꿈(<br>)을 제거하고 한 줄로 예쁘게 출력되도록 수정
         window.updateTableHeaders = function() {
             const grade = document.getElementById("filterGrade").value; const cutoffs = PASS_CUTOFF[grade];
-            let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th style="width: 140px;">이름</th>`; AREAS.forEach(a => { headerHtml += `<th>[${a}]<span class="th-criteria">(${cutoffs[a]}점↑)</span></th>`; }); 
-            headerHtml += `<th>총점</th><th>획득<br>배지</th><th>성장<br>칭호</th><th>출력</th>`; document.getElementById("tableHeaderRow").innerHTML = headerHtml;
+            let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th>이름</th>`; 
+            AREAS.forEach(a => { 
+                headerHtml += `<th>[${a}]<br><span class="th-criteria">(${cutoffs[a]}점↑)</span></th>`; 
+            }); 
+            headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력</th>`; 
+            document.getElementById("tableHeaderRow").innerHTML = headerHtml;
         };
 
         window.toggleAllCheckboxes = function(source) {
@@ -877,9 +890,11 @@
                     });
                     
                     let certBtn = s.yearData.earned_badges >= 6 ? `<button class="btn ${filterGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="alert('인증서 출력 준비중')">🖨️</button>` : "-"; 
+                    
+                    // ★ [핵심 변경] 총점과 획득 배지 등을 절대 줄바꿈되지 않게 묶음
                     rowHtml += `<td style="color:#2980b9; font-weight:bold;">${s.yearData.total_score || 0}점</td>
                                 <td><strong>${s.yearData.earned_badges || 0}개</strong></td>
-                                <td style="color:#27ae60; font-weight:bold; white-space:nowrap;">${s.yearData.title || '진행중'}</td>
+                                <td style="color:#27ae60; font-weight:bold;">${s.yearData.title || '진행중'}</td>
                                 <td>${certBtn}</td></tr>`;
                     tbody.innerHTML += rowHtml;
                 });
