@@ -27,9 +27,16 @@
         .container { max-width: 1200px; margin: 20px auto; padding: 0 20px 100px 20px; box-sizing: border-box; }
 
         /* =========================================
-           ✨ [인스타 캡처용] 히어로 배너 & 스탯 박스
+           ✨ [인스타 캡처용] 히어로 배너 & 스탯 & 경험치바
         ========================================= */
-        .hero-banner { background: linear-gradient(135deg, #447fe5, var(--dark-blue)); border-radius: 20px; padding: 25px 35px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(59, 113, 202, 0.25); margin-bottom: 20px; position: relative; width: 100%; box-sizing: border-box; gap: 30px; }
+        .hero-banner { 
+            background: linear-gradient(135deg, #447fe5, var(--dark-blue)); 
+            border-radius: 20px; padding: 25px 35px; color: white; 
+            display: flex; flex-direction: column; /* 경험치바를 위해 column으로 변경 */
+            box-shadow: 0 10px 25px rgba(59, 113, 202, 0.25); margin-bottom: 20px; position: relative; width: 100%; box-sizing: border-box; 
+        }
+        
+        .hero-top { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 30px; }
         
         .user-profile-section { display: flex; align-items: center; gap: 40px; flex: 1; }
         .user-profile { display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;}
@@ -54,6 +61,13 @@
         .rank-clickable { cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .rank-clickable:hover { transform: translateY(-3px); background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
         .rank-clickable p::after { content: ' 👆'; font-size: 14px; } 
+
+        /* ★ [새 기능] 경험치 게이지 바 CSS */
+        .hero-bottom { width: 100%; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px; }
+        .exp-bar-container { width: 100%; background: rgba(0,0,0,0.25); border-radius: 10px; height: 12px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        .exp-bar-fill { background: linear-gradient(90deg, #f1c40f, #e67e22); height: 100%; width: 0%; border-radius: 10px; transition: width 1.5s cubic-bezier(0.1, 0.8, 0.2, 1); position: relative; }
+        .exp-bar-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shine 2s infinite; }
+        @keyframes shine { 100% { left: 200%; } }
 
         /* 하단 레이아웃 */
         .content-grid { display: flex; gap: 20px; box-sizing: border-box; width: 100%;}
@@ -169,7 +183,9 @@
             .header { padding: 10px 15px; flex-direction: column; gap: 10px;}
             .header-left, .header-right { justify-content: center;}
             
-            .hero-banner { padding: 15px; border-radius: 16px; flex-direction: column; margin-bottom: 12px; gap: 12px; text-align: left;}
+            .hero-banner { padding: 15px; border-radius: 16px; margin-bottom: 12px; text-align: left; }
+            .hero-top { flex-direction: column; gap: 12px; }
+            .hero-bottom { margin-top: 15px; padding-top: 12px; }
             
             .user-profile-section { flex-direction: row; gap: 10px; width: 100%; justify-content: space-between; align-items: center; }
             .user-profile { width: auto; align-items: flex-start; flex: 1;} 
@@ -177,7 +193,6 @@
             .user-info h2 { font-size: 20px; margin-bottom: 6px; display:flex; flex-direction:column; gap:5px; align-items:flex-start;}
             .badge-pill { padding: 4px 12px; font-size: 12px;}
             
-            /* 모바일에서 차트 크기 확보 */
             .radar-chart-container { width: 120px; height: 120px; padding: 0px; }
 
             .score-summary { width: 100%; flex-direction: row; justify-content: center; gap: 10px;} 
@@ -235,28 +250,40 @@
 
     <div class="container">
         <div class="hero-banner">
-            <div class="user-profile-section">
-                <div class="user-profile">
-                    <div class="user-info">
-                        <p id="classDisplay">학년 반 로딩중...</p>
-                        <h2 id="userNameDisplay">학생</h2>
-                        <div class="badge-pill" id="tierDisplay">🌱 로딩중...</div>
+            <div class="hero-top">
+                <div class="user-profile-section">
+                    <div class="user-profile">
+                        <div class="user-info">
+                            <p id="classDisplay">학년 반 로딩중...</p>
+                            <h2 id="userNameDisplay">학생</h2>
+                            <div class="badge-pill" id="tierDisplay">🌱 로딩중...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="radar-chart-container">
+                        <canvas id="myRadarChart"></canvas>
                     </div>
                 </div>
                 
-                <div class="radar-chart-container">
-                    <canvas id="myRadarChart"></canvas>
+                <div class="score-summary">
+                    <div class="score-box">
+                        <p>✨ 총점</p>
+                        <h3>0<span>점</span></h3>
+                    </div>
+                    <div class="score-box rank-clickable" onclick="window.openRankModal()">
+                        <p>🥈 현재 순위</p>
+                        <h3>계산중...<span class="rank-text"></span></h3>
+                    </div>
                 </div>
             </div>
             
-            <div class="score-summary">
-                <div class="score-box">
-                    <p>✨ 총점</p>
-                    <h3>0<span>점</span></h3>
+            <div class="hero-bottom">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:8px; align-items: flex-end;">
+                    <span style="opacity:0.9;">🚀 나의 성장률</span>
+                    <span id="expText" style="font-size:12px;">계산중...</span>
                 </div>
-                <div class="score-box rank-clickable" onclick="window.openRankModal()">
-                    <p>🥈 현재 순위</p>
-                    <h3>계산중...<span class="rank-text"></span></h3>
+                <div class="exp-bar-container">
+                    <div class="exp-bar-fill" id="expBar"></div>
                 </div>
             </div>
         </div>
@@ -296,7 +323,7 @@
                 <a href="https://www.historyexam.go.kr/" target="_blank" class="link-card"><div class="link-icon-text">🇰🇷 한국사능력검정</div><div class="link-desc">국사편찬위원회 홈페이지</div></a>
                 <a href="https://www.q-net.or.kr/" target="_blank" class="link-card"><div class="link-icon-text">🛠️ Q-Net 자격</div><div class="link-desc">국가기술자격 원서접수</div></a>
                 <a href="https://www.ncs.go.kr/" target="_blank" class="link-card"><div class="link-icon-text">🤝 직업기초능력</div><div class="link-desc">NCS 국가직무능력표준</div></a>
-                <a href="img/PAPS.pdf" target="_blank" class="link-card"><div class="link-icon-text">🏃 PAPS 평가 안내</div><div class="link-desc">PAPS 측정 방법 및 기준</div></a>
+                <a href="img/paps.pdf" target="_blank" class="link-card"><div class="link-icon-text">🏃 PAPS 평가 안내</div><div class="link-desc">PAPS 측정 방법 및 기준</div></a>
                 <a href="https://exam.toeic.co.kr/" target="_blank" class="link-card"><div class="link-icon-text">🌐 외국어 (토익 등)</div><div class="link-desc">어학시험 접수센터</div></a>
                 <a href="https://www.1365.go.kr/" target="_blank" class="link-card"><div class="link-icon-text">🧡 1365 자원봉사</div><div class="link-desc">자원봉사포털 실적 확인</div></a>
                 <a href="https://www.work24.go.kr/" target="_blank" class="link-card"><div class="link-icon-text">💼 고용24 (진로)</div><div class="link-desc">청년 진로 및 취업 정보</div></a>
@@ -409,7 +436,6 @@
             });
         });
 
-        // ★ 모바일 글씨 짤림 방지 기능이 탑재된 차트 함수
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             
@@ -430,20 +456,19 @@
             const max = CAPS[window.CURRENT_GRADE];
 
             let dataArr = [
-                Math.min(100, Math.round(((scoreM + scoreT) / (max['M'] + max['T'])) * 100)), // 전공직무
-                Math.min(100, Math.round((scoreS / max['S']) * 100)), // AI역량 (S)
-                Math.min(100, Math.round(((scoreC + scoreR) / (max['C'] + max['R'])) * 100)), // 기초학업
-                Math.min(100, Math.round((scoreI / max['I']) * 100)), // 어학능력 (I)
-                Math.min(100, Math.round((scoreA / max['A']) * 100)), // 건강체력 (A)
-                Math.min(100, Math.round(((scoreTr + scoreY) / (max['Tr'] + max['Y'])) * 100))  // 바른인성
+                Math.min(100, Math.round(((scoreM + scoreT) / (max['M'] + max['T'])) * 100)), 
+                Math.min(100, Math.round((scoreS / max['S']) * 100)), 
+                Math.min(100, Math.round(((scoreC + scoreR) / (max['C'] + max['R'])) * 100)), 
+                Math.min(100, Math.round((scoreI / max['I']) * 100)), 
+                Math.min(100, Math.round((scoreA / max['A']) * 100)), 
+                Math.min(100, Math.round(((scoreTr + scoreY) / (max['Tr'] + max['Y'])) * 100))  
             ];
 
             dataArr = dataArr.map(val => isNaN(val) ? 0 : val);
 
-            // ★ 화면 넓이 감지해서 모바일이면 폰트 크기와 여백을 자동 조절
             const isMobile = window.innerWidth <= 850;
-            const labelFontSize = isMobile ? 8 : 10; // 모바일이면 글씨를 작게
-            const chartPadding = isMobile ? 12 : 5;  // 모바일이면 글씨 안 잘리게 여백 넓게
+            const labelFontSize = isMobile ? 8 : 10; 
+            const chartPadding = isMobile ? 12 : 5;  
 
             window.myRadarChartInstance = new Chart(ctx, {
                 type: 'radar',
@@ -464,7 +489,6 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    // ★ 여기가 핵심! 차트 밖으로 글씨가 나가지 않게 여백 강제 확보
                     layout: {
                         padding: chartPadding 
                     },
@@ -528,6 +552,38 @@
                 window.renderDashboardBadges();
                 window.drawRadarChart();
                 await window.loadRankingData(dbInstance);
+
+                // ★ [아이디어 A] 경험치(EXP) 게이지 바 계산 로직
+                // 150점 단위로 다음 목표 점수와 티어 이름 설정
+                let targetScore = (Math.floor(totalScore / 150) + 1) * 150;
+                let nextTierName = "";
+                if(targetScore === 150) nextTierName = "CITY 스타터";
+                else if(targetScore === 300) nextTierName = "CITY 프로";
+                else if(targetScore === 450) nextTierName = "CITY 마스터";
+                else if(targetScore === 600) nextTierName = "CITY 챔피언";
+                else nextTierName = "CITY 레전드";
+
+                let percent = 0;
+                let expMsg = "";
+
+                if (totalScore >= 600) {
+                    percent = 100;
+                    expMsg = `축하합니다! 최고 등급에 도달했습니다.`;
+                    document.getElementById('expBar').style.width = '100%';
+                } else {
+                    // 현재 150점 구간 내에서의 달성률 계산 (예: 150~300 사이면 150점 만점 기준)
+                    let baseScore = targetScore - 150;
+                    let earnedInChunk = totalScore - baseScore;
+                    percent = Math.floor((earnedInChunk / 150) * 100);
+                    let left = targetScore - totalScore;
+                    expMsg = `🏆 <b>${nextTierName}</b>까지 <span style="color:#f1c40f;">${left}점</span> 남았습니다!`;
+                }
+
+                // 애니메이션 효과를 위해 0.3초 딜레이 후 바 차오르게 하기
+                setTimeout(() => {
+                    document.getElementById('expBar').style.width = percent + '%';
+                }, 300);
+                document.getElementById('expText').innerHTML = expMsg;
 
             } catch(e) {
                 console.error(e);
