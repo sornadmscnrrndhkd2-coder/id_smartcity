@@ -798,7 +798,6 @@
             } catch(e) { console.log("DB 연결 대기중..."); }
         };
 
-        // ★ [핵심 변경] 헤더의 줄바꿈(<br>)을 제거하고 한 줄로 예쁘게 출력되도록 수정
         window.updateTableHeaders = function() {
             const grade = document.getElementById("filterGrade").value; const cutoffs = PASS_CUTOFF[grade];
             let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th>이름</th>`; 
@@ -890,11 +889,9 @@
                     });
                     
                     let certBtn = s.yearData.earned_badges >= 6 ? `<button class="btn ${filterGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="alert('인증서 출력 준비중')">🖨️</button>` : "-"; 
-                    
-                    // ★ [핵심 변경] 총점과 획득 배지 등을 절대 줄바꿈되지 않게 묶음
                     rowHtml += `<td style="color:#2980b9; font-weight:bold;">${s.yearData.total_score || 0}점</td>
                                 <td><strong>${s.yearData.earned_badges || 0}개</strong></td>
-                                <td style="color:#27ae60; font-weight:bold;">${s.yearData.title || '진행중'}</td>
+                                <td style="color:#27ae60; font-weight:bold; white-space:nowrap;">${s.yearData.title || '진행중'}</td>
                                 <td>${certBtn}</td></tr>`;
                     tbody.innerHTML += rowHtml;
                 });
