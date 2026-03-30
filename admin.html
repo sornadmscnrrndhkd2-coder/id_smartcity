@@ -470,7 +470,7 @@
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
   measurementId: "G-3SL84TXVHD"
 };
-
+       
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
@@ -547,7 +547,6 @@
             if(id === 'badgeManagement') window.loadBadgeData();
         };
 
-        // ★ [새 기능] 관리자 결재함 연동
         window.currentAdminPendingApps = [];
 
         window.openPendingModal = async function() {
@@ -557,12 +556,11 @@
             tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px;'>데이터를 불러오는 중입니다...⏳</td></tr>";
 
             try {
-                // 관리자는 특정 학년 필터 없이 "대기중"인 모든 결재 서류를 가져옵니다.
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중")));
                 let apps = [];
                 qSnap.forEach(doc => { apps.push({ id: doc.id, ...doc.data() }); });
                 
-                apps.sort((a, b) => a.timestamp - b.timestamp); // 오래된 서류부터 위로
+                apps.sort((a, b) => a.timestamp - b.timestamp); 
                 window.currentAdminPendingApps = apps;
 
                 if(apps.length === 0) {
@@ -592,7 +590,6 @@
             }
         };
 
-        // ★ [새 기능] 관리자 모달에서 증빙 사진/PDF 띄우기
         window.viewAdminProof = function(appId) {
             const app = window.currentAdminPendingApps.find(a => a.id === appId);
             if(!app || !app.fileData) return alert("증빙 자료가 존재하지 않거나 이미 파기되었습니다.");
@@ -608,15 +605,12 @@
             document.getElementById('adminProofModal').style.display = 'flex';
         };
 
-        // ★ [새 기능] 관리자 승인 처리 (DB에 점수 꽂기)
         window.approveAdminApp = async function(appId, studentId, area, score, grade) {
             if(!confirm(`[${studentId}] 학생의 ${area}영역 ${score}점 신청을 최고관리자 권한으로 강제 승인하시겠습니까?\n(승인 시 즉시 점수가 반영됩니다.)`)) return;
 
             try {
-                // 1. 상태를 '승인'으로 변경
                 await window.updateDoc(window.doc(window.db, "applications", appId), { status: "승인" });
 
-                // 2. 학생 DB에 점수 업데이트
                 const studentRef = window.doc(window.db, "students", studentId);
                 const studentSnap = await window.getDoc(studentRef);
                 
@@ -641,14 +635,13 @@
 
                 alert("✅ 최고관리자 승인 완료 및 점수가 업데이트되었습니다.");
                 logAction(`관리자 권한으로 [${studentId}] 학생 ${area}영역 결재 승인`);
-                window.openPendingModal(); // 리스트 새로고침
-                window.loadDashboard();    // 대시보드 요약 새로고침
+                window.openPendingModal(); 
+                window.loadDashboard();    
             } catch(e) {
                 alert("승인 중 오류 발생: " + e.message);
             }
         };
 
-        // ★ [새 기능] 관리자 반려 처리 (사진 데이터 파기하여 서버 용량 확보)
         window.rejectAdminApp = async function(appId) {
             if(!confirm("이 신청을 반려하시겠습니까?\n(반려 시 DB 서버 용량 확보를 위해 첨부된 증빙자료는 즉시 영구 삭제(null 처리)됩니다.)")) return;
 
@@ -659,7 +652,7 @@
                 });
                 alert("❌ 반려 처리되었으며, 용량 확보를 위해 증빙 파일이 삭제되었습니다.");
                 logAction(`관리자 권한으로 결재 반려 (자료 파기)`);
-                window.openPendingModal(); // 리스트 새로고침
+                window.openPendingModal(); 
                 window.loadDashboard();
             } catch(e) {
                 alert("반려 처리 중 오류 발생.");
@@ -736,7 +729,14 @@
 
         window.loadDashboard = async function() {
             try {
-                // ★ 대시보드 1번 박스 업데이트 (미승인 결재 대기 건수)
+                // ★ [방문자 수 불러오기] 관리자 화면에 숫자 띄우기
+                const statRef = window.doc(window.db, "system", "visitorStats");
+                const statSnap = await window.getDoc(statRef);
+                if (statSnap.exists()) {
+                    const count = statSnap.data().count;
+                    document.getElementById('visitorCount').innerText = count;
+                }
+
                 const appSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중")));
                 document.getElementById('dashPendingApprove').innerText = appSnap.size + "건";
 
@@ -957,10 +957,10 @@
             try { 
                 const querySnapshot = await window.getDocs(window.collection(window.db, "teachers")); 
                 tbody.innerHTML = ""; 
-                allTeachersData = []; // 데이터 보관용 배열 초기화
+                allTeachersData = []; 
                 querySnapshot.forEach(doc => { 
                     let t = doc.data(); 
-                    t.docId = doc.id; // 고유 ID 저장
+                    t.docId = doc.id; 
                     allTeachersData.push(t);
 
                     let roleStr = t.roleDetail ? t.roleDetail : "교사";
