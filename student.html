@@ -169,27 +169,23 @@
             .header { padding: 10px 15px; flex-direction: column; gap: 10px;}
             .header-left, .header-right { justify-content: center;}
             
-            /* ★ 핵심 변경 1: 히어로 배너 여백/간격 압축 */
             .hero-banner { padding: 15px; border-radius: 16px; flex-direction: column; margin-bottom: 12px; gap: 12px; text-align: left;}
             
-            /* ★ 핵심 변경 2: (좌)내정보 + (우)육각차트를 한 줄에 나란히 배치 */
             .user-profile-section { flex-direction: row; gap: 10px; width: 100%; justify-content: space-between; align-items: center; }
             .user-profile { width: auto; align-items: flex-start; flex: 1;} 
             .user-info p { margin-bottom: 4px; font-size: 12px;}
             .user-info h2 { font-size: 20px; margin-bottom: 6px; display:flex; flex-direction:column; gap:5px; align-items:flex-start;}
             .badge-pill { padding: 4px 12px; font-size: 12px;}
             
-            /* 차트를 모바일 화면에 맞춰 작고 예쁘게 축소 */
-            .radar-chart-container { width: 110px; height: 110px; padding: 2px; }
+            /* 모바일에서 차트 크기 확보 */
+            .radar-chart-container { width: 120px; height: 120px; padding: 0px; }
 
-            /* ★ 핵심 변경 3: 점수/순위 박스도 납작하게 압축해서 한 줄로 배치 */
             .score-summary { width: 100%; flex-direction: row; justify-content: center; gap: 10px;} 
             .score-box { padding: 10px; min-width: auto; flex: 1; border-radius: 10px;}
             .score-box p { margin-bottom: 4px; font-size: 12px;}
             .score-box h3 { font-size: 18px; }
             .score-box h3 span { font-size: 11px; }
 
-            /* 나머지 요소들 간격도 화면에 맞게 최적화 */
             .content-grid { flex-direction: column; gap: 15px; width: 100%;}
             .left-panel, .right-panel { width: 100%; }
             
@@ -300,10 +296,10 @@
                 <a href="https://www.historyexam.go.kr/" target="_blank" class="link-card"><div class="link-icon-text">🇰🇷 한국사능력검정</div><div class="link-desc">국사편찬위원회 홈페이지</div></a>
                 <a href="https://www.q-net.or.kr/" target="_blank" class="link-card"><div class="link-icon-text">🛠️ Q-Net 자격</div><div class="link-desc">국가기술자격 원서접수</div></a>
                 <a href="https://www.ncs.go.kr/" target="_blank" class="link-card"><div class="link-icon-text">🤝 직업기초능력</div><div class="link-desc">NCS 국가직무능력표준</div></a>
-                <a href="https://nfa.kspo.or.kr/" target="_blank" class="link-card"><div class="link-icon-text">🏃 국민체력100</div><div class="link-desc">체력인증 및 PAPS 연계</div></a>
+                <a href="img/PAPS.pdf" target="_blank" class="link-card"><div class="link-icon-text">🏃 PAPS 평가 안내</div><div class="link-desc">PAPS 측정 방법 및 기준</div></a>
                 <a href="https://exam.toeic.co.kr/" target="_blank" class="link-card"><div class="link-icon-text">🌐 외국어 (토익 등)</div><div class="link-desc">어학시험 접수센터</div></a>
                 <a href="https://www.1365.go.kr/" target="_blank" class="link-card"><div class="link-icon-text">🧡 1365 자원봉사</div><div class="link-desc">자원봉사포털 실적 확인</div></a>
-                <a href="https://www.work.go.kr/" target="_blank" class="link-card"><div class="link-icon-text">💼 워크넷 (진로)</div><div class="link-desc">청년 진로 및 취업 정보</div></a>
+                <a href="https://www.work24.go.kr/" target="_blank" class="link-card"><div class="link-icon-text">💼 고용24 (진로)</div><div class="link-desc">청년 진로 및 취업 정보</div></a>
             </div>
         </div>
     </div> 
@@ -405,9 +401,15 @@
 
             await window.loadStudentRealData(db);
             await window.loadMyApplications(db); 
+
+            window.addEventListener('resize', () => {
+                if(window.myScoreData) {
+                    window.drawRadarChart();
+                }
+            });
         });
 
-        // ★ 새롭게 바뀐 네이밍(AI역량, 어학능력, 건강체력) 반영된 6각 레이더 차트 함수
+        // ★ 모바일 글씨 짤림 방지 기능이 탑재된 차트 함수
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             
@@ -438,10 +440,14 @@
 
             dataArr = dataArr.map(val => isNaN(val) ? 0 : val);
 
+            // ★ 화면 넓이 감지해서 모바일이면 폰트 크기와 여백을 자동 조절
+            const isMobile = window.innerWidth <= 850;
+            const labelFontSize = isMobile ? 8 : 10; // 모바일이면 글씨를 작게
+            const chartPadding = isMobile ? 12 : 5;  // 모바일이면 글씨 안 잘리게 여백 넓게
+
             window.myRadarChartInstance = new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    // ★ 선생님이 선택하신 가장 밸런스 좋은 네이밍으로 라벨 변경!
                     labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
                     datasets: [{
                         label: '영역별 달성률(%)',
@@ -458,13 +464,17 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    // ★ 여기가 핵심! 차트 밖으로 글씨가 나가지 않게 여백 강제 확보
+                    layout: {
+                        padding: chartPadding 
+                    },
                     scales: {
                         r: {
                             angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
                             grid: { color: 'rgba(255, 255, 255, 0.2)' },
                             pointLabels: {
                                 color: 'rgba(255, 255, 255, 0.9)', 
-                                font: { size: 10, family: 'Pretendard', weight: 'bold' }
+                                font: { size: labelFontSize, family: 'Pretendard', weight: 'bold' } 
                             },
                             ticks: {
                                 display: false, 
