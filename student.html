@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>스마트시티 역량 인증제 - 학생 대시보드</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 
@@ -28,13 +29,19 @@
         /* =========================================
            ✨ [인스타 캡처용] 히어로 배너 & 스탯 박스
         ========================================= */
-        .hero-banner { background: linear-gradient(135deg, #447fe5, var(--dark-blue)); border-radius: 20px; padding: 25px 35px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(59, 113, 202, 0.25); margin-bottom: 20px; position: relative; width: 100%; box-sizing: border-box; }
+        /* ★ 배너 레이아웃 수정 (차트 공간 확보) */
+        .hero-banner { background: linear-gradient(135deg, #447fe5, var(--dark-blue)); border-radius: 20px; padding: 25px 35px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(59, 113, 202, 0.25); margin-bottom: 20px; position: relative; width: 100%; box-sizing: border-box; gap: 30px; }
+        
+        .user-profile-section { display: flex; align-items: center; gap: 40px; flex: 1; }
         .user-profile { display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;}
         .user-info p { margin: 0 0 6px 0; font-size: 14px; opacity: 0.9; font-weight: 600;}
         .user-info h2 { margin: 0 0 12px 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;}
         .badge-pill { background: linear-gradient(135deg, #f39c12, #d35400); display: inline-block; padding: 6px 18px; border-radius: 20px; font-size: 14px; font-weight: 900; box-shadow: 0 4px 10px rgba(211, 84, 0, 0.4); border: 1px solid rgba(255,255,255,0.3);}
         
-        .score-summary { display: flex; gap: 12px; position: relative; z-index: 2; align-items: center;}
+        /* ★ 레이더 차트 영역 컨테이너 */
+        .radar-chart-container { width: 160px; height: 160px; position: relative; z-index: 2; flex-shrink: 0; background: rgba(255,255,255,0.05); border-radius: 50%; padding: 10px; }
+        
+        .score-summary { display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 2; flex-shrink: 0;}
         
         .score-box { 
             background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); padding: 15px 10px; 
@@ -103,7 +110,7 @@
         .rank-2 { background: linear-gradient(135deg, #bdc3c7, #a4b0be); color: #2c3e50; }
         .rank-3 { background: linear-gradient(135deg, #e67e22, #d35400); }
         
-        /* ★ [새 기능] 나의 신청 내역 리스트 스타일 */
+        /* 나의 신청 내역 리스트 스타일 */
         .apply-item { background: #fdfefe; border: 1px solid #edf0f2; border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;}
         .apply-item-top { display: flex; justify-content: space-between; align-items: center; }
         .apply-item-title { font-size: 13px; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 6px;}
@@ -134,7 +141,7 @@
         /* 모달창 공통 CSS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(3px); }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: #f8f9fa; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 30px 25px 100px 25px; min-height: 60vh; box-sizing: border-box; animation: slideUp 0.3s ease-out forwards; }
+        .modal-content { background: #f8f9fa; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 30px 25px 100px 25px; min-height: 60vh; box-sizing: border-box; animation: slideUp 0.3s forwards; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;}
         .modal-header h3 { margin: 0; font-size: 20px; font-weight: 900; color: var(--text-dark);}
@@ -163,9 +170,12 @@
             .header { padding: 10px 15px; flex-direction: column; gap: 10px;}
             .header-left, .header-right { justify-content: center;}
             
-            .hero-banner { padding: 20px 15px; border-radius: 16px; flex-direction: column; margin-bottom: 15px; gap: 15px; text-align: center;}
+            /* ★ 모바일에서는 레이더 차트가 프로필 아래로 내려가도록 수정 */
+            .hero-banner { padding: 20px 15px; border-radius: 16px; flex-direction: column; margin-bottom: 15px; gap: 20px; text-align: center;}
+            .user-profile-section { flex-direction: column; gap: 20px; width: 100%; align-items: center; }
             .user-profile { width: 100%; align-items: center; } 
             .user-info h2 { font-size: 22px; margin-bottom: 8px;}
+            
             .score-summary { width: 100%; flex-direction: row; justify-content: center; gap: 10px;} 
             .score-box { padding: 12px; min-width: auto; flex: 1; }
             .score-box h3 { font-size: 18px; }
@@ -187,6 +197,7 @@
         @media (min-width: 850px) {
             .modal-overlay { align-items: center; }
             .modal-content { border-radius: 20px; padding-bottom: 50px;} 
+            .score-summary { flex-direction: column; }
         }
     </style>
 </head>
@@ -219,9 +230,15 @@
 
     <div class="container">
         <div class="hero-banner">
-            <div class="user-profile">
-                <div class="user-info">
-                    <p id="classDisplay">학년 반 로딩중...</p><h2 id="userNameDisplay">학생</h2><div class="badge-pill" id="tierDisplay">🌱 로딩중...</div>
+            <div class="user-profile-section">
+                <div class="user-profile">
+                    <div class="user-info">
+                        <p id="classDisplay">학년 반 로딩중...</p><h2 id="userNameDisplay">학생</h2><div class="badge-pill" id="tierDisplay">🌱 로딩중...</div>
+                    </div>
+                </div>
+                
+                <div class="radar-chart-container">
+                    <canvas id="myRadarChart"></canvas>
                 </div>
             </div>
             
@@ -333,7 +350,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         
         // 🚨 여기에 선생님의 실제 API 키를 넣어주세요! 🚨
         const firebaseConfig = {
@@ -355,6 +372,7 @@
         window.myScoreData = {};
         window.myPassData = {};
         window.sameGradeStudents = [];
+        window.myRadarChartInstance = null; // 차트 변수
 
         window.addEventListener('DOMContentLoaded', async () => {
             const loginName = sessionStorage.getItem('loginName') || "학생";
@@ -375,8 +393,93 @@
             document.getElementById('userNameDisplay').innerText = loginName + " 학생";
 
             await window.loadStudentRealData(db);
-            await window.loadMyApplications(db); // ★ 추가: 내 신청 내역 로드
+            await window.loadMyApplications(db); 
         });
+
+        // ★ [새 기능] 6각 레이더 차트 그리는 함수
+        window.drawRadarChart = function() {
+            const ctx = document.getElementById('myRadarChart').getContext('2d');
+            
+            // 기존 차트가 있으면 지우고 다시 그리기 (반응형 대응)
+            if (window.myRadarChartInstance) {
+                window.myRadarChartInstance.destroy();
+            }
+
+            // 영역별 현재 획득 점수
+            let scoreM = window.myScoreData['M'] || 0;
+            let scoreT = window.myScoreData['T'] || 0;
+            let scoreS = window.myScoreData['S'] || 0;
+            let scoreC = window.myScoreData['C'] || 0;
+            let scoreR = window.myScoreData['R'] || 0;
+            let scoreI = window.myScoreData['I'] || 0;
+            let scoreA = window.myScoreData['A'] || 0;
+            let scoreTr = window.myScoreData['Tr'] || 0;
+            let scoreY = window.myScoreData['Y'] || 0;
+
+            // 학년별 만점(CAPS) 데이터 가져오기
+            const max = CAPS[window.CURRENT_GRADE];
+
+            // 6개 영역으로 병합하여 달성률(%) 계산 (최대 100%)
+            let dataArr = [
+                Math.min(100, Math.round(((scoreM + scoreT) / (max['M'] + max['T'])) * 100)), // 전공직무
+                Math.min(100, Math.round((scoreS / max['S']) * 100)), // 미래IT
+                Math.min(100, Math.round(((scoreC + scoreR) / (max['C'] + max['R'])) * 100)), // 기초학업
+                Math.min(100, Math.round((scoreI / max['I']) * 100)), // 글로벌
+                Math.min(100, Math.round((scoreA / max['A']) * 100)), // 심신건강
+                Math.min(100, Math.round(((scoreTr + scoreY) / (max['Tr'] + max['Y'])) * 100))  // 바른인성
+            ];
+
+            // 만약 0으로 나누어져서 NaN이 나오면 0으로 처리
+            dataArr = dataArr.map(val => isNaN(val) ? 0 : val);
+
+            window.myRadarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['전공직무', '미래 IT', '기초학업', '글로벌', '심신건강', '바른인성'],
+                    datasets: [{
+                        label: '영역별 달성률(%)',
+                        data: dataArr,
+                        backgroundColor: 'rgba(241, 196, 15, 0.4)', // 노란색 반투명 채우기
+                        borderColor: 'rgba(241, 196, 15, 1)',     // 노란색 테두리
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: 'rgba(241, 196, 15, 1)',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(241, 196, 15, 1)',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                            pointLabels: {
+                                color: 'rgba(255, 255, 255, 0.9)', // 라벨(글자) 하얀색
+                                font: { size: 10, family: 'Pretendard', weight: 'bold' }
+                            },
+                            ticks: {
+                                display: false, // 숫자 눈금 숨기기
+                                min: 0,
+                                max: 100,
+                                stepSize: 25
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }, // 범례(라벨 이름) 숨기기
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: { size: 12, family: 'Pretendard' },
+                            bodyFont: { size: 12, family: 'Pretendard', weight: 'bold' },
+                            displayColors: false,
+                            callbacks: { label: function(context) { return context.raw + '% 달성'; } }
+                        }
+                    }
+                }
+            });
+        };
 
         window.loadStudentRealData = async function(dbInstance) {
             try {
@@ -406,6 +509,10 @@
                 if(scoreBoxes.length > 0) scoreBoxes[0].innerHTML = `${totalScore}<span>점</span>`;
 
                 window.renderDashboardBadges();
+                
+                // ★ 데이터를 다 불러온 후 6각 레이더 차트 그리기 실행!
+                window.drawRadarChart();
+                
                 await window.loadRankingData(dbInstance);
 
             } catch(e) {
@@ -447,7 +554,6 @@
             }
         };
 
-        // ★ [새 기능] 내 신청 내역 불러오기
         window.loadMyApplications = async function(dbInstance) {
             const listEl = document.getElementById('myApplyList');
             try {
@@ -457,7 +563,6 @@
                 let applies = [];
                 qSnap.forEach(doc => { applies.push({ id: doc.id, ...doc.data() }); });
                 
-                // 시간순 내림차순 정렬 (최신이 위로)
                 applies.sort((a, b) => b.timestamp - a.timestamp);
 
                 if(applies.length === 0) {
@@ -467,7 +572,6 @@
 
                 listEl.innerHTML = '';
                 applies.forEach(app => {
-                    // 상태에 따른 태그 디자인 설정
                     let tagHtml = '';
                     let cancelBtnHtml = '';
                     
@@ -480,7 +584,6 @@
                         tagHtml = '<span class="apply-status-tag tag-reject">❌ 반려됨</span>';
                     }
 
-                    // 날짜 변환
                     let dateObj = new Date(app.timestamp);
                     let dateStr = `${dateObj.getMonth()+1}월 ${dateObj.getDate()}일`;
 
@@ -502,19 +605,17 @@
             }
         };
 
-        // ★ [새 기능] 신청 내역 취소 (DB 삭제)
         window.cancelApplication = async function(docId) {
             if(!confirm("정말 이 인증 신청을 취소하시겠습니까?")) return;
             try {
                 await deleteDoc(doc(db, "applications", docId));
                 alert("신청이 취소되었습니다.");
-                window.loadMyApplications(db); // 목록 새로고침
+                window.loadMyApplications(db); 
             } catch(e) {
                 alert("취소 처리 중 오류가 발생했습니다.");
             }
         };
 
-        // ★ [새 기능] 제출 시 사진을 Canvas API로 초고속/초경량 압축하는 마법의 로직
         async function compressImage(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -524,8 +625,8 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 1200; // 가로 최대 크기 제한
-                        const MAX_HEIGHT = 1200; // 세로 최대 크기 제한
+                        const MAX_WIDTH = 1200; 
+                        const MAX_HEIGHT = 1200; 
                         let width = img.width;
                         let height = img.height;
 
@@ -539,7 +640,6 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // 0.7 품질의 JPEG 데이터 URL로 변환하여 용량 극적 감소!
                         resolve(canvas.toDataURL('image/jpeg', 0.7)); 
                     };
                     img.onerror = error => reject(error);
@@ -548,7 +648,6 @@
             });
         }
 
-        // ★ [새 기능] 실제 DB로 결재 서류 쏘기
         window.submitApplication = async function() {
             const areaSelect = document.getElementById('areaSelect').value;
             const scoreText = document.getElementById('currentPoint').innerText;
@@ -567,7 +666,6 @@
                 let fileData = "";
                 let fileType = "";
 
-                // 파일이 이미지면 압축 마법 발동, PDF면 그대로 Base64 변환
                 if (file.type.startsWith('image/')) {
                     fileData = await compressImage(file);
                     fileType = "image";
@@ -582,7 +680,6 @@
                     throw new Error("사진(JPG/PNG) 또는 PDF 파일만 업로드 가능합니다.");
                 }
 
-                // DB의 applications 폴더에 새 서류 접수
                 const newApp = {
                     studentId: window.myStudentId,
                     studentName: window.myStudentName,
@@ -590,7 +687,7 @@
                     classNum: parseInt(window.myStudentId.substring(1,3)),
                     area: areaSelect,
                     score: parseInt(scoreText),
-                    fileData: fileData, // 압축된 사진 또는 PDF 데이터
+                    fileData: fileData, 
                     fileType: fileType,
                     status: "대기중",
                     timestamp: Date.now()
@@ -600,7 +697,7 @@
 
                 alert(`✅ ${scoreText}점 신청이 완료되었습니다!\n(사진이 최적화되어 전송되었습니다)`);
                 window.closeApplyModal();
-                window.loadMyApplications(db); // 목록 새로고침
+                window.loadMyApplications(db); 
 
             } catch(e) {
                 alert("제출 중 오류가 발생했습니다: " + e.message);
@@ -620,6 +717,9 @@
 
         const AREAS = ['S', 'M', 'A', 'R', 'T', 'C', 'I', 'Tr', 'Y'];
         const AREA_KOR_NAMES = { 'S': '정보화', 'M': '전공성적', 'A': '예체능', 'R': '한국사', 'T': '전공자격', 'C': '직업기초', 'I': '외국어', 'Tr': '성실', 'Y': '인성' };
+        
+        // ★ 차트를 위해 전역 변수 CAPS를 위로 올렸으므로 여기서는 선언 생략 (중복 방지)
+        const CAPS = { 1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 2: { S:50, M:50, A:30, R:30, T:80, C:50, I:40, Tr:50, Y:30 }, 3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 } };
 
         window.renderDashboardBadges = function() {
             const badgeContainer = document.getElementById('badgeGridContainer');
@@ -735,7 +835,6 @@
 
         window.closeRankModal = function() { document.getElementById('rankModal').classList.remove('active'); document.body.style.overflow = 'auto'; };
 
-        const CAPS = { 1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 2: { S:50, M:50, A:30, R:30, T:80, C:50, I:40, Tr:50, Y:30 }, 3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 } };
         const EVAL_ITEMS_BY_GRADE = {
             1: { 'S': [{ label: 'ITQ 2과목(40점)', score: 40, group: 'itq' }, { label: 'ITQ 1과목(20점)', score: 20, group: 'itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 'ai' }], 'R': [{ label: '한능검 3급(30점)', score: 30, group: 'his' }, { label: '한능검 4급(20점)', score: 20, group: 'his' }, { label: '한능검 5~6급(10점)', score: 10, group: 'his' }], 'T': [{ label: '기능사 자격증 취득(60점)', score: 60, group: 'tnow' }, { label: '민간자격증 취득(40점)', score: 40, group: 'tnow' }, { label: '국가/민간 필기합격(30점)', score: 30, group: 'tnow' }], 'I': [{ label: '영어 교과 성취도 A 이상(40점)', score: 40, group: 'i1' }, { label: '영어 교과 성취도 B 이상(30점)', score: 30, group: 'i1' }, { label: '교내 영어 관련 대회 입상(30점)', score: 30, group: 'i1' }] },
             2: { 'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 'itq' }, { label: 'ITQ 2과목 합격(20점)', score: 20, group: 'itq' }, { label: '(당해연도) AI관련 자격증 취득(20점)', score: 20, group: 'ai' }], 'R': [{ label: '한능검 2급이상(30점)', score: 30, group: 'his' }, { label: '한능검 3급(20점)', score: 20, group: 'his' }], 'T': [{ label: '(당해연도) 기능사 1개 취득(60점)', score: 60, group: 'tnow' }, { label: '(당해연도) 민간 자격증 1개 취득(40점)', score: 40, group: 'tnow' }, { label: '(당해연도) 국가/민간 필기합격(30점)', score: 30, group: 'tnow' }, { label: '(이전학년) 기능사 1개 취득(20점)', score: 20, group: 'tprev' }, { label: '(이전학년) 민간 자격증 1개 취득(10점)', score: 10, group: 'tprev' }], 'I': [{ label: '토익500/토스NH/OPIc NH/JLPT N5/JPT250(40점)', score: 40, group: 'i1' }, { label: '영어/일어 교과 성취도 A(40점)', score: 40, group: 'i1' }, { label: '영어/일어 교과 성취도 B(30점)', score: 30, group: 'i1' }] },
