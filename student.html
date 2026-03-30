@@ -32,7 +32,7 @@
         .hero-banner { 
             background: linear-gradient(135deg, #447fe5, var(--dark-blue)); 
             border-radius: 20px; padding: 25px 35px; color: white; 
-            display: flex; flex-direction: column; /* 경험치바를 위해 column으로 변경 */
+            display: flex; flex-direction: column; 
             box-shadow: 0 10px 25px rgba(59, 113, 202, 0.25); margin-bottom: 20px; position: relative; width: 100%; box-sizing: border-box; 
         }
         
@@ -62,7 +62,6 @@
         .rank-clickable:hover { transform: translateY(-3px); background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
         .rank-clickable p::after { content: ' 👆'; font-size: 14px; } 
 
-        /* ★ [새 기능] 경험치 게이지 바 CSS */
         .hero-bottom { width: 100%; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px; }
         .exp-bar-container { width: 100%; background: rgba(0,0,0,0.25); border-radius: 10px; height: 12px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
         .exp-bar-fill { background: linear-gradient(90deg, #f1c40f, #e67e22); height: 100%; width: 0%; border-radius: 10px; transition: width 1.5s cubic-bezier(0.1, 0.8, 0.2, 1); position: relative; }
@@ -279,7 +278,7 @@
             
             <div class="hero-bottom">
                 <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:8px; align-items: flex-end;">
-                    <span style="opacity:0.9;">🚀 나의 성장률</span>
+                    <span style="opacity:0.9;">🚀 나의 인증 달성률 (배지 기준)</span>
                     <span id="expText" style="font-size:12px;">계산중...</span>
                 </div>
                 <div class="exp-bar-container">
@@ -438,10 +437,7 @@
 
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
-            
-            if (window.myRadarChartInstance) {
-                window.myRadarChartInstance.destroy();
-            }
+            if (window.myRadarChartInstance) window.myRadarChartInstance.destroy();
 
             let scoreM = window.myScoreData['M'] || 0;
             let scoreT = window.myScoreData['T'] || 0;
@@ -463,7 +459,6 @@
                 Math.min(100, Math.round((scoreA / max['A']) * 100)), 
                 Math.min(100, Math.round(((scoreTr + scoreY) / (max['Tr'] + max['Y'])) * 100))  
             ];
-
             dataArr = dataArr.map(val => isNaN(val) ? 0 : val);
 
             const isMobile = window.innerWidth <= 850;
@@ -489,35 +484,16 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: {
-                        padding: chartPadding 
-                    },
+                    layout: { padding: chartPadding },
                     scales: {
                         r: {
                             angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
                             grid: { color: 'rgba(255, 255, 255, 0.2)' },
-                            pointLabels: {
-                                color: 'rgba(255, 255, 255, 0.9)', 
-                                font: { size: labelFontSize, family: 'Pretendard', weight: 'bold' } 
-                            },
-                            ticks: {
-                                display: false, 
-                                min: 0,
-                                max: 100,
-                                stepSize: 25
-                            }
+                            pointLabels: { color: 'rgba(255, 255, 255, 0.9)', font: { size: labelFontSize, family: 'Pretendard', weight: 'bold' } },
+                            ticks: { display: false, min: 0, max: 100, stepSize: 25 }
                         }
                     },
-                    plugins: {
-                        legend: { display: false }, 
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleFont: { size: 12, family: 'Pretendard' },
-                            bodyFont: { size: 12, family: 'Pretendard', weight: 'bold' },
-                            displayColors: false,
-                            callbacks: { label: function(context) { return context.raw + '% 달성'; } }
-                        }
-                    }
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', titleFont: { size: 12, family: 'Pretendard' }, bodyFont: { size: 12, family: 'Pretendard', weight: 'bold' }, displayColors: false, callbacks: { label: function(context) { return context.raw + '% 달성'; } } } }
                 }
             });
         };
@@ -537,7 +513,7 @@
                     window.myScoreData = yData.scores || {};
                     window.myPassData = yData.pass || {};
                     totalScore = yData.total_score || 0;
-                    badges = yData.earned_badges || 0;
+                    badges = yData.earned_badges || 0; // ★ 획득한 배지 개수 불러오기
                     
                     if (yData.title) {
                         title = yData.title;
@@ -553,33 +529,25 @@
                 window.drawRadarChart();
                 await window.loadRankingData(dbInstance);
 
-                // ★ [아이디어 A] 경험치(EXP) 게이지 바 계산 로직
-                // 150점 단위로 다음 목표 점수와 티어 이름 설정
-                let targetScore = (Math.floor(totalScore / 150) + 1) * 150;
+                // ★ [완벽 수정] 경험치 바 기준을 '점수'가 아닌 '획득 배지 개수'로 변경
                 let nextTierName = "";
-                if(targetScore === 150) nextTierName = "CITY 스타터";
-                else if(targetScore === 300) nextTierName = "CITY 프로";
-                else if(targetScore === 450) nextTierName = "CITY 마스터";
-                else if(targetScore === 600) nextTierName = "CITY 챔피언";
-                else nextTierName = "CITY 레전드";
+                if(window.CURRENT_GRADE === 1) nextTierName = "CITY 스타터";
+                else if(window.CURRENT_GRADE === 2) nextTierName = "CITY 빌더";
+                else nextTierName = "CITY 프로";
 
                 let percent = 0;
                 let expMsg = "";
 
-                if (totalScore >= 600) {
+                if (badges >= 6) { // ★ 배지 6개 달성 시 100%
                     percent = 100;
-                    expMsg = `축하합니다! 최고 등급에 도달했습니다.`;
+                    expMsg = `축하합니다! 🏆 <b>${nextTierName}</b> 인증을 달성했습니다!`;
                     document.getElementById('expBar').style.width = '100%';
                 } else {
-                    // 현재 150점 구간 내에서의 달성률 계산 (예: 150~300 사이면 150점 만점 기준)
-                    let baseScore = targetScore - 150;
-                    let earnedInChunk = totalScore - baseScore;
-                    percent = Math.floor((earnedInChunk / 150) * 100);
-                    let left = targetScore - totalScore;
-                    expMsg = `🏆 <b>${nextTierName}</b>까지 <span style="color:#f1c40f;">${left}점</span> 남았습니다!`;
+                    percent = Math.floor((badges / 6) * 100);
+                    let left = 6 - badges;
+                    expMsg = `🏆 <b>${nextTierName}</b> 인증까지 <span style="color:#f1c40f;">배지 ${left}개</span> 남았습니다!`;
                 }
 
-                // 애니메이션 효과를 위해 0.3초 딜레이 후 바 차오르게 하기
                 setTimeout(() => {
                     document.getElementById('expBar').style.width = percent + '%';
                 }, 300);
