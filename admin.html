@@ -350,7 +350,7 @@
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 300px; background: #fff; padding: 20px; border: 1px dashed #16a085; border-radius: 8px; margin-bottom: 20px;">
                         <h3 style="margin-top: 0; color: #16a085;">📂 새 학기 교사 일괄 등록 (엑셀)</h3>
-                        <button onclick="downloadTeacherTemplate()" class="btn btn-dark" style="margin-bottom: 15px;">📄 교사 등록 양식 다운로드</button><br>
+                        <button onclick="window.downloadTeacherTemplate()" class="btn btn-dark" style="margin-bottom: 15px;">📄 교사 등록 양식 다운로드</button><br>
                         <input type="file" id="teacherExcelInput" accept=".xlsx" style="margin-bottom:15px;"/><br><button id="uploadTeacherExcelBtn" class="btn btn-purple">🚀 교사 계정 일괄 업로드 실행</button>
                     </div>
                     <div style="flex: 1; min-width: 300px; background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px;">
@@ -365,7 +365,7 @@
                                 <option value="교과교사">교과교사</option>
                             </select>
                             <input type="text" id="tAssignment" placeholder="담당 반/과목 편하게 입력 (예: 1-4, 체육)" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
-                            <button class="btn btn-green" style="padding: 12px; font-size:14px;" onclick="addTeacher()">개별 등록하기</button>
+                            <button class="btn btn-green" style="padding: 12px; font-size:14px;" onclick="window.addTeacher()">개별 등록하기</button>
                         </div>
                     </div>
                 </div>
@@ -442,7 +442,6 @@
             <div class="info-grid" style="display: flex; flex-direction: column; gap: 12px;">
                 <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">교사 성함</label><input type="text" id="edit-tName" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></div>
                 <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">아이디 (수정 불가)</label><input type="text" id="edit-tId" readonly style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background: #f4f6f7;"></div>
-                <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">비밀번호 (초기화용)</label><input type="text" id="edit-tPw" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></div>
                 <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">권한 설정</label>
                     <select id="edit-tRoleDetail" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
                         <option value="일반교사">일반교사 (조회/평가)</option>
@@ -526,7 +525,6 @@
         const secondaryApp = firebase.initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG, "ShadowApp");
         const db_compat = firebase.firestore();
 
-        // ★ 수정: 강제 로그아웃을 없애고, 실제 Auth 로그인 상태와 세션을 모두 확인하는 안전한 검증 로직!
         async function verifyRealAdmin() {
             try {
                 const user = firebase.auth().currentUser;
@@ -541,7 +539,6 @@
                     return false;
                 }
                 
-                // 더 이상 여기서 DB 조회를 하지 않으므로 엑셀 업로드 시 튕기지 않습니다!
                 return true;
 
             } catch (e) {
@@ -560,7 +557,7 @@
         }
 
         // =========================================
-        // ★ 엑셀 업로드: 생년월일 의존성 완전 제거!
+        // ★ 학생 엑셀 업로드: Auth UID 기준 (평문 비번 저장 금지)
         // =========================================
         document.getElementById("uploadExcelBtn").addEventListener("click", async () => {
             if (!(await verifyRealAdmin())) return;
@@ -647,10 +644,7 @@
                             }
 
                             if (!targetDocId) {
-                                const tempDocRef = db_compat.collection('temp').doc();
-                                const tempId = tempDocRef.id;
-                                authEmail = `stu_${tempId}@induk.hs.kr`;
-
+                                authEmail = `stu_${studentId}@induk.hs.kr`;
                                 const initialPassword = "123456";
                                 const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, initialPassword);
 
@@ -682,8 +676,6 @@
                                 name: studentName, current_grade: grade, current_studentId: studentId, department: dept, role: "student",
                                 [`year_${grade}`]: { scores: s_map, pass: p_map, earned_badges: earned, total_score: total_score, title: title, delivery_status: currentDelivery }
                             };
-
-                            if (!existingData) { payload.password = "123456"; }
 
                             const batch = db_compat.batch();
                             batch.set(db_compat.collection("students").doc(targetDocId), payload, { merge: true });
@@ -723,6 +715,229 @@
             };
             reader.readAsArrayBuffer(fileInput.files[0]);
         });
+
+        // =========================================
+        // ★ 개별 학생 추가: Auth UID 기준 (평문 비번 저장 금지)
+        // =========================================
+        window.addSingleStudent = async function() {
+            const sName = document.getElementById("newSName").value.trim();
+            const sId = document.getElementById("newSId").value.trim();
+            const sDept = document.getElementById("newSDept").value.trim();
+            const sPw = document.getElementById("newSPw").value.trim() || "123456";
+
+            if(!sName || !sId || !sDept) return alert("모든 항목(이름, 학번, 학과)을 입력해주세요.");
+            if(sId.length !== 5) return alert("학번은 반드시 5자리로 입력해주세요. (예: 10419)");
+
+            const grade = Number(sId.charAt(0));
+            if(isNaN(grade) || grade < 1 || grade > 3) return alert("학번의 첫 자리는 1~3학년 중 하나여야 합니다.");
+
+            try {
+                const dirSnap = await window.getDoc(window.doc(window.db, "directory", sId));
+                if(dirSnap.exists()) return alert(`오류: 이미 등록된 학번(${sId})입니다.`);
+
+                const authEmail = `stu_${sId}@induk.hs.kr`;
+                let targetDocId = null;
+
+                try {
+                    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, sPw);
+                    targetDocId = cred.user.uid;
+                    await secondaryApp.auth().signOut();
+                } catch(authErr) {
+                    if(authErr.code === 'auth/email-already-in-use') {
+                        return alert(`🚨 이미 시스템에 존재하는 학생 계정입니다!\n비밀번호 초기화가 필요하다면 Firebase 콘솔의 [Authentication] 탭에서 해당 학생을 삭제 후 다시 추가해주세요.`);
+                    }
+                    throw authErr;
+                }
+
+                let s_map = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
+                let p_map = {S:false, M:false, A:false, R:false, T:false, C:false, I:false, Tr:false, Y:false};
+                
+                let payload = { 
+                    name: sName, current_grade: grade, current_studentId: sId, department: sDept, role: "student", 
+                    [`year_${grade}`]: { scores: s_map, pass: p_map, earned_badges: 0, total_score: 0, title: "진행중", delivery_status: {} } 
+                };
+                
+                const batch = db_compat.batch();
+                batch.set(db_compat.collection("students").doc(targetDocId), payload);
+                batch.set(db_compat.collection("directory").doc(sId), { stableId: targetDocId, authEmail: authEmail, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                await batch.commit();
+                
+                if (typeof safeLog === "function") await safeLog(`개별 학생 [${sName}(${sId})] 추가`);
+                alert(`✅ [${sName}] 학생이 성공적으로 추가되었습니다.\n초기 비밀번호: ${sPw}`);
+                
+                document.getElementById("newSName").value = "";
+                document.getElementById("newSId").value = "";
+                document.getElementById("newSDept").value = "";
+                document.getElementById("newSPw").value = "";
+                document.getElementById("addStudentBox").style.display = 'none';
+
+                window.loadData();
+                window.loadDashboard();
+            } catch(e) { 
+                alert("학생 추가 중 오류가 발생했습니다: " + e.message); 
+            }
+        };
+
+        // =========================================
+        // ★ 학생 비밀번호 초기화 (안내문구 제공)
+        // =========================================
+        window.resetSelectedPasswords = async function() {
+            alert("🚨 [보안 정책 안내]\n\n구글 Auth 보안이 적용되어, 이제 웹 화면에서 학생의 비밀번호를 임의로 덮어쓸 수 없습니다.\n\n💡 비밀번호 초기화 방법:\n1. Firebase 콘솔 ➡️ [Authentication] 메뉴 접속\n2. 학생 이메일(예: stu_10401@induk.hs.kr) 검색 후 계정 '삭제'\n3. 관리자 화면에서 [개별 학생 추가]로 재등록 (기록은 유지됩니다!)");
+            const checkboxes = document.querySelectorAll('.student-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            const selectAllCb = document.getElementById('selectAllCheckbox');
+            if(selectAllCb) selectAllCb.checked = false;
+        };
+
+        // =========================================
+        // ★ 교사 일괄 등록 (Auth UID 기준 / Firestore 평문 비번 저장 금지)
+        // =========================================
+        document.getElementById("uploadTeacherExcelBtn").addEventListener("click", async () => {
+            const fileInput = document.getElementById("teacherExcelInput");
+            if (!fileInput.files[0]) return alert("파일을 선택해주세요.");
+
+            const btn = document.getElementById("uploadTeacherExcelBtn");
+            btn.innerText = "⏳ 교사 계정 생성 중...";
+            btn.disabled = true;
+
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                let successCount = 0;
+                let failCount = 0;
+                const failedList = [];
+
+                try {
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+                    for (const row of jsonData) {
+                        const tName = String(row["교사 성함"] || "").trim();
+                        const tId = String(row["아이디"] || "").trim();
+                        const tPw = String(row["초기 비밀번호"] || "").trim();
+                        const tRoleDetail = String(row["권한(담임/교과/일반)"] || "일반교사").trim();
+                        const tAssignment = String(row["담당(반/과목)"] || "-").trim() || "-";
+
+                        if (!tName || !tId || !tPw) {
+                            failCount++;
+                            failedList.push(`필수값 누락: ${tName || "(이름없음)"} / ${tId || "(아이디없음)"}`);
+                            continue;
+                        }
+
+                        const authEmail = `${tId}@induk.hs.kr`;
+
+                        try {
+                            const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, tPw);
+                            const uid = cred.user.uid;
+
+                            const dateString = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+                            await window.setDoc(
+                                window.doc(window.db, "teachers", uid),
+                                {
+                                    name: tName,
+                                    userId: tId,
+                                    email: authEmail,
+                                    role: "teacher",
+                                    roleDetail: tRoleDetail,
+                                    assignment: tAssignment,
+                                    createdAt: dateString
+                                }
+                            );
+
+                            successCount++;
+
+                        } catch (authErr) {
+                            console.error("교사 계정 생성 실패:", tId, authErr);
+
+                            if (authErr.code === "auth/email-already-in-use") {
+                                failCount++;
+                                failedList.push(`이미 존재하는 아이디: ${tId}`);
+                            } else {
+                                failCount++;
+                                failedList.push(`${tId}: ${authErr.message}`);
+                            }
+                        } finally {
+                            try { await secondaryApp.auth().signOut(); } catch (_) {}
+                        }
+                    }
+
+                    if (typeof safeLog === "function") {
+                        await safeLog(`교사 일괄 등록 완료 (성공: ${successCount}명, 실패: ${failCount}명)`);
+                    }
+
+                    alert(`✅ 교사 계정 일괄 등록 완료!\n성공: ${successCount}명\n실패: ${failCount}명` +
+                        (failedList.length ? `\n\n실패 목록:\n- ${failedList.join("\n- ")}` : "")
+                    );
+
+                    fileInput.value = "";
+                    if (typeof window.loadTeachers === "function") window.loadTeachers();
+
+                } catch (e) {
+                    console.error("교사 엑셀 업로드 전체 실패:", e);
+                    alert("교사 엑셀 처리 중 오류가 발생했습니다.\n" + e.message);
+                } finally {
+                    btn.innerText = "🚀 교사 계정 일괄 업로드 실행";
+                    btn.disabled = false;
+                }
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        });
+
+        // =========================================
+        // ★ 교사 개별 추가 (Auth UID 기준)
+        // =========================================
+        window.addTeacher = async function() {
+            const tName = document.getElementById("tName").value.trim();
+            const tId = document.getElementById("tId").value.trim();
+            const tPw = document.getElementById("tPw").value.trim();
+            const tRoleDetail = document.getElementById("tRoleDetail").value;
+            const tAssignment = document.getElementById("tAssignment").value.trim() || "-";
+
+            if (!tName || !tId || !tPw) return alert("필수 항목(이름, 아이디, 비번)을 모두 입력하세요.");
+
+            try {
+                const authEmail = tId + "@induk.hs.kr";
+                let uid = null;
+
+                try {
+                    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, tPw);
+                    uid = cred.user.uid;
+                    await secondaryApp.auth().signOut();
+                } catch (authErr) {
+                    if (authErr.code !== 'auth/email-already-in-use') throw authErr;
+                    return alert("이미 사용 중인 교사 아이디입니다. Firebase Auth의 기존 계정은 콘솔에서 UID를 확인해 직접 연결해야 합니다.");
+                }
+
+                const dateString = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+                await window.setDoc(
+                    window.doc(window.db, "teachers", uid),
+                    {
+                        name: tName,
+                        userId: tId,
+                        email: authEmail,
+                        role: "teacher",
+                        roleDetail: tRoleDetail,
+                        assignment: tAssignment,
+                        createdAt: dateString
+                    }
+                );
+
+                document.getElementById("tName").value = "";
+                document.getElementById("tId").value = "";
+                document.getElementById("tPw").value = "";
+                document.getElementById("tAssignment").value = "";
+
+                alert("✅ 교사 계정 생성 완료!");
+                if (typeof safeLog === "function") await safeLog(`신규 교사 [${tName}] 등록`);
+                if (typeof window.loadTeachers === "function") window.loadTeachers();
+
+            } catch (e) {
+                console.error(e);
+                alert("생성 실패: " + e.message);
+            }
+        };
 
         // =========================================
         // ★ 비번 변경 모달 열기/실행 함수
@@ -923,49 +1138,6 @@
             }
         };
 
-        window.addSingleStudent = async function() {
-            const sName = document.getElementById("newSName").value.trim();
-            const sId = document.getElementById("newSId").value.trim();
-            const sDept = document.getElementById("newSDept").value.trim();
-            const sPw = document.getElementById("newSPw").value.trim() || "123456";
-
-            if(!sName || !sId || !sDept) return alert("모든 항목(이름, 학번, 학과)을 입력해주세요.");
-            if(sId.length !== 5) return alert("학번은 반드시 5자리로 입력해주세요. (예: 10419)");
-
-            const grade = Number(sId.charAt(0));
-            if(isNaN(grade) || grade < 1 || grade > 3) return alert("학번의 첫 자리는 1~3학년 중 하나여야 합니다.");
-
-            try {
-                const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", sId)));
-                if(!qSnap.empty) return alert(`오류: 이미 등록된 학번(${sId})입니다.`);
-
-                let s_map = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
-                let p_map = {S:false, M:false, A:false, R:false, T:false, C:false, I:false, Tr:false, Y:false};
-                
-                let payload = { 
-                    name: sName, current_grade: grade, current_studentId: sId, department: sDept, role: "student", 
-                    password: sPw, 
-                    [`year_${grade}`]: { scores: s_map, pass: p_map, earned_badges: 0, total_score: 0, title: "진행중", delivery_status: {} } 
-                };
-                
-                await window.setDoc(window.doc(window.db, "students", sId), payload);
-                
-                safeLog(`개별 학생 [${sName}(${sId})] 추가`);
-                alert(`✅ [${sName}] 학생이 성공적으로 추가되었습니다.\n초기 비밀번호: ${sPw}`);
-                
-                document.getElementById("newSName").value = "";
-                document.getElementById("newSId").value = "";
-                document.getElementById("newSDept").value = "";
-                document.getElementById("newSPw").value = "";
-                document.getElementById("addStudentBox").style.display = 'none';
-
-                window.loadData();
-                window.loadDashboard();
-            } catch(e) { 
-                alert("학생 추가 중 오류가 발생했습니다: " + e.message); 
-            }
-        };
-
         window.printClassChart = function() {
             const filterClass = document.getElementById("filterClass").value; const filterGrade = document.getElementById("filterGrade").value;
             if (filterClass === "ALL") return alert("❗ [필터]에서 특정 '반'을 먼저 선택 후 [조회]를 눌러주세요.");
@@ -988,7 +1160,6 @@
 
         window.loadDashboard = async function() {
             try {
-                // ★ 추가/수정: '오늘 방문자' 숫자도 7일 꺾은선 그래프와 같은 데이터를 읽도록 통일!
                 let dToday = new Date(new Date().getTime() + 9*60*60*1000);
                 let todayStr = dToday.toISOString().slice(0,10);
                 try {
@@ -1178,34 +1349,6 @@
             } catch(e) { alert("삭제 중 오류가 발생했습니다: " + e.message); }
         };
 
-        window.resetSelectedPasswords = async function() {
-            const selected = document.querySelectorAll('.student-checkbox:checked');
-            if(selected.length === 0) return alert('비밀번호를 초기화할 학생을 체크박스로 선택해주세요.');
-
-            const resetPw = prompt(`선택한 ${selected.length}명 학생의 비밀번호를 무엇으로 일괄 초기화하시겠습니까?\n(최소 6자리 이상, 예: 123456)`);
-            
-            if(!resetPw) return;
-            if(resetPw.trim().length < 6) return alert("🚨 비밀번호는 최소 6자리 이상이어야 합니다.");
-
-            if(!confirm(`정말 선택한 ${selected.length}명 학생의 비밀번호를 [ ${resetPw} ](으)로 일괄 초기화하시겠습니까?`)) return;
-
-            let successCount = 0;
-
-            try {
-                for(let cb of selected) {
-                    const docRef = window.doc(window.db, "students", cb.value);
-                    await window.updateDoc(docRef, { password: resetPw.trim() });
-                    successCount++;
-                }
-                safeLog(`${successCount}명의 학생 비밀번호 [ ${resetPw} ] 로 일괄 초기화`);
-                alert(`✅ 총 ${successCount}명 초기화 성공\n(새 비밀번호: ${resetPw})`);
-                
-                const selectAllCb = document.getElementById('selectAllCheckbox');
-                if(selectAllCb) selectAllCb.checked = false;
-                window.loadData();
-            } catch(e) { alert("오류가 발생했습니다: " + e.message); }
-        };
-
         window.openEditModal = function(docId, grade) { 
             const student = allStudentsData.find(s => s.docId === docId); 
             if(!student || !student.yearData) { alert("학생 데이터를 불러오지 못했습니다."); return; }
@@ -1261,7 +1404,7 @@
             document.getElementById("edit-tDocId").value = docId;
             document.getElementById("edit-tName").value = t.name;
             document.getElementById("edit-tId").value = t.userId;
-            document.getElementById("edit-tPw").value = t.password;
+            if(document.getElementById("edit-tPw")) document.getElementById("edit-tPw").parentElement.style.display = 'none';
             document.getElementById("edit-tRoleDetail").value = t.roleDetail || "일반교사";
             document.getElementById("edit-tAssignment").value = t.assignment || "-";
             
@@ -1275,16 +1418,14 @@
         window.saveTeacherEdit = async function() {
             const docId = document.getElementById("edit-tDocId").value;
             const tName = document.getElementById("edit-tName").value.trim();
-            const tPw = document.getElementById("edit-tPw").value.trim();
             const tRoleDetail = document.getElementById("edit-tRoleDetail").value;
             const tAssignment = document.getElementById("edit-tAssignment").value.trim();
 
-            if(!tName || !tPw) return alert("교사 이름과 비밀번호는 필수 입력입니다.");
+            if(!tName) return alert("교사 이름은 필수 입력입니다.");
 
             try {
                 await window.updateDoc(window.doc(window.db, "teachers", docId), {
                     name: tName,
-                    password: tPw,
                     roleDetail: tRoleDetail,
                     assignment: tAssignment
                 });
@@ -1305,38 +1446,14 @@
             XLSX.writeFile(wb, "스마트시티_교사등록양식.xlsx"); 
         };
 
-        document.getElementById("uploadTeacherExcelBtn").addEventListener("click", async () => {
-            const fileInput = document.getElementById("teacherExcelInput"); if (!fileInput.files[0]) return alert("파일 선택!");
-            const reader = new FileReader(); reader.onload = async function(e) {
-                const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'}); const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                let count = 0; const dateString = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-                for (let row of jsonData) { 
-                    const tName = row["교사 성함"]; const tId = String(row["아이디"]); const tPw = String(row["초기 비밀번호"]); 
-                    const tRoleDetail = row["권한(담임/교과/일반)"] || "일반교사";
-                    const tAssignment = String(row["담당(반/과목)"] || "-");
-                    if(!tName || !tId || !tPw || tId === "undefined") continue; 
-                    await window.setDoc(window.doc(window.db, "teachers", tId), { name: tName, userId: tId, password: tPw, role: "teacher", roleDetail: tRoleDetail, assignment: tAssignment, createdAt: dateString }); count++; 
-                }
-                safeLog(`교사 계정 일괄 등록 (${count}명)`); alert(`✅ 총 ${count}명 등록!`); fileInput.value = ""; window.loadTeachers();
-            }; reader.readAsArrayBuffer(fileInput.files[0]);
-        });
-
-        window.addTeacher = async function() {
-            const tName = document.getElementById("tName").value.trim(); const tId = document.getElementById("tId").value.trim(); const tPw = document.getElementById("tPw").value.trim();
-            const tRoleDetail = document.getElementById("tRoleDetail").value;
-            const tAssignment = document.getElementById("tAssignment").value.trim() || "-";
-            if(!tName || !tId || !tPw) return alert("필수 항목(이름, 아이디, 비번)을 모두 입력하세요.");
-            try { 
-                const dateString = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10); 
-                await window.setDoc(window.doc(window.db, "teachers", tId), { name: tName, userId: tId, password: tPw, role: "teacher", roleDetail: tRoleDetail, assignment: tAssignment, createdAt: dateString }); 
-                document.getElementById("tName").value = ""; document.getElementById("tId").value = ""; document.getElementById("tPw").value = ""; document.getElementById("tAssignment").value = "";
-                alert("등록 완료!"); safeLog(`신규 교사 [${tName}] 등록`); window.loadTeachers(); 
-            } catch(e) { alert("생성 실패"); }
+        window.deleteTeacher = async function(docId, name) { 
+            if(!confirm(`[${name}] 교사 데이터를 삭제하시겠습니까?\n(주의: Firebase Auth 계정은 콘솔에서 직접 삭제해야 합니다.)`)) return; 
+            await window.deleteDoc(window.doc(window.db, "teachers", docId)); 
+            safeLog(`교사 삭제 [${name}]`); 
+            window.loadTeachers(); 
         };
 
-        window.deleteTeacher = async function(docId, name) { if(!confirm(`[${name}] 삭제?`)) return; await window.deleteDoc(window.doc(window.db, "teachers", docId)); safeLog(`교사 삭제 [${name}]`); window.loadTeachers(); };
-
-        // ★ 엑셀 양식 다운로드 함수 (생년월일 완전 삭제!)
+        // ★ 학생 엑셀 양식 다운로드 함수 (생년월일 완전 삭제!)
         window.downloadTemplate = function() { const ws = XLSX.utils.json_to_sheet([{ "학년": "", "학과": "", "학번": "", "이름": "", "S": "", "M": "", "A": "", "R": "", "T": "", "C": "", "I": "", "Tr": "", "Y": "" }]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "입력양식"); XLSX.writeFile(wb, "스마트시티_학생양식.xlsx"); };
         
         window.closeEditModal = function() { document.getElementById("editModal").style.display = "none"; };
@@ -1366,7 +1483,6 @@
                 if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>활동 로그가 없습니다.</td></tr>";
             } catch(e) { tbody.innerHTML = "<tr><td colspan='3'>API 키를 연결해주세요.</td></tr>"; }
         };
-
     </script>
 </body>
 </html>
