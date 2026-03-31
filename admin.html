@@ -152,6 +152,19 @@
     </style>
 </head>
 <body>
+
+    <script>
+        window.MY_GLOBAL_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
+  authDomain: "induk-smartcity.firebaseapp.com",
+  projectId: "induk-smartcity",
+  storageBucket: "induk-smartcity.firebasestorage.app",
+  messagingSenderId: "836222545739",
+  appId: "1:836222545739:web:d370e05c68300ce6e202ce",
+  measurementId: "G-3SL84TXVHD"
+        };
+    </script>
+
     <script>
         if (sessionStorage.getItem('userRole') !== 'admin') {
             alert('⚠️ 접근 권한이 없습니다. 관리자 로그인이 필요합니다.');
@@ -176,7 +189,7 @@
     <div class="header">
         <h1>👑 스마트시티 역량 인증제 평가 시스템<br><span style="font-size: 14px; color: #f1c40f;">(통합 관리자)</span></h1>
         <div class="header-controls">
-            <button class="btn btn-orange" style="padding: 6px 12px; border-radius: 20px; font-size: 11px;" onclick="changeAdminPassword()">🔐 비번 변경</button>
+            <button class="btn btn-orange" style="padding: 6px 12px; border-radius: 20px; font-size: 11px;" onclick="window.changeAdminPassword()">🔐 비번 변경</button>
             <button class="btn btn-dark" style="padding: 6px 12px; border-radius: 20px; font-size: 11px;" onclick="sessionStorage.clear(); location.href='index.html';">🚪 로그아웃</button>
             <button id="globalLockBtn" class="btn-lock lock-inactive" onclick="toggleGlobalLock()">🔓 시스템 개방 중 (마감하기)</button>
             <div class="visitor-count">👀 오늘 방문자: <span id="visitorCount">0</span>명</div>
@@ -433,48 +446,12 @@
         </div>
     </div>
 
-    <div id="pendingModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-        <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header"><span>📝 전교생 미승인 결재 대기 명단</span><button class="btn btn-dark" onclick="document.getElementById('pendingModal').style.display='none'">✕</button></div>
-            <div class="summary-box" style="margin-bottom: 15px;">전교생이 신청한 배지 인증 증빙자료를 통합 관리자가 확인하고 승인/반려할 수 있습니다.</div>
-            <div style="overflow-x: auto; border: 1px solid #eee; border-radius: 8px;">
-                <table class="data-table" style="min-width: 600px; margin: 0;">
-                    <thead style="background:#34495e; color:white;"><tr><th>신청일</th><th>학번/이름</th><th>신청 역량(점수)</th><th>증빙자료</th><th>상태관리</th></tr></thead>
-                    <tbody id="adminPendingList">
-                        <tr><td colspan="5" style="text-align: center; padding: 30px; color: #7f8c8d; font-weight: bold;">결재 데이터를 불러오는 중입니다...⏳</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="adminProofModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-        <div class="modal-content" style="max-width: 700px; text-align: center;">
-            <div class="modal-header">
-                <h3>📄 제출된 증빙 자료 (관리자 확인용)</h3>
-                <button class="close-btn" onclick="document.getElementById('adminProofModal').style.display='none'">✕</button>
-            </div>
-            <div id="adminProofContent" style="margin-top: 15px; max-height: 60vh; overflow-y: auto; background: #eee; border-radius: 8px; display: flex; justify-content: center; align-items: center; min-height: 200px;">
-                </div>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, increment, query, where, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // 🚨 여기에 선생님의 실제 API 키를 넣어주세요! 🚨
-        const firebaseConfig = {
-  apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
-  authDomain: "induk-smartcity.firebaseapp.com",
-  projectId: "induk-smartcity",
-  storageBucket: "induk-smartcity.firebasestorage.app",
-  messagingSenderId: "836222545739",
-  appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"
-};
-        
-        const app = initializeApp(firebaseConfig);
+        // 맨 위에서 선언한 글로벌 키를 자동으로 가져다 씁니다!
+        const app = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
         const db = getFirestore(app);
         
         window.db = db; 
@@ -495,19 +472,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // 🚨 보안용 보조 앱 초기화 (위와 동일한 API 키를 넣어주세요) 🚨
-        const firebaseConfigCompat = {
-            apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
-  authDomain: "induk-smartcity.firebaseapp.com",
-  projectId: "induk-smartcity",
-  storageBucket: "induk-smartcity.firebasestorage.app",
-  messagingSenderId: "836222545739",
-  appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"
-        };
-
-        firebase.initializeApp(firebaseConfigCompat);
-        const secondaryApp = firebase.initializeApp(firebaseConfigCompat, "ShadowApp");
+        // 맨 위에서 선언한 글로벌 키를 똑같이 복사해서 씁니다!
+        firebase.initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
+        const secondaryApp = firebase.initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG, "ShadowApp");
         const db_compat = firebase.firestore();
 
         // =========================
@@ -561,7 +528,7 @@
         }
 
         // =========================
-        // 4) 업로드 보안 최종본 (골격 유지 + 정밀 롤백)
+        // 4) 업로드 보안 최종본 (정밀 롤백 탑재)
         // =========================
         document.getElementById("uploadExcelBtn").addEventListener("click", async () => {
             if (!(await verifyRealAdmin())) return;
@@ -602,19 +569,11 @@
 
                         if (!grade || !studentId || !studentName) {
                             failCount++;
-                            console.warn("필수값 누락으로 건너뜀:", row);
                             continue;
                         }
 
                         if (!/^\d{5}$/.test(studentId)) {
                             failCount++;
-                            console.warn(`형식 오류(학번) 건너뜀: ${studentName}(${studentId})`);
-                            continue;
-                        }
-
-                        if (birthdate && !/^\d{6}$/.test(birthdate)) {
-                            failCount++;
-                            console.warn(`형식 오류(생년월일) 건너뜀: ${studentName}(${studentId})`);
                             continue;
                         }
 
@@ -625,7 +584,7 @@
                             let authEmail = null;
                             let existingData = null;
 
-                            // 1. directory 매핑 우선 확인
+                            // 1. directory 매핑 확인
                             const dirSnap = await window.getDoc(window.doc(window.db, 'directory', studentId));
                             if (dirSnap.exists()) {
                                 const dirData = dirSnap.data();
@@ -634,9 +593,7 @@
 
                                 if (targetDocId) {
                                     const sSnap = await window.getDoc(window.doc(window.db, "students", targetDocId));
-                                    if (sSnap.exists()) {
-                                        existingData = sSnap.data();
-                                    }
+                                    if (sSnap.exists()) existingData = sSnap.data();
                                 }
                             }
 
@@ -650,9 +607,7 @@
 
                                     if (targetDocId) {
                                         const sSnap = await window.getDoc(window.doc(window.db, "students", targetDocId));
-                                        if (sSnap.exists()) {
-                                            existingData = sSnap.data();
-                                        }
+                                        if (sSnap.exists()) existingData = sSnap.data();
                                     }
                                 }
                             }
@@ -660,18 +615,7 @@
                             // 3. 구형 데이터 fallback 
                             if (!targetDocId) {
                                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
-                                if (!qSnap.empty) {
-                                    targetDocId = qSnap.docs[0].id;
-                                    existingData = qSnap.docs[0].data();
-                                }
-                            }
-
-                            if (!targetDocId && prevStudentId) {
-                                const oldQSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", prevStudentId)));
-                                if (!oldQSnap.empty) {
-                                    targetDocId = oldQSnap.docs[0].id;
-                                    existingData = oldQSnap.docs[0].data();
-                                }
+                                if (!qSnap.empty) { targetDocId = qSnap.docs[0].id; existingData = qSnap.docs[0].data(); }
                             }
 
                             // 4. 신규 학생이면 Auth 계정 생성
@@ -688,108 +632,56 @@
                             }
 
                             // 5. 기존 학년 데이터 보존
-                            let prevT = 0;
-                            let currentDelivery = {};
-
+                            let prevT = 0; let currentDelivery = {};
                             if (existingData) {
-                                if (grade === 2 && existingData.year_1) {
-                                    prevT = existingData.year_1.scores?.T || 0;
-                                }
-                                if (grade === 3 && existingData.year_2) {
-                                    prevT = existingData.year_2.scores?.T || 0;
-                                }
-                                if (existingData[`year_${grade}`]) {
-                                    currentDelivery = existingData[`year_${grade}`].delivery_status || {};
-                                }
+                                if (grade === 2 && existingData.year_1) prevT = existingData.year_1.scores?.T || 0;
+                                if (grade === 3 && existingData.year_2) prevT = existingData.year_2.scores?.T || 0;
+                                if (existingData[`year_${grade}`]) currentDelivery = existingData[`year_${grade}`].delivery_status || {};
                             }
 
                             // 6. 점수 계산 
-                            let cap = CAPS[grade];
-                            let cut = PASS_CUTOFF[grade];
-                            let s_map = {};
-                            let total_score = 0;
-
+                            let cap = CAPS[grade]; let cut = PASS_CUTOFF[grade]; let s_map = {}; let total_score = 0;
                             AREAS.forEach(area => {
                                 const rawScore = Number(row[area] || 0);
-                                s_map[area] = area === 'T'
-                                    ? Math.min(rawScore + prevT, cap[area])
-                                    : Math.min(rawScore, cap[area]);
+                                s_map[area] = area === 'T' ? Math.min(rawScore + prevT, cap[area]) : Math.min(rawScore, cap[area]);
                                 total_score += s_map[area];
                             });
 
                             let p_map = {};
-                            AREAS.forEach(area => {
-                                p_map[area] = s_map[area] >= cut[area];
-                            });
+                            AREAS.forEach(area => { p_map[area] = s_map[area] >= cut[area]; });
 
                             let earned = Object.values(p_map).filter(Boolean).length;
-                            let title = earned >= 6
-                                ? (grade === 1 ? "🏆 CITY 스타터" : (grade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로"))
-                                : "진행중";
+                            let title = earned >= 6 ? (grade === 1 ? "🏆 CITY 스타터" : (grade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중";
 
                             // 7. students payload
                             let payload = {
-                                name: studentName,
-                                current_grade: grade,
-                                current_studentId: studentId,
-                                department: dept,
-                                role: "student",
-                                [`year_${grade}`]: {
-                                    scores: s_map,
-                                    pass: p_map,
-                                    earned_badges: earned,
-                                    total_score: total_score,
-                                    title: title,
-                                    delivery_status: currentDelivery
-                                }
+                                name: studentName, current_grade: grade, current_studentId: studentId, department: dept, role: "student",
+                                [`year_${grade}`]: { scores: s_map, pass: p_map, earned_badges: earned, total_score: total_score, title: title, delivery_status: currentDelivery }
                             };
 
-                            if (!existingData && birthdate) {
-                                payload.birthdate = birthdate;
-                                payload.password = birthdate;
-                            } else if (birthdate && existingData && !existingData.birthdate) {
-                                payload.birthdate = birthdate;
-                            }
+                            if (!existingData && birthdate) { payload.birthdate = birthdate; payload.password = birthdate;
+                            } else if (birthdate && existingData && !existingData.birthdate) { payload.birthdate = birthdate; }
 
-                            // 8. Firestore 배치 쓰기 (v8 호환 방식)
+                            // 8. Firestore 배치 쓰기
                             const batch = db_compat.batch();
-
                             batch.set(db_compat.collection("students").doc(targetDocId), payload, { merge: true });
+                            batch.set(db_compat.collection("directory").doc(studentId), { stableId: targetDocId, authEmail: authEmail || null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
 
-                            // directory 갱신
-                            batch.set(db_compat.collection("directory").doc(studentId), {
-                                stableId: targetDocId,
-                                authEmail: authEmail || null,
-                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                            }, { merge: true });
-
-                            // 진급 시 이전 학번 매핑 삭제
                             if (prevStudentId && prevStudentId !== studentId) {
                                 batch.delete(db_compat.collection("directory").doc(prevStudentId));
                             }
 
                             await batch.commit();
-
                             successCount++;
                             statusEl.textContent = `⏳ 진행 중... 성공 ${successCount}명 / 실패 ${failCount}명`;
 
                         } catch (err) {
-                            console.error(`${studentName} 업로드 실패:`, err);
                             failCount++;
-
                             if (createdUser) {
-                                try {
-                                    await createdUser.delete();
-                                } catch (rollbackErr) {
-                                    console.error("롤백 실패:", rollbackErr);
-                                }
+                                try { await createdUser.delete(); } catch (rollbackErr) {}
                             }
-
-                            await safeLog(`학생 업로드 실패: ${studentName} / ${studentId} / ${err.message}`);
                         } finally {
-                            try {
-                                await secondaryApp.auth().signOut();
-                            } catch (_) {}
+                            try { await secondaryApp.auth().signOut(); } catch (_) {}
                         }
                     }
 
@@ -801,33 +693,27 @@
                     if (typeof window.loadDashboard === "function") window.loadDashboard();
 
                 } catch (e) {
-                    console.error("엑셀 업로드 전체 실패:", e);
                     statusEl.textContent = "❌ 업로드 중 오류 발생";
                     alert("업로드 중 오류가 발생했습니다.\n" + e.message);
-                    await safeLog(`학생 엑셀 업로드 치명적 실패: ${e.message}`);
                 } finally {
                     fileInput.value = "";
                 }
             };
-
             reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
         // =========================================
-        // 5) ★ 최고관리자 비밀번호 직접 변경 로직
+        // 5) ★ 최고관리자 비밀번호 직접 변경 로직 (절대 지워지지 않게 전역 고정!)
         // =========================================
         window.changeAdminPassword = async function() {
             const newPassword = prompt("새로운 최고관리자 비밀번호를 입력하세요.\n(보안을 위해 최소 6자리 이상 입력)");
-            
             if (!newPassword) return; 
-            
             if (newPassword.trim().length < 6) {
                 alert("🚨 비밀번호는 최소 6자리 이상이어야 합니다. 다시 시도해주세요.");
                 return;
             }
 
             const user = firebase.auth().currentUser;
-
             if (!user) {
                 alert("🚨 로그인 상태가 아닙니다. 다시 로그인해주세요.");
                 return;
@@ -836,14 +722,8 @@
             try {
                 await user.updatePassword(newPassword.trim());
                 alert("✅ 관리자 비밀번호가 성공적으로 변경되었습니다!\n다음 접속부터는 새 비밀번호를 사용해주세요.");
-                
-                if (typeof safeLog === "function") {
-                    await safeLog("최고관리자 비밀번호 변경 완료");
-                }
-                
+                if (typeof safeLog === "function") await safeLog("최고관리자 비밀번호 변경 완료");
             } catch (error) {
-                console.error("비밀번호 변경 에러:", error);
-                
                 if (error.code === 'auth/requires-recent-login') {
                     alert("🚨 [보안 정책]\n안전한 비밀번호 변경을 위해 현재 세션을 만료시킵니다.\n\n[로그아웃]하신 후 다시 로그인해서 즉시 비밀번호를 변경해주세요!");
                 } else {
@@ -864,17 +744,6 @@
         let myDeptChart = null; let myBadgeChart = null; let myVisitorChart = null;
         let isSystemLocked = false;
 
-        async function logAction(actionDetail) {
-            try {
-                const sessionName = localStorage.getItem('loginName') || sessionStorage.getItem('loginName') || "최고관리자";
-                const user = `${sessionName} (Admin)`; 
-                const now = new Date();
-                const kstTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-                const timeString = kstTime.toISOString().replace('T', ' ').substring(0, 19);
-                await window.addDoc(window.collection(window.db, "system_logs"), { timestamp: kstTime.getTime(), timeString: timeString, user: user, action: actionDetail });
-            } catch(e) {}
-        }
-
         window.loadLockStatus = async function() {
             try {
                 const docSnap = await window.getDoc(window.doc(window.db, "settings", "config"));
@@ -882,7 +751,7 @@
                     isSystemLocked = docSnap.data().isLocked || false;
                     updateLockButtonUI();
                 }
-            } catch(e) { console.log("마감 상태 로드 대기 중..."); }
+            } catch(e) {}
         }
 
         function updateLockButtonUI() {
@@ -898,7 +767,7 @@
             try {
                 await window.setDoc(window.doc(window.db, "settings", "config"), { isLocked: isSystemLocked }, { merge: true });
                 updateLockButtonUI();
-                logAction(`시스템 전체 평가 입력 ${isSystemLocked ? '마감' : '개방'} 처리`);
+                safeLog(`시스템 전체 평가 입력 ${isSystemLocked ? '마감' : '개방'} 처리`);
                 alert(`성공적으로 ${isSystemLocked ? '마감' : '개방'} 되었습니다.`);
             } catch(e) { alert("DB 에러: " + e.message); }
         }
@@ -1000,7 +869,7 @@
                 }
 
                 alert("✅ 최고관리자 승인 완료 및 점수가 업데이트되었습니다.");
-                logAction(`관리자 권한으로 [${studentId}] 학생 ${area}영역 결재 승인`);
+                safeLog(`관리자 권한으로 [${studentId}] 학생 ${area}영역 결재 승인`);
                 window.openPendingModal(); 
                 window.loadDashboard();    
             } catch(e) {
@@ -1017,7 +886,7 @@
                     fileData: null 
                 });
                 alert("❌ 반려 처리되었으며, 용량 확보를 위해 증빙 파일이 삭제되었습니다.");
-                logAction(`관리자 권한으로 결재 반려 (자료 파기)`);
+                safeLog(`관리자 권한으로 결재 반려 (자료 파기)`);
                 window.openPendingModal(); 
                 window.loadDashboard();
             } catch(e) {
@@ -1057,7 +926,7 @@
                 
                 await window.setDoc(window.doc(window.db, "students", sId), payload);
                 
-                logAction(`개별 학생 [${sName}(${sId})] 추가`);
+                safeLog(`개별 학생 [${sName}(${sId})] 추가`);
                 alert(`✅ [${sName}] 학생이 성공적으로 추가되었습니다.`);
                 
                 document.getElementById("newSName").value = "";
@@ -1088,10 +957,10 @@
                 <style>@page { size: A4 landscape; margin: 10mm; } body { font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 20px; background: white; } .title-wrap { margin-bottom: 30px; } h1 { color: #2c3e50; font-size: 32px; border-bottom: 4px solid #3498db; padding-bottom: 10px; margin-bottom: 10px; display: inline-block; font-weight: 900;} .date-text { color: #7f8c8d; font-size: 16px; font-weight: bold; } .chart-container { width: 100%; max-width: 1050px; margin: 0 auto; height: 500px; } .footer { margin-top: 50px; font-size: 16px; color: #7f8c8d; font-weight: bold; letter-spacing: 2px;}</style></head>
                 <body><div class="title-wrap"><h1>👑 ${filterGrade}학년 ${filterClass}반 스마트시티 배지 획득 현황</h1><div class="date-text">[ ${todayStr} 기준 ]</div></div><div class="chart-container"><canvas id="classChart"></canvas></div><div class="footer">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
                 <script>const badgeLabelPlugin = { id: 'badgeLabels', afterDatasetsDraw(chart, args, pluginOptions) { const { ctx } = chart; chart.data.datasets.forEach((dataset, i) => { const meta = chart.getDatasetMeta(i); meta.data.forEach((bar, index) => { const data = dataset.data[index]; ctx.fillStyle = '#c0392b'; ctx.font = 'bold 18px "Malgun Gothic"'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(data + '개', bar.x, bar.y - 8); }); }); } }; const ctx = document.getElementById('classChart').getContext('2d'); new Chart(ctx, { type: 'bar', data: { labels: [${labels.map(l => `'${l}'`).join(',')}], datasets: [{ label: '획득 배지', data: [${dataValues.join(',')}], backgroundColor: 'rgba(52, 152, 219, 0.85)', borderColor: 'rgba(41, 128, 185, 1)', borderWidth: 2, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1000 }, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 9, ticks: { stepSize: 1, font: { size: 16, weight: 'bold' }, color: '#7f8c8d' }, grid: { color: '#ecf0f1' } }, x: { ticks: { font: { size: 15, weight: 'bold' }, color: '#2c3e50' }, grid: { display: false } } } }, plugins: [badgeLabelPlugin] }); setTimeout(() => { window.print(); }, 1500);<\/script></body></html>
-            `); printWindow.document.close(); logAction(`[${filterGrade}학년 ${filterClass}반] 막대그래프 출력`);
+            `); printWindow.document.close(); safeLog(`[${filterGrade}학년 ${filterClass}반] 막대그래프 출력`);
         };
         
-        window.downloadExcelReport = function(tableId, fileName) { const table = document.getElementById(tableId); const wb = XLSX.utils.table_to_book(table, {sheet: "보고서"}); XLSX.writeFile(wb, `${fileName}.xlsx`); logAction(`엑셀 다운로드 (${fileName})`); };
+        window.downloadExcelReport = function(tableId, fileName) { const table = document.getElementById(tableId); const wb = XLSX.utils.table_to_book(table, {sheet: "보고서"}); XLSX.writeFile(wb, `${fileName}.xlsx`); safeLog(`엑셀 다운로드 (${fileName})`); };
 
         window.loadDashboard = async function() {
             try {
@@ -1152,7 +1021,7 @@
                     try { const snap = await window.getDoc(window.doc(window.db, "system_stats", dStr)); visitors.push(snap.exists() ? snap.data().visitors : 0); } catch(e) { visitors.push(0); }
                 }
                 const ctxVis = document.getElementById('visitorChart').getContext('2d'); if(myVisitorChart) myVisitorChart.destroy(); myVisitorChart = new Chart(ctxVis, { type: 'line', data: { labels: dates, datasets: [{ label: '방문자', data: visitors, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)', fill: true, tension: 0.3 }] }, options: { maintainAspectRatio: false } });
-            } catch(e) { console.log("DB 연결 대기중..."); }
+            } catch(e) {}
         };
 
         window.updateTableHeaders = function() {
@@ -1266,7 +1135,7 @@
                 for(let cb of selected) {
                     await window.deleteDoc(window.doc(window.db, "students", cb.value));
                 }
-                logAction(`${selected.length}명의 학생 일괄 영구 삭제`);
+                safeLog(`${selected.length}명의 학생 일괄 영구 삭제`);
                 alert(`✅ 총 ${selected.length}명의 학생 데이터가 삭제되었습니다.`);
                 window.loadData();
                 window.loadDashboard();
@@ -1294,7 +1163,7 @@
                         failCount++;
                     }
                 }
-                logAction(`${successCount}명의 학생 비밀번호 일괄 초기화`);
+                safeLog(`${successCount}명의 학생 비밀번호 일괄 초기화`);
                 alert(`✅ ${successCount}명 초기화 성공\n❌ ${failCount}명 실패 (생년월일 정보 없음)`);
                 const selectAllCb = document.getElementById('selectAllCheckbox');
                 if(selectAllCb) selectAllCb.checked = false;
@@ -1384,7 +1253,7 @@
                     roleDetail: tRoleDetail,
                     assignment: tAssignment
                 });
-                logAction(`[${tName}] 교사 정보 및 권한 수정`);
+                safeLog(`[${tName}] 교사 정보 및 권한 수정`);
                 alert("교사 정보가 성공적으로 수정되었습니다!");
                 closeEditTeacherModal();
                 window.loadTeachers();
@@ -1412,7 +1281,7 @@
                     if(!tName || !tId || !tPw || tId === "undefined") continue; 
                     await window.setDoc(window.doc(window.db, "teachers", tId), { name: tName, userId: tId, password: tPw, role: "teacher", roleDetail: tRoleDetail, assignment: tAssignment, createdAt: dateString }); count++; 
                 }
-                logAction(`교사 계정 일괄 등록 (${count}명)`); alert(`✅ 총 ${count}명 등록!`); fileInput.value = ""; window.loadTeachers();
+                safeLog(`교사 계정 일괄 등록 (${count}명)`); alert(`✅ 총 ${count}명 등록!`); fileInput.value = ""; window.loadTeachers();
             }; reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
@@ -1425,27 +1294,27 @@
                 const dateString = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10); 
                 await window.setDoc(window.doc(window.db, "teachers", tId), { name: tName, userId: tId, password: tPw, role: "teacher", roleDetail: tRoleDetail, assignment: tAssignment, createdAt: dateString }); 
                 document.getElementById("tName").value = ""; document.getElementById("tId").value = ""; document.getElementById("tPw").value = ""; document.getElementById("tAssignment").value = "";
-                alert("등록 완료!"); logAction(`신규 교사 [${tName}] 등록`); window.loadTeachers(); 
+                alert("등록 완료!"); safeLog(`신규 교사 [${tName}] 등록`); window.loadTeachers(); 
             } catch(e) { alert("생성 실패"); }
         };
 
-        window.deleteTeacher = async function(docId, name) { if(!confirm(`[${name}] 삭제?`)) return; await window.deleteDoc(window.doc(window.db, "teachers", docId)); logAction(`교사 삭제 [${name}]`); window.loadTeachers(); };
+        window.deleteTeacher = async function(docId, name) { if(!confirm(`[${name}] 삭제?`)) return; await window.deleteDoc(window.doc(window.db, "teachers", docId)); safeLog(`교사 삭제 [${name}]`); window.loadTeachers(); };
 
         window.downloadTemplate = function() { const ws = XLSX.utils.json_to_sheet([{ "학년": "", "학과": "", "학번": "", "이름": "", "생년월일(6자리)": "", "S": "", "M": "", "A": "", "R": "", "T": "", "C": "", "I": "", "Tr": "", "Y": "" }]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "입력양식"); XLSX.writeFile(wb, "스마트시티_학생양식.xlsx"); };
         
         window.closeEditModal = function() { document.getElementById("editModal").style.display = "none"; };
         
-        window.saveEdit = async function() { const docId = document.getElementById("editDocId").value; const newName = document.getElementById("edit-Name").value; const newId = document.getElementById("edit-StudentId").value; const newDept = document.getElementById("edit-Dept").value; const newGrade = Number(newId.charAt(0)); let cap = CAPS[newGrade], cut = PASS_CUTOFF[newGrade], s_map = {}, total_score = 0; AREAS.forEach(a => { let inputVal = Number(document.getElementById(`edit-${a}`).value || 0); s_map[a] = Math.min(inputVal, cap[a]); total_score += s_map[a]; }); let p_map = {}; AREAS.forEach(a => p_map[a] = s_map[a] >= cut[a]); let earned = Object.values(p_map).filter(Boolean).length; let title = earned >= 6 ? (newGrade === 1 ? "🏆 CITY 스타터" : (newGrade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중"; let updateData = { name: newName, current_studentId: newId, department: newDept, current_grade: newGrade }; updateData[`year_${newGrade}.scores`] = s_map; updateData[`year_${newGrade}.pass`] = p_map; updateData[`year_${newGrade}.earned_badges`] = earned; updateData[`year_${newGrade}.total_score`] = total_score; updateData[`year_${newGrade}.title`] = title; await window.updateDoc(window.doc(window.db, "students", docId), updateData); logAction(`[${newName}] 학생 정보 수정`); window.closeEditModal(); alert(`수정 완료!`); window.loadData(); window.loadDashboard(); };
+        window.saveEdit = async function() { const docId = document.getElementById("editDocId").value; const newName = document.getElementById("edit-Name").value; const newId = document.getElementById("edit-StudentId").value; const newDept = document.getElementById("edit-Dept").value; const newGrade = Number(newId.charAt(0)); let cap = CAPS[newGrade], cut = PASS_CUTOFF[newGrade], s_map = {}, total_score = 0; AREAS.forEach(a => { let inputVal = Number(document.getElementById(`edit-${a}`).value || 0); s_map[a] = Math.min(inputVal, cap[a]); total_score += s_map[a]; }); let p_map = {}; AREAS.forEach(a => p_map[a] = s_map[a] >= cut[a]); let earned = Object.values(p_map).filter(Boolean).length; let title = earned >= 6 ? (newGrade === 1 ? "🏆 CITY 스타터" : (newGrade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중"; let updateData = { name: newName, current_studentId: newId, department: newDept, current_grade: newGrade }; updateData[`year_${newGrade}.scores`] = s_map; updateData[`year_${newGrade}.pass`] = p_map; updateData[`year_${newGrade}.earned_badges`] = earned; updateData[`year_${newGrade}.total_score`] = total_score; updateData[`year_${newGrade}.title`] = title; await window.updateDoc(window.doc(window.db, "students", docId), updateData); safeLog(`[${newName}] 학생 정보 수정`); window.closeEditModal(); alert(`수정 완료!`); window.loadData(); window.loadDashboard(); };
         
         window.openPhotoView = function(photoUrl, name, studentId, dept) { document.getElementById("photoViewImg").src = photoUrl; document.getElementById("photoViewName").innerText = name; document.getElementById("photoViewInfo").innerText = `${dept} | 학번: ${studentId}`; document.getElementById("photoViewModal").style.display = "flex"; }
         window.closePhotoView = function() { document.getElementById("photoViewModal").style.display = "none"; }
         
-        window.toggleDelivery = async function(id, grade, area, currentStatus) { if(!confirm(`상태를 변경할까요?`)) return; await window.updateDoc(window.doc(window.db, "students", id), { [`year_${grade}.delivery_status.${area}`]: !currentStatus }); logAction(`배지 지급 상태 변경`); window.loadData(); window.loadDashboard(); };
+        window.toggleDelivery = async function(id, grade, area, currentStatus) { if(!confirm(`상태를 변경할까요?`)) return; await window.updateDoc(window.doc(window.db, "students", id), { [`year_${grade}.delivery_status.${area}`]: !currentStatus }); safeLog(`배지 지급 상태 변경`); window.loadData(); window.loadDashboard(); };
         
         document.getElementById("uploadPhotosBtn").addEventListener("click", async () => { const fileInput = document.getElementById("photoFilesInput"); const files = fileInput.files; const progressDiv = document.getElementById("photoUploadProgress"); if (files.length === 0) return alert("사진 선택!"); if (!confirm(`업로드할까요?`)) return; progressDiv.style.display = "block"; progressDiv.innerText = "⏳ 사진 처리 중..."; let successCount = 0, failCount = 0; for (let i = 0; i < files.length; i++) { let file = files[i]; let studentId = file.name.split('.')[0]; const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId))); if (!qSnap.empty) { const targetDocId = qSnap.docs[0].id; const reader = new FileReader(); await new Promise((resolve) => { reader.onload = async function(e) { await window.updateDoc(window.doc(window.db, "students", targetDocId), { photoUrl: e.target.result }); successCount++; resolve(); }; reader.readAsDataURL(file); }); } else { failCount++; } } progressDiv.innerText = `✅ 완료! (성공: ${successCount}명)`; fileInput.value = ""; window.loadData(); });
         
         window.loadBadgeData = async function() { const tbody = document.getElementById("badgeTableBody"); const filterGrade = document.getElementById("badgeFilterGrade").value; const filterDept = document.getElementById("badgeFilterDept").value; tbody.innerHTML = ""; try { const querySnapshot = await window.getDocs(window.collection(window.db, "students")); querySnapshot.forEach(doc => { let data = doc.data(); if (data.current_grade == filterGrade && data[`year_${filterGrade}`]) { if (filterDept !== "ALL" && (data.department || "미지정") !== filterDept) return; let pass = data[`year_${filterGrade}`].pass || {}; let delivery = data[`year_${filterGrade}`].delivery_status || {}; let newBadges = AREAS.filter(a => pass[a] === true && delivery[a] !== true); if (newBadges.length > 0) { let badgeHtml = newBadges.map(a => `<span style="background:#e74c3c; color:white; padding:3px 6px; border-radius:4px; margin:2px; display:inline-block;">[${a}] ${AREA_NAMES[a]}</span>`).join(""); tbody.innerHTML += `<tr><td style="white-space:nowrap;">${data.department||"-"}</td><td>${data.current_studentId}</td><td><strong>${data.name}</strong></td><td>${badgeHtml}</td><td><button class="btn btn-blue" onclick="deliverSpecificBadges('${doc.id}', ${filterGrade}, '${newBadges.join(",")}')">지급 완료</button></td></tr>`; } } }); if(tbody.innerHTML === "") tbody.innerHTML = "<tr><td colspan='5'>지급 대상자 없음</td></tr>"; } catch(e) { tbody.innerHTML = "<tr><td colspan='5'>API 연결 필요</td></tr>"; } };
-        window.deliverSpecificBadges = async function(id, grade, areas) { if(!confirm("지급 완료 처리할까요?")) return; let updateData = {}; areas.split(",").forEach(a => updateData[`year_${grade}.delivery_status.${a}`] = true); await window.updateDoc(window.doc(window.db, "students", id), updateData); logAction(`배지 일괄 지급 처리`); window.loadBadgeData(); window.loadDashboard(); };
+        window.deliverSpecificBadges = async function(id, grade, areas) { if(!confirm("지급 완료 처리할까요?")) return; let updateData = {}; areas.split(",").forEach(a => updateData[`year_${grade}.delivery_status.${a}`] = true); await window.updateDoc(window.doc(window.db, "students", id), updateData); safeLog(`배지 일괄 지급 처리`); window.loadBadgeData(); window.loadDashboard(); };
 
         window.loadLogs = async function() {
             const tbody = document.getElementById("logTableBody"); tbody.innerHTML = "<tr><td colspan='3'>불러오는 중...</td></tr>";
