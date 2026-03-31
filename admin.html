@@ -487,9 +487,12 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        // ★ 추가: 화면 그리기 엔진에도 인증(Auth) 신분증을 달아줍니다!
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, increment, query, where, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const app = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
+        const auth = getAuth(app); // ★ 신분증 목에 걸기!
         const db = getFirestore(app);
         
         window.db = db; 
