@@ -176,6 +176,7 @@
     <div class="header">
         <h1>👑 스마트시티 역량 인증제 평가 시스템<br><span style="font-size: 14px; color: #f1c40f;">(통합 관리자)</span></h1>
         <div class="header-controls">
+            <button class="btn btn-orange" style="padding: 6px 12px; border-radius: 20px; font-size: 11px;" onclick="changeAdminPassword()">🔐 비번 변경</button>
             <button class="btn btn-dark" style="padding: 6px 12px; border-radius: 20px; font-size: 11px;" onclick="sessionStorage.clear(); location.href='index.html';">🚪 로그아웃</button>
             <button id="globalLockBtn" class="btn-lock lock-inactive" onclick="toggleGlobalLock()">🔓 시스템 개방 중 (마감하기)</button>
             <div class="visitor-count">👀 오늘 방문자: <span id="visitorCount">0</span>명</div>
@@ -495,14 +496,15 @@
 
     <script>
         // 🚨 보안용 보조 앱 초기화 (위와 동일한 API 키를 넣어주세요) 🚨
-        const firebaseConfigCompat = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+        const firebaseConfig = {
+  apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
+  authDomain: "induk-smartcity.firebaseapp.com",
+  projectId: "induk-smartcity",
+  storageBucket: "induk-smartcity.firebasestorage.app",
+  messagingSenderId: "836222545739",
+  appId: "1:836222545739:web:d370e05c68300ce6e202ce",
+  measurementId: "G-3SL84TXVHD"
+};
 
         firebase.initializeApp(firebaseConfigCompat);
         const secondaryApp = firebase.initializeApp(firebaseConfigCompat, "ShadowApp");
@@ -559,7 +561,7 @@
         }
 
         // =========================
-        // 4) 업로드 보안 최종본 (골격 100% 유지 + 정밀 롤백)
+        // 4) 업로드 보안 최종본 (골격 유지 + 정밀 롤백)
         // =========================
         document.getElementById("uploadExcelBtn").addEventListener("click", async () => {
             if (!(await verifyRealAdmin())) return;
@@ -655,7 +657,7 @@
                                 }
                             }
 
-                            // 3. 구형 데이터 fallback (students current_studentId 조회)
+                            // 3. 구형 데이터 fallback 
                             if (!targetDocId) {
                                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
                                 if (!qSnap.empty) {
@@ -701,7 +703,7 @@
                                 }
                             }
 
-                            // 6. 점수 계산 (기존 골격 유지)
+                            // 6. 점수 계산 
                             let cap = CAPS[grade];
                             let cut = PASS_CUTOFF[grade];
                             let s_map = {};
@@ -725,7 +727,7 @@
                                 ? (grade === 1 ? "🏆 CITY 스타터" : (grade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로"))
                                 : "진행중";
 
-                            // 7. students payload (기존 구조 유지)
+                            // 7. students payload
                             let payload = {
                                 name: studentName,
                                 current_grade: grade,
@@ -742,7 +744,6 @@
                                 }
                             };
 
-                            // 기존 골격 호환 위해 birthdate/password 유지
                             if (!existingData && birthdate) {
                                 payload.birthdate = birthdate;
                                 payload.password = birthdate;
@@ -755,7 +756,7 @@
 
                             batch.set(db_compat.collection("students").doc(targetDocId), payload, { merge: true });
 
-                            // directory도 같이 갱신
+                            // directory 갱신
                             batch.set(db_compat.collection("directory").doc(studentId), {
                                 stableId: targetDocId,
                                 authEmail: authEmail || null,
@@ -776,7 +777,6 @@
                             console.error(`${studentName} 업로드 실패:`, err);
                             failCount++;
 
-                            // 신규 Auth만 생성되고 DB 실패한 경우 롤백
                             if (createdUser) {
                                 try {
                                     await createdUser.delete();
@@ -812,6 +812,45 @@
 
             reader.readAsArrayBuffer(fileInput.files[0]);
         });
+
+        // =========================================
+        // 5) ★ 최고관리자 비밀번호 직접 변경 로직
+        // =========================================
+        window.changeAdminPassword = async function() {
+            const newPassword = prompt("새로운 최고관리자 비밀번호를 입력하세요.\n(보안을 위해 최소 6자리 이상 입력)");
+            
+            if (!newPassword) return; 
+            
+            if (newPassword.trim().length < 6) {
+                alert("🚨 비밀번호는 최소 6자리 이상이어야 합니다. 다시 시도해주세요.");
+                return;
+            }
+
+            const user = firebase.auth().currentUser;
+
+            if (!user) {
+                alert("🚨 로그인 상태가 아닙니다. 다시 로그인해주세요.");
+                return;
+            }
+
+            try {
+                await user.updatePassword(newPassword.trim());
+                alert("✅ 관리자 비밀번호가 성공적으로 변경되었습니다!\n다음 접속부터는 새 비밀번호를 사용해주세요.");
+                
+                if (typeof safeLog === "function") {
+                    await safeLog("최고관리자 비밀번호 변경 완료");
+                }
+                
+            } catch (error) {
+                console.error("비밀번호 변경 에러:", error);
+                
+                if (error.code === 'auth/requires-recent-login') {
+                    alert("🚨 [보안 정책]\n안전한 비밀번호 변경을 위해 현재 세션을 만료시킵니다.\n\n[로그아웃]하신 후 다시 로그인해서 즉시 비밀번호를 변경해주세요!");
+                } else {
+                    alert("❌ 변경 실패: " + error.message);
+                }
+            }
+        };
     </script>
 
     <script>
