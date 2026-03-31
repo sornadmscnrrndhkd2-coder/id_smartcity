@@ -496,15 +496,15 @@
 
     <script>
         // 🚨 보안용 보조 앱 초기화 (위와 동일한 API 키를 넣어주세요) 🚨
-        const firebaseConfig = {
-  apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
+        const firebaseConfigCompat = {
+            apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
   authDomain: "induk-smartcity.firebaseapp.com",
   projectId: "induk-smartcity",
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
   measurementId: "G-3SL84TXVHD"
-};
+        };
 
         firebase.initializeApp(firebaseConfigCompat);
         const secondaryApp = firebase.initializeApp(firebaseConfigCompat, "ShadowApp");
