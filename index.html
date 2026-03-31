@@ -161,10 +161,10 @@
     <link rel="apple-touch-icon" href="img/app_icon.png">
     <link rel="manifest" href="img/manifest.json">
     <link rel="icon" type="image/png" href="img/app_icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="스마트시티">
-<link rel="apple-touch-startup-image" href="img/splash.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="스마트시티">
+    <link rel="apple-touch-startup-image" href="img/splash.png">
 </head>
 <body>
 
@@ -179,17 +179,17 @@
 
             <div class="tab-container">
                 <button class="tab-btn active" id="tabStudent">🧑‍🎓 학생</button>
-                <button class="tab-btn" id="tabTeacher">👨‍🏫 교사</button>
+                <button class="tab-btn" id="tabTeacher">👨‍🏫 교사/관리자</button>
             </div>
 
             <div id="loginFormArea">
                 <div class="form-group">
                     <label id="lblId">학번 (5자리)</label>
-                    <input type="number" id="inputId" class="form-control" placeholder="예: 10101" pattern="\d*">
+                    <input type="text" id="inputId" class="form-control" placeholder="예: 10101">
                 </div>
                 <div class="form-group">
                     <label id="lblPw">비밀번호</label>
-                    <input type="password" id="inputPw" class="form-control" placeholder="초기비밀번호: 생년월일 6자리">
+                    <input type="password" id="inputPw" class="form-control" placeholder="학교에서 발급한 비밀번호">
                 </div>
                 
                 <label class="auto-login-wrap">
@@ -200,7 +200,7 @@
             </div>
             
             <div class="helper-text" id="helperText">
-                학생 초기 비밀번호는 <span>생년월일 6자리</span>입니다.<br>
+                학생 초기 비밀번호는 <span>학교에서 발급한 비밀번호</span>입니다.<br>
                 (비밀번호 분실 시 담임선생님께 문의하세요)
             </div>
             <footer style="text-align: center; margin-top: 17px; font-size: 12px; color: #333333; font-weight: 700; opacity: 1;">
@@ -211,9 +211,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // 🚨 아래 빈칸에 선생님의 firebaseConfig 객체를 다시 넣어주세요! 🚨
+        // 🚨 1. 여기에 선생님의 실제 firebaseConfig 객체를 꽉 채워 넣어주세요! 🚨
         const firebaseConfig = {
   apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
   authDomain: "induk-smartcity.firebaseapp.com",
@@ -223,8 +224,8 @@
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
   measurementId: "G-3SL84TXVHD"
 };
-
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app); 
         const db = getFirestore(app);
 
         let currentMode = 'student';
@@ -240,71 +241,119 @@
                 document.getElementById('lblId').innerText = "학번 (5자리)";
                 document.getElementById('inputId').placeholder = "예: 10101";
                 document.getElementById('inputId').type = "number";
-                document.getElementById('inputPw').placeholder = "초기비밀번호: 생년월일 6자리";
-                document.getElementById('helperText').innerHTML = "학생 초기 비밀번호는 <span>생년월일 6자리</span>입니다.<br>(비밀번호 분실 시 담임선생님께 문의하세요)";
+                document.getElementById('inputPw').placeholder = "학교에서 발급한 비밀번호";
+                document.getElementById('helperText').innerHTML = "학생 초기 비밀번호는 <span>학교에서 발급한 비밀번호</span>입니다.<br>(비밀번호 분실 시 담임선생님께 문의하세요)";
             } else {
                 document.getElementById('tabTeacher').classList.add('active');
                 document.getElementById('tabStudent').classList.remove('active');
-                document.getElementById('lblId').innerText = "교사 아이디";
-                document.getElementById('inputId').placeholder = "발급된 ID";
+                document.getElementById('lblId').innerText = "교사/관리자 아이디";
+                document.getElementById('inputId').placeholder = "발급된 계정 ID (예: admin)";
                 document.getElementById('inputId').type = "text";
                 document.getElementById('inputPw').placeholder = "비밀번호 입력";
-                document.getElementById('helperText').innerHTML = "시스템 관리 및 평가 권한을 가진 <span>교사 전용</span>입니다.<br>최초 접속 시 최고관리자 계정으로 로그인하세요.";
+                document.getElementById('helperText').innerHTML = "시스템 관리 및 평가 권한을 가진 <span>교사/관리자 전용</span>입니다.<br>최초 접속 시 최고관리자 계정으로 로그인하세요.";
             }
         }
 
         document.getElementById('tabStudent').addEventListener('click', () => switchTab('student'));
         document.getElementById('tabTeacher').addEventListener('click', () => switchTab('teacher'));
 
-        // ★ [보안 강화 완료] 파이어베이스 진짜 자물쇠 로직 장착 + 교사 세부 권한 로드
+        // ★ [현장 검문(X-ray 디버그) 로그인 엔진]
         document.getElementById('btnLogin').addEventListener('click', async function(e) {
             e.preventDefault();
             const idVal = document.getElementById('inputId').value.trim();
             const pwVal = document.getElementById('inputPw').value.trim();
+            const isAutoLogin = document.getElementById('chkAutoLogin').checked;
 
             if(!idVal || !pwVal) return alert("아이디와 비밀번호를 모두 입력해주세요.");
 
             const btn = document.getElementById('btnLogin');
-            btn.innerText = "확인 중...";
+            btn.innerText = "로그인 판독 중...";
             btn.disabled = true;
 
             try {
-                // 현재 탭에 따라 찾을 폴더 결정
-                const collectionName = (currentMode === 'student') ? "students" : "teachers";
-                
-                // 파이어베이스에서 해당 아이디 문서 찾아오기
-                const docRef = doc(db, collectionName, idVal);
-                const userDoc = await getDoc(docRef);
+                await setPersistence(auth, isAutoLogin ? browserLocalPersistence : browserSessionPersistence);
+                let authEmail = "";
+                let authUid = "";
 
-                // 아이디가 존재하고, 비밀번호가 일치하는지 확인
-                if (userDoc.exists() && userDoc.data().password === pwVal) {
-                    const userData = userDoc.data();
-                    
-                    // 합격! 신분증(Session) 발급
-                    sessionStorage.setItem('loginUserId', idVal);
-                    sessionStorage.setItem('loginName', userData.name);
-                    sessionStorage.setItem('userRole', userData.role || 'student');
-                    
-                    // ★ 추가된 부분: 교사인 경우 권한과 담당과목을 세션에 추가로 저장!
-                    if(collectionName === 'teachers') {
-                        sessionStorage.setItem('roleDetail', userData.roleDetail || '일반교사');
-                        sessionStorage.setItem('assignment', userData.assignment || '-');
+                if (currentMode === 'student') {
+                    // [학생 모드] 
+                    const dirRef = doc(db, "directory", idVal);
+                    const dirSnap = await getDoc(dirRef);
+
+                    if (!dirSnap.exists()) {
+                        alert("등록되지 않은 학번입니다. 담임선생님께 문의하세요.");
+                        btn.innerText = "로그인";
+                        btn.disabled = false;
+                        return;
                     }
+                    authEmail = dirSnap.data().authEmail; 
+                    
+                    const userCredential = await signInWithEmailAndPassword(auth, authEmail, pwVal);
+                    authUid = userCredential.user.uid;
 
-                    // 직급(role)에 맞춰 자동으로 방 안내
-                    if (userData.role === 'admin') {
-                        window.location.href = "admin.html";
-                    } else if (userData.role === 'teacher') {
-                        window.location.href = "teacher.html";
-                    } else {
+                    const studentRef = doc(db, "students", authUid);
+                    const studentSnap = await getDoc(studentRef);
+
+                    if (studentSnap.exists()) {
+                        const userData = studentSnap.data();
+                        sessionStorage.setItem('loginUserId', idVal);
+                        sessionStorage.setItem('loginName', userData.name);
+                        sessionStorage.setItem('userRole', 'student');
                         window.location.href = "student.html";
+                    } else {
+                        alert("학생 프로필 정보가 없습니다.");
                     }
+
                 } else {
-                    alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+                    // [교사/관리자 모드 집중 디버깅 구간]
+                    authEmail = idVal;
+                    
+                    // 🚨 2. 여기에 선생님이 실제로 구글에 가입한 최고관리자 이메일을 꼭 넣어주세요! 🚨
+                    if (authEmail === 'admin') {
+                        authEmail = 'admin@naver.com'; // <--- 선생님의 실제 관리자 이메일로 변경!
+                    } else if (!authEmail.includes('@')) {
+                        authEmail = authEmail + "@induk.hs.kr"; 
+                    }
+
+                    console.log("👉 [디버그 1] 로그인 시도 이메일:", authEmail);
+
+                    // Auth 로그인 시도
+                    const userCredential = await signInWithEmailAndPassword(auth, authEmail, pwVal);
+                    authUid = userCredential.user.uid;
+
+                    console.log("✅ [디버그 2] Auth 로그인 성공! 발급된 UID:", authUid);
+
+                    // 관리자 문서 읽기 시도
+                    try {
+                        const adminRef = doc(db, "admin_users", authUid);
+                        const adminSnap = await getDoc(adminRef);
+
+                        console.log("🔍 [디버그 3] admin_users 문서 존재 여부:", adminSnap.exists());
+
+                        if (adminSnap.exists()) {
+                            // 로그인 완벽 통과
+                            sessionStorage.setItem('loginUserId', idVal);
+                            sessionStorage.setItem('loginName', '최고관리자');
+                            sessionStorage.setItem('userRole', 'admin');
+                            window.location.href = "admin.html";
+                            return; 
+                        } else {
+                            // 문서가 없어서 실패한 경우, 원인을 화면에 명확하게 띄워줌
+                            alert(`🚨 [문서 불일치]\n로그인은 성공했으나 admin_users 폴더에 이 UID 문서가 없습니다!\n내 UID: ${authUid}\n(이 UID를 복사해서 Firestore 문서 ID로 만드세요)`);
+                        }
+                    } catch (permErr) {
+                        console.error("❌ [디버그 4] Firestore 읽기 에러(Rules 문제):", permErr);
+                        alert(`🚨 [권한 차단]\nFirestore Rules가 읽기를 막았습니다.\n메시지: ${permErr.message}`);
+                    }
                 }
+
             } catch(error) {
-                console.error("Login Error:", error);
-                alert("로그인 처리 중 오류가 발생했습니다. 인터넷 연결을 확인해주세요.");
+                console.error("🚨 Login Error Full:", error);
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    alert(`🚨 [아이디/비번 오류]\n입력하신 정보가 틀렸습니다.\n사유: ${error.message}`);
+                } else {
+                    alert(`🚨 [로그인 자체 실패]\n코드: ${error.code}\n사유: ${error.message}`);
+                }
             } finally {
                 btn.innerText = "로그인";
                 btn.disabled = false;
