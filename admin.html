@@ -459,40 +459,13 @@
         </div>
     </div>
 
-    <div id="pendingModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-        <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header"><span>📝 전교생 미승인 결재 대기 명단</span><button class="btn btn-dark" onclick="document.getElementById('pendingModal').style.display='none'">✕</button></div>
-            <div class="summary-box" style="margin-bottom: 15px;">전교생이 신청한 배지 인증 증빙자료를 통합 관리자가 확인하고 승인/반려할 수 있습니다.</div>
-            <div style="overflow-x: auto; border: 1px solid #eee; border-radius: 8px;">
-                <table class="data-table" style="min-width: 600px; margin: 0;">
-                    <thead style="background:#34495e; color:white;"><tr><th>신청일</th><th>학번/이름</th><th>신청 역량(점수)</th><th>증빙자료</th><th>상태관리</th></tr></thead>
-                    <tbody id="adminPendingList">
-                        <tr><td colspan="5" style="text-align: center; padding: 30px; color: #7f8c8d; font-weight: bold;">결재 데이터를 불러오는 중입니다...⏳</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="adminProofModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-        <div class="modal-content" style="max-width: 700px; text-align: center;">
-            <div class="modal-header">
-                <h3>📄 제출된 증빙 자료 (관리자 확인용)</h3>
-                <button class="close-btn" onclick="document.getElementById('adminProofModal').style.display='none'">✕</button>
-            </div>
-            <div id="adminProofContent" style="margin-top: 15px; max-height: 60vh; overflow-y: auto; background: #eee; border-radius: 8px; display: flex; justify-content: center; align-items: center; min-height: 200px;">
-                </div>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        // ★ 추가: 화면 그리기 엔진에도 인증(Auth) 신분증을 달아줍니다!
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, increment, query, where, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const app = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
-        const auth = getAuth(app); // ★ 신분증 목에 걸기!
+        const auth = getAuth(app);
         const db = getFirestore(app);
         
         window.db = db; 
@@ -506,6 +479,18 @@
         window.query = query;
         window.where = where;
         window.addDoc = addDoc;
+
+        // ★ 챗GPT가 짚어낸 핵심! 신분증 검사가 완벽히 끝난 뒤에만 화면을 그립니다.
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("✅ 모듈 엔진 인증 확인 완료:", user.uid);
+                // 인증이 확인된 후, 안전하게 초기 데이터 로딩 시작!
+                if (typeof window.loadLockStatus === "function") window.loadLockStatus();
+                if (typeof window.showSection === "function") window.showSection('dashboard');
+            } else {
+                console.warn("⚠️ 모듈 엔진에서 인증 사용자 없음. 대기 중...");
+            }
+        });
     </script>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -554,7 +539,7 @@
         }
 
         // =========================================
-        // ★ 엑셀 업로드: 생년월일 폐기! (비밀번호 강제 123456)
+        // ★ 엑셀 업로드 (비밀번호 강제 123456)
         // =========================================
         document.getElementById("uploadExcelBtn").addEventListener("click", async () => {
             if (!(await verifyRealAdmin())) return;
@@ -636,11 +621,15 @@
                             }
 
                             if (!targetDocId) {
+                                const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
+                                if (!qSnap.empty) { targetDocId = qSnap.docs[0].id; existingData = qSnap.docs[0].data(); }
+                            }
+
+                            if (!targetDocId) {
                                 const tempDocRef = db_compat.collection('temp').doc();
                                 const tempId = tempDocRef.id;
                                 authEmail = `stu_${tempId}@induk.hs.kr`;
 
-                                // ★ 생년월일 폐기: 초기 비밀번호를 무조건 123456으로 지정합니다!
                                 const initialPassword = "123456";
                                 const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, initialPassword);
 
@@ -673,7 +662,6 @@
                                 [`year_${grade}`]: { scores: s_map, pass: p_map, earned_badges: earned, total_score: total_score, title: title, delivery_status: currentDelivery }
                             };
 
-                            // 새 학생이면 DB에도 초기 비밀번호 명시
                             if (!existingData) { payload.password = "123456"; }
 
                             const batch = db_compat.batch();
@@ -914,7 +902,6 @@
             }
         };
 
-        // ★ 개별 추가 시 비번 강제 셋팅 (생년월일 무시)
         window.addSingleStudent = async function() {
             const sName = document.getElementById("newSName").value.trim();
             const sId = document.getElementById("newSId").value.trim();
@@ -1055,7 +1042,6 @@
             checkboxes.forEach(cb => cb.checked = source.checked);
         };
 
-        // ★ 학생 명단 조회 로직 (진짜 에러를 뿜게 X-ray 수정!)
         window.loadData = async function() {
             const tbody = document.getElementById("studentTableBody"); 
             const filterGrade = document.getElementById("filterGrade").value; 
@@ -1076,7 +1062,6 @@
                         dbDepartments.add(data.department);
                     }
 
-                    // 안전하게 데이터 불러오기 (구형 데이터에서 에러가 나지 않도록)
                     let yearData = data[`year_${filterGrade}`] || {};
 
                     if (data.current_grade == filterGrade && data[`year_${filterGrade}`]) {
@@ -1171,7 +1156,6 @@
             } catch(e) { alert("삭제 중 오류가 발생했습니다: " + e.message); }
         };
 
-        // ★ 선택 학생 비번 초기화 (관리자 지정 공통 비번으로!)
         window.resetSelectedPasswords = async function() {
             const selected = document.querySelectorAll('.student-checkbox:checked');
             if(selected.length === 0) return alert('비밀번호를 초기화할 학생을 체크박스로 선택해주세요.');
@@ -1359,7 +1343,8 @@
             } catch(e) { tbody.innerHTML = "<tr><td colspan='3'>API 키를 연결해주세요.</td></tr>"; }
         };
 
-        setTimeout(() => { window.loadLockStatus(); window.showSection('dashboard'); }, 500);
+        // 삭제: setTimeout(() => { window.loadLockStatus(); window.showSection('dashboard'); }, 500); 
+        // -> 이 로직은 위쪽 onAuthStateChanged 안으로 안전하게 이사했습니다!
     </script>
 </body>
 </html>
