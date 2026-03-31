@@ -83,7 +83,7 @@
         .btn-view { color: var(--primary-blue); font-weight: bold; cursor: pointer; background: none; border: none; font-size: 13px; font-family: 'Pretendard'; padding: 5px; }
 
         /* =========================================
-           [트랙 2] 비담임 전용 학년 전체 랭킹 대시보
+           [트랙 2] 비담임 전용 학년 전체 랭킹 대시보드
         ========================================= */
         .all-grades-dashboard { display: none; margin-top: 30px; animation: fadeIn 0.4s ease; }
         .ranking-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; } 
@@ -122,7 +122,7 @@
         .eval-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
         .eval-card { background: white; border-radius: 12px; padding: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.02); border: 1px solid #edf0f2; position: relative;}
         
-        .readonly-area { pointer-events: none; background-color: #fdfdfe; }
+        .readonly-area { pointer-events: none; background-color: #fdfdfe; opacity: 0.8; }
         .view-only-mode .check-label { pointer-events: none; }
 
         .eval-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;}
@@ -144,7 +144,8 @@
         .action-buttons { display: flex; gap: 15px; margin-top: 25px; }
         .btn-cancel { flex: 1; padding: 16px; background: #ecf0f1; color: var(--text-dark); border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.2s;}
         .btn-cancel:hover { background: #bdc3c7; }
-        .btn-save { flex: 2; padding: 16px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(59, 113, 202, 0.3); }
+        .btn-save { flex: 2; padding: 16px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 5px 15px rgba(59, 113, 202, 0.3); transition: 0.3s; }
+        .btn-save:disabled { background: #bdc3c7; box-shadow: none; cursor: not-allowed; }
 
         /* 모달창 공통 CSS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(3px); }
@@ -221,6 +222,9 @@
             </span>
             <span id="roleBadgeDisplay" style="background:var(--accent-orange); color:white; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; margin-right: 10px;">
                 <script>document.write(roleDetail);</script>
+            </span>
+            <span id="systemLockBadge" style="display:none; background:var(--danger-red); color:white; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; margin-right: 10px;">
+                🔒 시스템 마감됨
             </span>
             <button class="btn-logout" onclick="sessionStorage.clear(); location.href='index.html';">로그아웃</button>
         </div>
@@ -363,20 +367,23 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        // ★ 추가: 통계와 CCTV 기록을 위한 함수들 import
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, increment, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         
-        // 🚨 선생님의 실제 Firebase 설정값을 여기에 넣어주세요! 🚨
+        // 🚨 선생님의 실제 Firebase 설정값을 여기에 꽉 채워 넣어주세요! 🚨
         const firebaseConfig = {
-  apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
+            apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
   authDomain: "induk-smartcity.firebaseapp.com",
   projectId: "induk-smartcity",
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
   measurementId: "G-3SL84TXVHD"
-};
+        };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
         window.db = db; 
@@ -384,16 +391,77 @@
         window.getDocs = getDocs;
         window.doc = doc;
         window.getDoc = getDoc;
+        window.setDoc = setDoc;
         window.updateDoc = updateDoc;
+        window.increment = increment;
+        window.addDoc = addDoc;
         window.query = query;
         window.where = where;
+
+        // =========================================
+        // ★ [기능 1] 방문자 수 증가 로직 (하루 1번만!)
+        // =========================================
+        async function recordTeacherVisitor() {
+            const today = new Date();
+            const kstTime = new Date(today.getTime() + 9 * 60 * 60 * 1000);
+            const dateString = kstTime.toISOString().slice(0, 10);
+            const visitedKey = 'visited_smartcity_teacher_' + dateString;
+
+            if (!localStorage.getItem(visitedKey)) {
+                try {
+                    const totalRef = doc(db, "system", "visitorStats");
+                    await updateDoc(totalRef, { count: increment(1) }).catch(() => setDoc(totalRef, { count: 1 }));
+
+                    const dailyRef = doc(db, "system_stats", dateString);
+                    await updateDoc(dailyRef, { visitors: increment(1) }).catch(() => setDoc(dailyRef, { visitors: 1 }));
+
+                    localStorage.setItem(visitedKey, 'true');
+                    console.log("✅ 교사 방문자 카운트 1 증가 완료!");
+                } catch (e) {
+                    console.error("방문자 집계 에러:", e);
+                }
+            }
+        }
+
+        // =========================================
+        // ★ [기능 2] 시스템 마감 상태 확인 로직
+        // =========================================
+        async function checkSystemLock() {
+            try {
+                const docSnap = await getDoc(doc(db, "settings", "config"));
+                if (docSnap.exists() && docSnap.data().isLocked) {
+                    window.isSystemLocked = true;
+                    // 시스템 잠김 뱃지 표시
+                    document.getElementById('systemLockBadge').style.display = "inline-block";
+                    // 저장 버튼 무력화
+                    const saveBtn = document.getElementById("saveBtn");
+                    if (saveBtn) {
+                        saveBtn.disabled = true;
+                        saveBtn.innerText = "🔒 시스템 마감 (입력 불가)";
+                    }
+                } else {
+                    window.isSystemLocked = false;
+                }
+            } catch(e) {
+                console.log("마감 상태 로딩 대기 중...");
+            }
+        }
+
+        // 신분증이 확인되면 방문자 수를 올리고 마감 상태를 체크합니다.
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await checkSystemLock();
+                recordTeacherVisitor();
+            }
+        });
     </script>
 
     <script>
         let homeroomGrade = null;
         let homeroomClass = null;
         window.currentSearchDocId = null; 
-        window.currentPendingApps = []; // ★ 추가: 결재 대기 서류 보관용 배열
+        window.currentPendingApps = []; 
+        window.isSystemLocked = false; // 전역 마감 변수
 
         window.addEventListener('DOMContentLoaded', (event) => {
             const roleDetail = sessionStorage.getItem('roleDetail') || "일반교사";
@@ -419,8 +487,8 @@
                 tabNav.style.display = "flex";
                 manualTitle.innerText = "✍️ 학생 역량 수동 검색 및 입력";
                 window.switchTab('tab-approve');
-                window.loadApplications();      // ★ 결재 서류 불러오기 실행
-                window.loadHomeroomStudents();  // 우리 반 학생 불러오기 실행
+                window.loadApplications();      
+                window.loadHomeroomStudents();  
             } else if(roleDetail === '교과교사') {
                 btnTabApprove.style.display = "none";
                 manualTitle.innerText = "✍️ 학생 역량 수동 검색 및 입력";
@@ -434,7 +502,26 @@
             window.preloadAllGradesTop3();
         });
 
-        // ★ [새 기능] 결재함 연동: 우리 반 아이들의 대기 중인 신청서만 쏙 뽑아오기
+        // =========================================
+        // ★ [기능 3] CCTV(system_logs) 기록을 위한 공통 함수
+        // =========================================
+        window.logTeacherAction = async function(actionDetail) {
+            try {
+                const userName = sessionStorage.getItem('loginName') || "교사";
+                const userStr = `${userName} 선생님`; 
+                const now = new Date();
+                const kstTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+                const timeString = kstTime.toISOString().replace('T', ' ').substring(0, 19);
+                
+                await window.addDoc(window.collection(window.db, "system_logs"), { 
+                    timestamp: kstTime.getTime(), 
+                    timeString: timeString, 
+                    user: userStr, 
+                    action: actionDetail 
+                });
+            } catch(e) {}
+        };
+
         window.loadApplications = async function() {
             const listEl = document.getElementById('approvalListContainer');
             const pendingCountEl = document.getElementById('pendingCount');
@@ -445,7 +532,6 @@
             }
 
             try {
-                // "대기중"인 모든 서류를 가져와서 우리 반 것만 필터링
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중")));
                 let apps = [];
                 qSnap.forEach(doc => {
@@ -455,10 +541,10 @@
                     }
                 });
 
-                apps.sort((a, b) => a.timestamp - b.timestamp); // 먼저 신청한 사람이 위로 (오름차순)
+                apps.sort((a, b) => a.timestamp - b.timestamp); 
                 
-                window.currentPendingApps = apps; // 열람용 보관
-                pendingCountEl.innerText = apps.length; // 요약 배지 업데이트
+                window.currentPendingApps = apps; 
+                pendingCountEl.innerText = apps.length; 
 
                 if(apps.length === 0) {
                     listEl.innerHTML = "<div style='text-align:center; padding: 40px; color: var(--text-gray); font-weight: bold; background: white; border-radius: 16px; border: 1px solid #edf0f2;'>🎉 현재 결재 대기 중인 인증 요청이 없습니다.</div>";
@@ -496,7 +582,6 @@
             }
         };
 
-        // ★ [새 기능] 증빙자료 모달창 띄우기
         window.viewProof = function(appId) {
             const app = window.currentPendingApps.find(a => a.id === appId);
             if(!app || !app.fileData) return alert("증빙 자료가 존재하지 않거나 이미 삭제되었습니다.");
@@ -515,15 +600,14 @@
             document.body.style.overflow = 'hidden';
         };
 
-        // ★ [새 기능] 승인 처리 (DB에 점수 즉시 반영)
+        // ★ 승인 시 CCTV 로그 연동 + 마감 확인
         window.approveApp = async function(appId, studentId, area, score) {
+            if(window.isSystemLocked) return alert("🔒 시스템이 마감되어 결재를 처리할 수 없습니다.");
             if(!confirm(`[${studentId}] 학생의 ${area}영역 ${score}점 신청을 승인하시겠습니까?\n(승인 시 즉시 점수가 반영됩니다.)`)) return;
 
             try {
-                // 1. 신청서 상태 업데이트
                 await window.updateDoc(window.doc(window.db, "applications", appId), { status: "승인" });
 
-                // 2. 학생 DB에 점수 덮어쓰기 로직
                 const studentRef = window.doc(window.db, "students", studentId);
                 const studentSnap = await window.getDoc(studentRef);
                 
@@ -532,10 +616,9 @@
                     const grade = sData.current_grade;
                     let yData = sData[`year_${grade}`] || { scores: {}, pass: {} };
                     
-                    yData.scores[area] = score; // 점수 덮어쓰기
-                    yData.pass[area] = score >= PASS_CUTOFF[grade][area]; // 패스 여부 확인
+                    yData.scores[area] = score; 
+                    yData.pass[area] = score >= PASS_CUTOFF[grade][area]; 
                     
-                    // 총점 및 배지 재계산
                     let total = 0;
                     let badges = 0;
                     AREAS.forEach(a => {
@@ -554,38 +637,42 @@
                     yData.earned_badges = badges;
                     yData.title = title;
 
-                    // 학생 DB 최종 업데이트
                     await window.updateDoc(studentRef, { [`year_${grade}`]: yData });
                 }
 
                 alert("✅ 승인 완료 및 학생 점수가 업데이트되었습니다.");
-                window.loadApplications(); // 결재함 새로고침
-                window.loadHomeroomStudents(); // 우리 반 명단 새로고침
+                // ★ 승인 기록 CCTV에 남기기
+                await window.logTeacherAction(`[결재 승인] ${studentId} 학생 ${area}영역 ${score}점 부여`);
+                
+                window.loadApplications(); 
+                window.loadHomeroomStudents(); 
 
             } catch(e) {
                 alert("승인 처리 중 오류가 발생했습니다: " + e.message);
             }
         };
 
-        // ★ [새 기능] 반려 처리 및 증빙자료 자동 파기
+        // ★ 반려 시 CCTV 로그 연동 + 마감 확인
         window.rejectApp = async function(appId) {
+            if(window.isSystemLocked) return alert("🔒 시스템이 마감되어 결재를 처리할 수 없습니다.");
             if(!confirm("이 신청을 반려하시겠습니까?\n(반려 시 DB 서버 용량 확보를 위해 첨부된 증빙자료는 즉시 영구 삭제됩니다.)")) return;
 
             try {
-                // 상태를 반려로 바꾸고, 엄청나게 긴 사진 데이터(fileData)를 null로 날려버림!
                 await window.updateDoc(window.doc(window.db, "applications", appId), { 
                     status: "반려",
                     fileData: null 
                 });
                 
                 alert("❌ 반려 처리되었으며, 용량 확보를 위해 증빙 파일이 삭제되었습니다.");
-                window.loadApplications(); // 결재함 새로고침
+                // ★ 반려 기록 CCTV에 남기기
+                await window.logTeacherAction(`[결재 반려] 신청 번호(${appId}) 반려 및 자료 파기`);
+
+                window.loadApplications(); 
             } catch(e) {
                 alert("반려 처리 중 오류가 발생했습니다.");
             }
         };
 
-        // (이하 기존 loadHomeroomStudents, switchTab 등은 동일하게 유지)
         window.loadHomeroomStudents = async function() {
             const tbody = document.querySelector("#homeroomTable tbody");
             let sumScore = 0;
@@ -652,7 +739,6 @@
                             `;
                         });
 
-                        // ★ 요약 대시보드 업데이트
                         if(stuCount > 0) {
                             document.getElementById('classAvgScore').innerText = Math.round(sumScore / stuCount);
                             document.getElementById('classAvgBadge').innerText = Math.round((sumBadge / stuCount) * 100);
@@ -777,7 +863,20 @@
                 document.getElementById("student-detail-area").style.display = "block";
                 
                 const roleDetail = sessionStorage.getItem('roleDetail') || "일반교사";
-                document.getElementById("saveBtn").style.display = (roleDetail === "일반교사") ? "none" : "block";
+                // ★ 마감 시에는 일반교사뿐만 아니라 모두에게 '저장' 버튼을 숨기거나 비활성화함
+                const btnSave = document.getElementById("saveBtn");
+                if (roleDetail === "일반교사") {
+                    btnSave.style.display = "none";
+                } else {
+                    btnSave.style.display = "block";
+                    if (window.isSystemLocked) {
+                        btnSave.disabled = true;
+                        btnSave.innerText = "🔒 시스템 마감됨 (입력 불가)";
+                    } else {
+                        btnSave.disabled = false;
+                        btnSave.innerText = "💾 평가 데이터 저장하기";
+                    }
+                }
                 
                 renderEvalCards(grade, sid, yData); 
             } catch(e) {
@@ -790,7 +889,8 @@
             const currentItems = EVAL_ITEMS_BY_GRADE[grade];
 
             const roleDetail = sessionStorage.getItem('roleDetail') || "일반교사";
-            let isViewOnlyAll = (roleDetail === "일반교사"); 
+            // ★ 시스템이 마감되었거나 일반교사면 무조건 조회 전용 모드
+            let isViewOnlyAll = (roleDetail === "일반교사") || window.isSystemLocked; 
             container.className = `eval-section ${isViewOnlyAll ? "view-only-mode" : ""}`;
 
             const savedScores = yData.scores || {};
@@ -811,7 +911,7 @@
                 
                 if(isViewOnlyAll) { 
                     disabledClass = "readonly-area"; 
-                    readonlyBadge = `<span class="tag-readonly">🔒조회 전용</span>`;
+                    readonlyBadge = `<span class="tag-readonly">🔒${window.isSystemLocked ? '마감됨' : '조회 전용'}</span>`;
                 }
 
                 container.innerHTML += `
@@ -826,6 +926,9 @@
         }
 
         window.handleTeacherCheck = function(checkbox) {
+            // 시스템 마감 시 클릭 방지 방어코드
+            if(window.isSystemLocked) return;
+
             if (checkbox.checked && checkbox.dataset.group) {
                 document.querySelectorAll(`#evalSection input[data-area="${checkbox.dataset.area}"][data-group="${checkbox.dataset.group}"]`).forEach(other => {
                     if (other !== checkbox) { 
@@ -851,10 +954,14 @@
             document.getElementById('sTotalScore').innerHTML = `${grandTotal}<span>점</span>`;
         }
 
+        // ★ 평가 저장 시 CCTV 연동 및 마감 확인
         document.getElementById("saveBtn").addEventListener("click", async () => {
+            if(window.isSystemLocked) return alert("🔒 시스템이 마감되어 저장할 수 없습니다.");
             if(!window.currentSearchDocId) return;
+
             const docId = window.currentSearchDocId;
             const grade = window.lastSearchedGrade;
+            const sid = document.getElementById("searchInput").value.trim(); // CCTV 기록용 학번
             
             const btn = document.getElementById("saveBtn");
             btn.innerText = "⏳ 저장 중...";
@@ -888,6 +995,9 @@
 
                 await window.updateDoc(docRef, updateData);
                 alert("✅ 평가 데이터가 성공적으로 저장되었습니다!");
+                
+                // ★ 점수 수정 내역을 CCTV에 기록!
+                await window.logTeacherAction(`[평가 입력] 학번(${sid}) 학생 역량 점수 수정 완료`);
                 
             } catch(e) {
                 alert("저장 중 오류가 발생했습니다: " + e.message);
@@ -1008,7 +1118,6 @@
                 });
 
                 for(let g = 1; g <= 3; g++) {
-                    // TOP 3 계산
                     gradeStudents[g].sort((a, b) => b.score - a.score);
                     let top3 = gradeStudents[g].slice(0, 3);
                     const panels = document.querySelectorAll(`.grade-ranking-panel:nth-child(${g}) .rank-card`);
@@ -1021,7 +1130,6 @@
                         }
                     });
 
-                    // 달성률 요약카드 계산
                     let avgRate = gradeCount[g] > 0 ? Math.round((gradeSum[g] / gradeCount[g]) * 100) : 0;
                     document.getElementById(`grade${g}Avg`).innerHTML = `${avgRate}<span>%</span>`;
                 }
