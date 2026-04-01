@@ -106,6 +106,8 @@
 
         .helper-text { margin-top: 25px; font-size: 12px; color: #555; line-height: 1.5; }
         .helper-text span { color: #d35400; font-weight: 900; }
+        
+        .error-msg { color: #e74c3c; font-size: 13px; font-weight: bold; margin-top: 15px; display: none; background: #fdedec; padding: 10px; border-radius: 8px;}
 
         /* =======================================================
            4. ★ 모바일 최적화 (여백 최소화로 SMART 글자 구출 작전!) 📱
@@ -196,6 +198,8 @@
                     <input type="checkbox" id="chkAutoLogin"> 로그인 상태 유지 (공용 PC 금지)
                 </label>
 
+                <div id="errorMsg" class="error-msg">아이디 또는 비밀번호가 맞지 않습니다.</div>
+
                 <button class="btn-login" id="btnLogin">로그인</button>
             </div>
             
@@ -211,19 +215,20 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        // ★ 세션 유지를 위한 핵심 모듈 import 완료!
         import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // 🚨 1. 여기에 선생님의 실제 firebaseConfig 객체를 꽉 채워 넣어주세요! 🚨
         const firebaseConfig = {
-  apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
+            apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
   authDomain: "induk-smartcity.firebaseapp.com",
   projectId: "induk-smartcity",
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
   measurementId: "G-3SL84TXVHD"
-};
+        };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app); 
         const db = getFirestore(app);
@@ -234,13 +239,14 @@
             currentMode = mode;
             document.getElementById('inputId').value = "";
             document.getElementById('inputPw').value = "";
+            document.getElementById('errorMsg').style.display = 'none';
 
             if (mode === 'student') {
                 document.getElementById('tabStudent').classList.add('active');
                 document.getElementById('tabTeacher').classList.remove('active');
                 document.getElementById('lblId').innerText = "학번 (5자리)";
                 document.getElementById('inputId').placeholder = "예: 10101";
-                document.getElementById('inputId').type = "number";
+                document.getElementById('inputId').type = "text"; // 모바일 키보드 호환성을 위해 text 유지
                 document.getElementById('inputPw').placeholder = "학교에서 발급한 비밀번호";
                 document.getElementById('helperText').innerHTML = "학생 초기 비밀번호는 <span>학교에서 발급한 비밀번호</span>입니다.<br>(비밀번호 분실 시 담임선생님께 문의하세요)";
             } else {
@@ -257,103 +263,100 @@
         document.getElementById('tabStudent').addEventListener('click', () => switchTab('student'));
         document.getElementById('tabTeacher').addEventListener('click', () => switchTab('teacher'));
 
-        // ★ [현장 검문(X-ray 디버그) 로그인 엔진]
+        // ★ [완벽한 권한 판별 로그인 엔진]
         document.getElementById('btnLogin').addEventListener('click', async function(e) {
             e.preventDefault();
             const idVal = document.getElementById('inputId').value.trim();
             const pwVal = document.getElementById('inputPw').value.trim();
             const isAutoLogin = document.getElementById('chkAutoLogin').checked;
+            const errorMsg = document.getElementById('errorMsg');
+
+            errorMsg.style.display = 'none';
 
             if(!idVal || !pwVal) return alert("아이디와 비밀번호를 모두 입력해주세요.");
 
             const btn = document.getElementById('btnLogin');
-            btn.innerText = "로그인 판독 중...";
+            btn.innerText = "로그인 판독 중... ⏳";
             btn.disabled = true;
 
             try {
+                // ★ 세션 영구 유지 설정 적용! (admin 접속 시 튕김 완벽 방지)
                 await setPersistence(auth, isAutoLogin ? browserLocalPersistence : browserSessionPersistence);
-                let authEmail = "";
-                let authUid = "";
+                
+                let authEmail = idVal;
 
-                if (currentMode === 'student') {
-                    // [학생 모드] 
-                    const dirRef = doc(db, "directory", idVal);
-                    const dirSnap = await getDoc(dirRef);
-
-                    if (!dirSnap.exists()) {
-                        alert("등록되지 않은 학번입니다. 담임선생님께 문의하세요.");
-                        btn.innerText = "로그인";
-                        btn.disabled = false;
-                        return;
-                    }
-                    authEmail = dirSnap.data().authEmail; 
-                    
-                    const userCredential = await signInWithEmailAndPassword(auth, authEmail, pwVal);
-                    authUid = userCredential.user.uid;
-
-                    const studentRef = doc(db, "students", authUid);
-                    const studentSnap = await getDoc(studentRef);
-
-                    if (studentSnap.exists()) {
-                        const userData = studentSnap.data();
-                        sessionStorage.setItem('loginUserId', idVal);
-                        sessionStorage.setItem('loginName', userData.name);
-                        sessionStorage.setItem('userRole', 'student');
-                        window.location.href = "student.html";
+                // ★ 스마트 이메일 자동 변환 (admin 예외 처리 완벽 복구!)
+                if (!authEmail.includes('@')) {
+                    if (/^\d{5}$/.test(idVal)) {
+                        authEmail = `stu_${idVal}@induk.hs.kr`;
+                    } else if (idVal === 'admin') {
+                        // 🚨 2. 여기에 선생님이 실제로 구글에 가입한 최고관리자 이메일을 꼭 넣어주세요! 🚨
+                        authEmail = 'admin@naver.com'; 
                     } else {
-                        alert("학생 프로필 정보가 없습니다.");
-                    }
-
-                } else {
-                    // [교사/관리자 모드 집중 디버깅 구간]
-                    authEmail = idVal;
-                    
-                    // 🚨 2. 여기에 선생님이 실제로 구글에 가입한 최고관리자 이메일을 꼭 넣어주세요! 🚨
-                    if (authEmail === 'admin') {
-                        authEmail = 'admin@naver.com'; // <--- 선생님의 실제 관리자 이메일로 변경!
-                    } else if (!authEmail.includes('@')) {
-                        authEmail = authEmail + "@induk.hs.kr"; 
-                    }
-
-                    console.log("👉 [디버그 1] 로그인 시도 이메일:", authEmail);
-
-                    // Auth 로그인 시도
-                    const userCredential = await signInWithEmailAndPassword(auth, authEmail, pwVal);
-                    authUid = userCredential.user.uid;
-
-                    console.log("✅ [디버그 2] Auth 로그인 성공! 발급된 UID:", authUid);
-
-                    // 관리자 문서 읽기 시도
-                    try {
-                        const adminRef = doc(db, "admin_users", authUid);
-                        const adminSnap = await getDoc(adminRef);
-
-                        console.log("🔍 [디버그 3] admin_users 문서 존재 여부:", adminSnap.exists());
-
-                        if (adminSnap.exists()) {
-                            // 로그인 완벽 통과
-                            sessionStorage.setItem('loginUserId', idVal);
-                            sessionStorage.setItem('loginName', '최고관리자');
-                            sessionStorage.setItem('userRole', 'admin');
-                            window.location.href = "admin.html";
-                            return; 
-                        } else {
-                            // 문서가 없어서 실패한 경우, 원인을 화면에 명확하게 띄워줌
-                            alert(`🚨 [문서 불일치]\n로그인은 성공했으나 admin_users 폴더에 이 UID 문서가 없습니다!\n내 UID: ${authUid}\n(이 UID를 복사해서 Firestore 문서 ID로 만드세요)`);
-                        }
-                    } catch (permErr) {
-                        console.error("❌ [디버그 4] Firestore 읽기 에러(Rules 문제):", permErr);
-                        alert(`🚨 [권한 차단]\nFirestore Rules가 읽기를 막았습니다.\n메시지: ${permErr.message}`);
+                        authEmail = `${idVal}@induk.hs.kr`;
                     }
                 }
+
+                // 1. Firebase Auth (은행급 보안) 로그인 시도
+                const userCredential = await signInWithEmailAndPassword(auth, authEmail, pwVal);
+                const uid = userCredential.user.uid;
+
+                btn.innerText = "권한 판별 중... 🔍";
+
+                // 2. 권한 판별 (관리자 -> 교사 -> 학생 순서대로 물 흐르듯 통과!)
+                
+                // [A] 최고 관리자 확인
+                const adminSnap = await getDoc(doc(db, "admin_users", uid));
+                if (adminSnap.exists()) {
+                    sessionStorage.setItem('userRole', 'admin');
+                    sessionStorage.setItem('loginName', adminSnap.data().name || '최고관리자');
+                    window.location.replace('admin.html');
+                    return; 
+                }
+
+                // [B] 교사 확인 (★선생님 코드에서 빠져있던 핵심 로직 복구 완료!)
+                const teacherSnap = await getDoc(doc(db, "teachers", uid));
+                if (teacherSnap.exists()) {
+                    const tData = teacherSnap.data();
+                    sessionStorage.setItem('userRole', 'teacher');
+                    sessionStorage.setItem('loginName', tData.name || '교사');
+                    sessionStorage.setItem('roleDetail', tData.roleDetail || '일반교사');
+                    sessionStorage.setItem('assignment', tData.assignment || '-');
+                    window.location.replace('teacher.html'); 
+                    return;
+                }
+
+                // [C] 학생 확인
+                const studentSnap = await getDoc(doc(db, "students", uid));
+                if (studentSnap.exists()) {
+                    const sData = studentSnap.data();
+                    sessionStorage.setItem('userRole', 'student');
+                    sessionStorage.setItem('loginName', sData.name || '학생');
+                    sessionStorage.setItem('studentId', sData.current_studentId || '');
+                    sessionStorage.setItem('grade', sData.current_grade || '');
+                    window.location.replace('student.html'); 
+                    return;
+                }
+
+                // [D] 3군데 다 찾아봤는데도 없으면 고아 계정 처리
+                throw new Error("role_not_found");
 
             } catch(error) {
-                console.error("🚨 Login Error Full:", error);
-                if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                    alert(`🚨 [아이디/비번 오류]\n입력하신 정보가 틀렸습니다.\n사유: ${error.message}`);
+                console.error("🚨 로그인 실패:", error);
+                errorMsg.style.display = 'block';
+                
+                if (error.message === "role_not_found") {
+                    errorMsg.innerText = "계정은 존재하나 시스템 권한이 부여되지 않았습니다.";
+                } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    errorMsg.innerText = "아이디 또는 비밀번호가 일치하지 않습니다.";
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMsg.innerText = "로그인 실패가 반복되어 일시적으로 잠겼습니다. 잠시 후 다시 시도해주세요.";
                 } else {
-                    alert(`🚨 [로그인 자체 실패]\n코드: ${error.code}\n사유: ${error.message}`);
+                    errorMsg.innerText = `로그인 오류: ${error.code}`;
                 }
+                
+                // 로그인 실패 시 찌꺼기 방지용 강제 로그아웃
+                auth.signOut();
             } finally {
                 btn.innerText = "로그인";
                 btn.disabled = false;
