@@ -106,10 +106,14 @@
         .score-grid input { width: 55px; padding: 5px; text-align: right; border: 1px solid #ccc; border-radius: 4px; }
         .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
 
-        /* ★ 랭킹 모달 전용 미니 CSS 추가 (골격 훼손 없음) */
+        /* ★ 랭킹 모달 전용 미니 CSS 수정 (메달 이미지 사이즈 고정!) */
         .rank-card { display: flex; align-items: center; padding: 12px 15px; border-radius: 12px; color: white; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 10px;}
         .rank-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-        .rare-medal { width: 28px; height: 28px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; font-size:22px;}
+        
+        /* 메달 크기 고정! */
+        .rare-medal { width: 32px; height: 32px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
+        .rare-medal img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        
         .rank-details { display: flex; align-items: baseline; gap: 6px;}
         .rank-details h4 { margin: 0; font-size: 14px; font-weight: 900; }
         .rank-details p { margin: 0; font-size: 11px; opacity: 0.9; font-weight: 500;}
@@ -232,12 +236,11 @@
             <div id="dashboard">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
                     <h2 style="margin:0;">📈 스마트시티 인증제 실시간 현황</h2>
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap;">
-                    <button class="btn btn-orange" style="padding:10px 20px; font-size:14px; box-shadow: 0 4px 10px rgba(243,156,18,0.3);" onclick="openAdminRankModal(1)">🏆 1학년 TOP 10 보기</button>
-                    <button class="btn btn-orange" style="padding:10px 20px; font-size:14px; box-shadow: 0 4px 10px rgba(243,156,18,0.3);" onclick="openAdminRankModal(2)">🏆 2학년 TOP 10 보기</button>
-                    <button class="btn btn-orange" style="padding:10px 20px; font-size:14px; box-shadow: 0 4px 10px rgba(243,156,18,0.3);" onclick="openAdminRankModal(3)">🏆 3학년 TOP 10 보기</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-dark" style="padding:8px 12px; font-size:12px;" onclick="openAdminRankModal(1)">🏆 1학년 TOP 10</button>
+                        <button class="btn btn-dark" style="padding:8px 12px; font-size:12px;" onclick="openAdminRankModal(2)">🏆 2학년 TOP 10</button>
+                        <button class="btn btn-dark" style="padding:8px 12px; font-size:12px;" onclick="openAdminRankModal(3)">🏆 3학년 TOP 10</button>
+                    </div>
                 </div>
 
                 <div class="dashboard-grid">
@@ -393,10 +396,10 @@
                             </select>
 
                             <select id="tSubject" style="padding:10px; border:1px solid #ccc; border-radius:5px; background-color: #ebf5fb;">
-                                <option value="일반">일반 교사 (조회 전용 / 담임이면 결재가능)</option>
-                                <option value="체육">체육 담당 (A영역 전교생 입력 개방)</option>
-                                <option value="직업기초">직업기초 담당 (C영역 전교생 입력 개방)</option>
-                                <option value="영어1">1학년 영어 담당 (I영역 1학년 한정 개방)</option>
+                                <option value="일반">일반 교사 (조회 전용)</option>
+                                <option value="체육">체육 담당 (A영역 입력)</option>
+                                <option value="직업기초">직업기초 담당 (C영역 입력)</option>
+                                <option value="영어1">1학년 영어 담당 (I영역 입력)</option>
                             </select>
 
                             <button class="btn btn-green" style="padding: 12px; font-size:14px;" onclick="window.addTeacher()">개별 등록하기</button>
@@ -448,7 +451,7 @@
                 <button class="btn btn-dark" onclick="document.getElementById('rankModal').style.display='none'; document.body.style.overflow='auto';">✕</button>
             </div>
             <div id="rankModalList" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;">
-                </div>
+            </div>
         </div>
     </div>
 
@@ -548,7 +551,7 @@
         const db = getFirestore(app);
         
         window.db = db; 
-        window.authV10 = auth; // 엑셀 튕김 방지용 전역 공유
+        window.authV10 = auth; 
         window.collection = collection;
         window.getDocs = getDocs;
         window.doc = doc;
@@ -580,7 +583,6 @@
         const secondaryApp = firebase.initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG, "ShadowApp");
         const db_compat = firebase.firestore();
 
-        // 관리자 확인 튕김 완벽 방지 함수
         async function verifyRealAdmin() {
             try {
                 const user = window.authV10 ? window.authV10.currentUser : null;
@@ -595,7 +597,7 @@
         }
 
         // =========================================
-        // ★ 10단계 동점자 규정 완벽 탑재 랭킹 엔진!
+        // ★ 에러 완벽 해결: 구형 브라우저 안전 정렬 엔진
         // =========================================
         window.openAdminRankModal = async function(grade) {
             document.getElementById('rankModalTitle').innerText = `🏆 ${grade}학년 명예의 전당 TOP 10`;
@@ -609,6 +611,7 @@
                 const querySnapshot = await window.getDocs(window.collection(window.db, "students"));
                 let students = [];
                 
+                // ★ Syntax 에러 방지: 안전하게 데이터 복사
                 querySnapshot.forEach(doc => {
                     let data = doc.data();
                     if(data.current_grade === grade && data[`year_${grade}`]) {
@@ -617,38 +620,32 @@
                             name: data.name,
                             classStr: `${grade}-${classNum}`,
                             score: data[`year_${grade}`].total_score || 0,
-                            yearData: data[`year_${grade}`] // 디테일 정렬을 위해 전체 점수 통째로 가져옴
+                            yearData: data[`year_${grade}`] 
                         });
                     }
                 });
 
-                // ★ 선생님이 주신 공식 10단계 동점자 규정 엔진! (T->M->Tr->S->C->I->R->A->Y->이름)
+                // ★ 공식 10단계 동점자 규정 완벽 탑재
                 students.sort((a, b) => {
-                    // 1. 총점 비교
                     if (b.score !== a.score) return b.score - a.score;
                     
-                    const getSc = (student, area) => student.yearData?.scores?.[area] || 0;
+                    const getSc = (student, area) => {
+                        if (student.yearData && student.yearData.scores && student.yearData.scores[area]) {
+                            return student.yearData.scores[area];
+                        }
+                        return 0;
+                    };
                     
-                    // 2. 1순위: [T] 전공자격
                     if (getSc(b, 'T') !== getSc(a, 'T')) return getSc(b, 'T') - getSc(a, 'T');
-                    // 3. 2순위: [M] 전공성적
                     if (getSc(b, 'M') !== getSc(a, 'M')) return getSc(b, 'M') - getSc(a, 'M');
-                    // 4. 3순위: [Tr] 성실
                     if (getSc(b, 'Tr') !== getSc(a, 'Tr')) return getSc(b, 'Tr') - getSc(a, 'Tr');
-                    // 5. 4순위: [S] 정보화
                     if (getSc(b, 'S') !== getSc(a, 'S')) return getSc(b, 'S') - getSc(a, 'S');
-                    // 6. 5순위: [C] 직업기초능력
                     if (getSc(b, 'C') !== getSc(a, 'C')) return getSc(b, 'C') - getSc(a, 'C');
-                    // 7. 6순위: [I] 외국어
                     if (getSc(b, 'I') !== getSc(a, 'I')) return getSc(b, 'I') - getSc(a, 'I');
-                    // 8. 7순위: [R] 한국사
                     if (getSc(b, 'R') !== getSc(a, 'R')) return getSc(b, 'R') - getSc(a, 'R');
-                    // 9. 8순위: [A] 예체능
                     if (getSc(b, 'A') !== getSc(a, 'A')) return getSc(b, 'A') - getSc(a, 'A');
-                    // 10. 9순위: [Y] 인성
                     if (getSc(b, 'Y') !== getSc(a, 'Y')) return getSc(b, 'Y') - getSc(a, 'Y');
                     
-                    // 11. 기적의 10순위: 이름 가나다순
                     return String(a.name).localeCompare(String(b.name));
                 });
 
@@ -697,9 +694,6 @@
             }
         };
 
-        // =========================================
-        // ★ 학생 엑셀 업로드: Auth UID 기준
-        // =========================================
         document.getElementById("uploadExcelBtn").addEventListener("click", async () => {
             if (!(await verifyRealAdmin())) return;
 
@@ -731,10 +725,10 @@
 
                     for (const row of jsonData) {
                         const grade = Number(row["학년"]);
-                        const studentId = String(row["학번"] ?? "").trim();
-                        const dept = String(row["학과"] ?? "미지정").trim() || "미지정";
-                        const studentName = String(row["이름"] ?? "").trim();
-                        const prevStudentId = String(row["이전학번"] ?? "").trim();
+                        const studentId = row["학번"] ? String(row["학번"]).trim() : "";
+                        const dept = row["학과"] ? String(row["학과"]).trim() : "미지정";
+                        const studentName = row["이름"] ? String(row["이름"]).trim() : "";
+                        const prevStudentId = row["이전학번"] ? String(row["이전학번"]).trim() : "";
 
                         if (!grade || !studentId || !studentName) { failCount++; continue; }
                         if (!/^\d{5}$/.test(studentId)) { failCount++; continue; }
@@ -788,8 +782,8 @@
 
                             let prevT = 0; let currentDelivery = {};
                             if (existingData) {
-                                if (grade === 2 && existingData.year_1) prevT = existingData.year_1.scores?.T || 0;
-                                if (grade === 3 && existingData.year_2) prevT = existingData.year_2.scores?.T || 0;
+                                if (grade === 2 && existingData.year_1 && existingData.year_1.scores && existingData.year_1.scores.T) prevT = existingData.year_1.scores.T;
+                                if (grade === 3 && existingData.year_2 && existingData.year_2.scores && existingData.year_2.scores.T) prevT = existingData.year_2.scores.T;
                                 if (existingData[`year_${grade}`]) currentDelivery = existingData[`year_${grade}`].delivery_status || {};
                             }
 
@@ -850,9 +844,6 @@
             reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
-        // =========================================
-        // ★ 개별 학생 추가: Auth UID 기준
-        // =========================================
         window.addSingleStudent = async function() {
             const sName = document.getElementById("newSName").value.trim();
             const sId = document.getElementById("newSId").value.trim();
@@ -920,9 +911,6 @@
             if(selectAllCb) selectAllCb.checked = false;
         };
 
-        // =========================================
-        // ★ 교사 일괄 등록 (담임/과목 열쇠 체계 반영)
-        // =========================================
         document.getElementById("uploadTeacherExcelBtn").addEventListener("click", async () => {
             const fileInput = document.getElementById("teacherExcelInput");
             if (!fileInput.files[0]) return alert("파일을 선택해주세요.");
@@ -943,11 +931,11 @@
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
                     for (const row of jsonData) {
-                        const tName = String(row["교사 성함"] || "").trim();
-                        const tId = String(row["아이디"] || "").trim();
-                        const tPw = String(row["초기 비밀번호"] || "").trim();
-                        const tHomeroom = String(row["담임학급"] || "").trim();
-                        const tSubject = String(row["특별권한"] || "일반").trim();
+                        const tName = row["교사 성함"] ? String(row["교사 성함"]).trim() : "";
+                        const tId = row["아이디"] ? String(row["아이디"]).trim() : "";
+                        const tPw = row["초기 비밀번호"] ? String(row["초기 비밀번호"]).trim() : "";
+                        const tHomeroom = row["담임학급"] ? String(row["담임학급"]).trim() : "";
+                        const tSubject = row["특별권한"] ? String(row["특별권한"]).trim() : "일반";
 
                         if (!tName || !tId || !tPw) {
                             failCount++;
@@ -1009,9 +997,6 @@
             reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
-        // =========================================
-        // ★ 교사 개별 추가 (담임/과목 열쇠 체계 반영)
-        // =========================================
         window.addTeacher = async function() {
             const tName = document.getElementById("tName").value.trim();
             const tId = document.getElementById("tId").value.trim();
@@ -1065,9 +1050,6 @@
             }
         };
 
-        // =========================================
-        // ★ 교사 목록 출력 업데이트 (열쇠 보여주기)
-        // =========================================
         window.loadTeachers = async function() {
             const tbody = document.getElementById("teacherTableBody"); tbody.innerHTML = "<tr><td colspan='6'>불러오는 중...</td></tr>";
             try { 
@@ -1098,9 +1080,6 @@
             } catch(e) { tbody.innerHTML = "<tr><td colspan='6'>오류 발생</td></tr>"; }
         };
 
-        // =========================================
-        // ★ 교사 정보 수정 (모달 연동)
-        // =========================================
         window.openEditTeacherModal = function(docId) {
             const t = allTeachersData.find(x => x.docId === docId);
             if(!t) return alert("교사 정보를 찾을 수 없습니다.");
@@ -1141,7 +1120,6 @@
             }
         };
 
-        // ★ 엑셀 양식 다운로드 함수 (열쇠 체계로 변경)
         window.downloadTeacherTemplate = function() { 
             const ws = XLSX.utils.json_to_sheet([{ "교사 성함": "", "아이디": "", "초기 비밀번호": "", "담임학급": "", "특별권한": "일반" }]); 
             const wb = XLSX.utils.book_new(); 
@@ -1149,7 +1127,6 @@
             XLSX.writeFile(wb, "스마트시티_교사등록양식.xlsx"); 
         };
 
-        // 이하 기존 기능 완벽 유지
         window.deleteTeacher = async function(docId, name) { 
             if(!confirm(`[${name}] 교사 데이터를 삭제하시겠습니까?\n(주의: Firebase Auth 계정은 콘솔에서 직접 삭제해야 합니다.)`)) return; 
             await window.deleteDoc(window.doc(window.db, "teachers", docId)); 
