@@ -3,79 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>스마트시티 역량 인증제 - 로그인</title>
+    <title>스마트시티 역량 인증제 평가 시스템 - 통합 관리자</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%);
-            margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; color: #333;
-        }
-        .login-card {
-            background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 40px 30px; box-sizing: border-box;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; animation: popIn 0.5s ease-out;
-        }
-        @keyframes popIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; margin: 0; background-color: #f4f7f6; font-size: 13px; color: #333; }
         
-        .logo-icon { font-size: 45px; margin-bottom: 10px; display: inline-block; }
-        .login-card h1 { margin: 0 0 5px 0; font-size: 24px; font-weight: 900; color: #1a252f; letter-spacing: -0.5px;}
-        .login-card p { margin: 0 0 30px 0; font-size: 14px; color: #7f8c8d; font-weight: 500;}
-
-        .input-group { margin-bottom: 15px; text-align: left; }
-        .input-group label { display: block; font-size: 12px; font-weight: 800; color: #34495e; margin-bottom: 5px; margin-left: 5px;}
-        .input-group input {
-            width: 100%; padding: 15px; border: 2px solid #ecf0f1; border-radius: 12px; font-size: 15px;
-            box-sizing: border-box; transition: all 0.3s; font-family: 'Pretendard'; outline: none; font-weight: bold;
-        }
-        .input-group input:focus { border-color: #3498db; box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1); }
-
-        .btn-login {
-            width: 100%; padding: 16px; background: #3498db; color: white; border: none; border-radius: 12px;
-            font-size: 16px; font-weight: 900; cursor: pointer; transition: all 0.3s; margin-top: 10px;
-        }
-        .btn-login:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(52,152,219,0.3); }
-        .btn-login:disabled { background: #bdc3c7; cursor: not-allowed; transform: none; box-shadow: none; }
-
-        .footer-text { margin-top: 25px; font-size: 12px; color: #95a5a6; }
+        .header { background-color: #1a252f; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; z-index: 10; }
+        .header h1 { margin: 0; font-size: 20px; letter-spacing: 0.5px; line-height: 1.4; word-break: keep-all;}
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+        .visitor-count { background: #e67e22; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; white-space: nowrap; }
         
-        .error-msg { color: #e74c3c; font-size: 13px; font-weight: bold; margin-top: 15px; display: none; background: #fdedec; padding: 10px; border-radius: 8px;}
+        .btn-lock { padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap;}
+        .lock-active { background-color: #e74c3c; color: white; }
+        .lock-inactive { background-color: #2ecc71; color: white; }
+
+        .container { display: flex; padding: 20px; gap: 25px; max-width: 1600px; margin: 0 auto; box-sizing: border-box;}
+        
+        .sidebar { width: 240px; background-color: #1e2a38; padding: 25px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: fit-content; color: white; flex-shrink: 0;}
+        .menu-group { font-size: 13px; font-weight: 800; margin: 35px 0 12px 5px; padding-bottom: 8px; letter-spacing: 0.5px; opacity: 0.9; }
+        .menu-group:first-child { margin-top: 0; }
+        .g-monitor { color: #5dade2; border-bottom: 1px solid rgba(52, 152, 219, 0.3); }
+        .g-student { color: #58d68d; border-bottom: 1px solid rgba(46, 204, 113, 0.3); }
+        .g-system  { color: #af7ac5; border-bottom: 1px solid rgba(155, 89, 182, 0.3); }
+        
+        .menu-item { padding: 13px 15px; margin-bottom: 6px; background-color: transparent; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13.5px; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); color: #bdc3c7; display: flex; align-items: center; border: 1px solid transparent; }
+        .menu-item:hover { background-color: rgba(255,255,255,0.05); color: white; }
+        .menu-active { background: rgba(255, 255, 255, 0.12) !important; backdrop-filter: blur(10px) !important; -webkit-backdrop-filter: blur(10px) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; color: #fff !important; font-weight: 800; }
+        
+        .content { flex: 1; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto; min-height: 80vh; min-width: 0;}
+        
+        .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .dash-card { padding: 20px; border-radius: 12px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .dash-card h3 { margin: 0 0 10px 0; font-size: 15px; opacity: 0.9; word-break: keep-all; }
+        .dash-card .number { font-size: 32px; font-weight: bold; margin: 0; }
+        
+        .card-blue { background: linear-gradient(135deg, #3498db, #2980b9); cursor: pointer; transition: 0.3s; }
+        .card-blue:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4); }
+        .card-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .card-orange { background: linear-gradient(135deg, #f39c12, #d35400); }
+        .card-red { background: linear-gradient(135deg, #e74c3c, #c0392b); cursor: pointer; transition: 0.3s; }
+        .card-red:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(231,76,60,0.4); }
+        
+        .chart-container { display: flex; gap: 20px; margin-bottom: 20px; }
+        .chart-box { flex: 1; background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; min-width: 0;}
+        .chart-full { width: 100%; background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); box-sizing: border-box; min-width: 0;}
+        
+        .filter-group { display: flex; gap: 10px; align-items: center; background: #f8f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; border: 1px solid #e0e6ed; }
+        .filter-group select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold;}
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px;}
+        
+        .data-table th, .data-table td { border: 1px solid #ddd; padding: 10px 8px; text-align: center; vertical-align: middle; white-space: nowrap; }
+        .data-table th { background-color: #f1f2f6; color: #2c3e50; position: sticky; top: 0; font-weight: 800; z-index: 5; }
+        .th-criteria { font-size: 10px; color: #e74c3c; display: inline-block; margin-top: 4px; font-weight: bold;}
+        
+        .check-cell { width: 30px; text-align: center; }
+        .student-checkbox { transform: scale(1.3); cursor: pointer; }
+        .score-cell { text-align: center; } 
+        .badge-status { font-size: 10px; display: inline-block; margin-top: 4px; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap; }
+        .status-yet { background-color: #fdf2f2; color: #e74c3c; border: 1px solid #fadbd8; }
+        .status-done { background-color: #e8f8f5; color: #1abc9c; border: 1px solid #d1f2eb; }
+        .pass-star { color: #f1c40f; font-weight: bold; font-size: 14px; margin-right: 2px; }
+        .certified-row { background-color: #fef9e7 !important; }
+        
+        .profile-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 8px; border: 2px solid #ecf0f1; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s;}
+        .profile-img:hover { transform: scale(1.1); border-color: #3498db; }
+        .profile-placeholder { display: inline-block; width: 36px; height: 36px; border-radius: 50%; background-color: #bdc3c7; vertical-align: middle; margin-right: 8px; border: 2px solid #ecf0f1; }
+
+        .btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; font-size: 12px; margin: 2px; transition: 0.2s; white-space: nowrap; display: inline-block;}
+        .btn:hover { opacity: 0.9; }
+        .btn-green { background-color: #2ecc71; } .btn-orange { background-color: #f39c12; } .btn-blue { background-color: #3498db; } .btn-dark { background-color: #34495e; } .btn-red { background-color: #e74c3c; } .btn-purple { background-color: #9b59b6; }
+        
+        .action-group { margin-left: auto; display: flex; gap: 5px; } 
+
+        .summary-box { background-color: #f4f6f7; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #3498db; line-height: 1.6;}
+        
+        .log-table { width: 100%; border-collapse: collapse; font-size: 13px; background: white; min-width: 500px;}
+        .log-table th, .log-table td { border: 1px solid #eee; padding: 10px; text-align: left; }
+        .log-table th { background: #34495e; color: white; position: sticky; top: 0;}
+        .log-time { color: #7f8c8d; font-size: 11px; }
+        .log-user { font-weight: bold; color: #2980b9; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .photo-view-content { background: white; padding: 15px; border-radius: 12px; text-align: center; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: popIn 0.2s ease-out; }
+        .photo-view-content img { max-width: 300px; max-height: 400px; border-radius: 8px; object-fit: cover; }
+        .photo-view-name { font-size: 18px; font-weight: bold; margin: 10px 0 5px 0; color: #2c3e50;}
+        
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: popIn 0.2s ease-out; box-sizing: border-box; max-height: 90vh; overflow-y: auto;}
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .edit-profile-header { display: flex; gap: 20px; margin-bottom: 15px; }
+        .edit-photo-box { width: 100px; height: 130px; border-radius: 8px; border: 1px solid #ddd; background: #eee; display: flex; justify-content: center; align-items: center; overflow: hidden; flex-shrink: 0; }
+        .edit-photo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .info-grid { flex: 1; display: grid; grid-template-columns: 1fr; gap: 8px; }
+        .info-grid label { font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 2px; }
+        .info-grid input, .info-grid select { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee;}
+        .score-grid div { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;}
+        .score-grid input { width: 55px; padding: 5px; text-align: right; border: 1px solid #ccc; border-radius: 4px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+
+        @media (max-width: 850px) {
+            .header { flex-direction: column; text-align: center; gap: 10px; padding: 15px 10px 10px 10px; }
+            .header h1 { font-size: 18px; margin-bottom: 0; line-height: 1.4; word-break: keep-all; }
+            .header-controls { flex-direction: row; width: 100%; justify-content: center; gap: 8px; margin-top: 0; }
+            .btn-lock { font-size: 11px; padding: 6px 12px; }
+            .visitor-count { font-size: 11px; padding: 6px 12px; }
+            
+            .container { flex-direction: column; padding: 10px; gap: 12px; }
+            
+            .sidebar { width: 100%; display: flex; flex-direction: row; overflow-x: auto; flex-wrap: nowrap; padding: 12px 10px; gap: 10px; border-radius: 12px; -ms-overflow-style: none; scrollbar-width: none; }
+            .sidebar::-webkit-scrollbar { display: none; }
+            .menu-group { display: none !important; } 
+            .menu-item { flex: 0 0 auto; padding: 10px 18px; margin: 0; border-radius: 25px; background-color: rgba(255,255,255,0.05); font-size: 13px; border: 1px solid transparent; }
+            
+            .content { padding: 15px; }
+            .dashboard-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            
+            .dash-card { padding: 15px 5px; }
+            .dash-card h3 { font-size: 12px; white-space: nowrap; overflow: visible; margin-bottom: 8px; letter-spacing: -0.5px; }
+            .dash-card .number { font-size: 26px; }
+
+            .chart-container { flex-direction: column; gap: 15px; }
+            .chart-box { width: 100% !important; box-sizing: border-box; }
+            
+            .filter-group { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: space-between; }
+            .filter-group select { flex: 1; min-width: 80px; }
+            .filter-group .btn-green { width: 100%; padding: 10px;}
+            .action-group { width: 100%; margin-top: 10px; justify-content: space-between;}
+            .action-group .btn { flex: 1; }
+
+            .edit-profile-header { flex-direction: column; align-items: center; text-align: center; }
+            
+            .log-table, .log-table tbody, .log-table tr, .log-table td { display: block; width: 100%; box-sizing: border-box; }
+            .log-table thead { display: none; } 
+            .log-table tr { margin-bottom: 15px; border: 1px solid #e0e6ed; border-radius: 12px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+            .log-table td { border: none; padding: 4px 0; text-align: left; }
+            .log-table td:nth-child(1) { font-size: 12px; color: #95a5a6; border-bottom: 1px dashed #f1f2f6; padding-bottom: 8px; margin-bottom: 8px; }
+            .log-table td:nth-child(2) { font-size: 14px; font-weight: 900; color: #2980b9; margin-bottom: 4px; }
+            .log-table td:nth-child(3) { font-size: 13px; color: #2c3e50; line-height: 1.4; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="login-card">
-        <span class="logo-icon">🏫</span>
-        <h1>스마트시티 역량 인증제</h1>
-        <p>통합 로그인 시스템</p>
-
-        <form id="loginForm">
-            <div class="input-group">
-                <label>아이디 (학생은 학번 5자리)</label>
-                <input type="text" id="userId" placeholder="학번 또는 아이디 입력" required autocomplete="username">
-            </div>
-            <div class="input-group">
-                <label>비밀번호 (초기: 123456)</label>
-                <input type="password" id="userPw" placeholder="비밀번호 입력" required autocomplete="current-password">
-            </div>
-            
-            <div id="errorMsg" class="error-msg">아이디 또는 비밀번호가 맞지 않습니다.</div>
-
-            <button type="submit" id="loginBtn" class="btn-login">로그인</button>
-        </form>
-
-        <div class="footer-text">
-            ⓒ 2026 Induk Science & Technology High School
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        // 🚨 여기에 선생님의 실제 Firebase API 키 7줄을 복사해서 넣어주세요! 🚨
-        const firebaseConfig = {
+    <script>
+        window.MY_GLOBAL_FIREBASE_CONFIG = {
             apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
   authDomain: "induk-smartcity.firebaseapp.com",
   projectId: "induk-smartcity",
@@ -84,101 +160,1334 @@
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
   measurementId: "G-3SL84TXVHD"
         };
+    </script>
 
-        const app = initializeApp(firebaseConfig);
+    <script>
+        if (sessionStorage.getItem('userRole') !== 'admin') {
+            alert('⚠️ 접근 권한이 없습니다. 관리자 로그인이 필요합니다.');
+            location.href = 'index.html'; 
+        }
+
+        let inactivityTimer;
+        function resetTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(function() {
+                sessionStorage.clear();
+                alert('⚠️ 일정 시간 동안 활동이 없어 안전을 위해 자동 로그아웃 되었습니다.');
+                location.href = 'index.html';
+            }, 600000); 
+        }
+        window.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
+        document.ontouchstart = resetTimer;
+    </script>
+
+    <div class="header">
+        <h1>👑 스마트시티 역량 인증제 평가 시스템<br><span style="font-size: 14px; color: #f1c40f;">(통합 관리자)</span></h1>
+        <div class="header-controls">
+            <button class="btn btn-orange" style="padding: 6px 12px; border-radius: 20px; font-size: 11px;" onclick="window.openChangePwModal()">🔐 비번 변경</button>
+            <button class="btn btn-dark" style="padding: 6px 12px; border-radius: 20px; font-size: 11px;" onclick="sessionStorage.clear(); location.href='index.html';">🚪 로그아웃</button>
+            <button id="globalLockBtn" class="btn-lock lock-inactive" onclick="toggleGlobalLock()">🔓 시스템 개방 중 (마감하기)</button>
+            <div class="visitor-count">👀 오늘 방문자: <span id="visitorCount">0</span>명</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="menu-group g-monitor">📊 모니터링</div>
+            <div class="menu-item menu-active" id="nav-dashboard" onclick="showSection('dashboard')">🏠 메인 대시보드</div>
+
+            <div class="menu-group g-student">🧑‍🎓 학생 데이터 관리</div>
+            <div class="menu-item" id="nav-studentList" onclick="showSection('studentList')">📋 학생 관리 & 비번초기화</div>
+            <div class="menu-item" id="nav-uploadData" onclick="showSection('uploadData')">📁 엑셀 데이터 업로드</div>
+            <div class="menu-item" id="nav-photoUpload" onclick="showSection('photoUpload')">📸 학생 사진 일괄 등록</div>
+            <div class="menu-item" id="nav-badgeManagement" onclick="showSection('badgeManagement')">🎁 월별 배지 결산</div>
+            <div class="menu-item" id="nav-promotion" onclick="showSection('promotion')">🎓 연말 진급 및 백업</div>
+
+            <div class="menu-group g-system">⚙️ 시스템 및 권한 관리</div>
+            <div class="menu-item" id="nav-teacherManage" onclick="showSection('teacherManage')">👨‍🏫 교사 계정 관리</div>
+            <div class="menu-item" id="nav-systemLog" onclick="showSection('systemLog')">🔍 시스템 로그 (C CCTV)</div>
+        </div>
+
+        <div class="content">
+            <div id="dashboard">
+                <h2>📈 스마트시티 인증제 실시간 현황</h2>
+                <div class="dashboard-grid">
+                    <div class="dash-card card-blue" onclick="window.openPendingModal()">
+                        <h3>📝 미승인 결재 대기 <span style="font-size:11px; opacity:0.8;"><br>(눌러서 확인👆)</span></h3>
+                        <p class="number" id="dashPendingApprove">0건</p>
+                    </div>
+                    <div class="dash-card card-green">
+                        <h3>🔥 이번 달 획득 배지</h3>
+                        <p class="number" id="dashMonthlyBadges">0개</p>
+                    </div>
+                    <div class="dash-card card-orange">
+                        <h3>🏆 역량 인증 달성자 (6개↑)</h3>
+                        <p class="number" id="dashTopAchievers">0명</p>
+                    </div>
+                    <div class="dash-card card-red" onclick="showSection('badgeManagement')">
+                        <h3>🚨 실물 배지 지급 대기</h3>
+                        <p class="number" id="dashPendingAlert">0건</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-box" style="width: 50%;">
+                        <h3 style="text-align: center; margin-top: 0; margin-bottom: 20px;">🏢 학과별 인증 달성자 비율</h3>
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                    <div class="chart-box" style="width: 50%;">
+                        <h3 style="text-align: center; margin-top: 0; margin-bottom: 20px;">🏅 9대 역량 배지 획득 비율</h3>
+                        <div style="width: 80%;"><canvas id="badgeChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="chart-full" style="margin-top: 20px;">
+                    <h3 style="text-align: center; margin-top: 0;">📉 최근 7일 접속자 추이</h3>
+                    <canvas id="visitorChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+
+            <div id="studentList" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap:10px;">
+                    <h2>📋 학생별 역량 현황</h2>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="document.getElementById('addStudentBox').style.display='block'" class="btn btn-orange" style="font-size: 14px; padding: 10px 15px;">➕ 개별 학생 추가</button>
+                        <button onclick="printClassChart()" class="btn btn-blue" style="font-size: 14px; padding: 10px 15px;">🖨️ 현재 반 막대그래프 인쇄</button>
+                        <button onclick="downloadExcelReport('studentTable', '스마트시티_전체데이터_보고서')" class="btn btn-dark" style="font-size: 14px; padding: 10px 15px;">⬇️ 표 엑셀 다운로드</button>
+                    </div>
+                </div>
+
+                <div id="addStudentBox" style="background: #fff; padding: 15px; border: 1px solid #f39c12; border-radius: 8px; margin-bottom: 15px; display: none;">
+                    <h3 style="margin-top: 0; color: #d35400;">➕ 개별 학생 (전학생) 즉시 추가</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <input type="text" id="newSName" placeholder="이름 (예: 홍길동)" style="padding:8px; border:1px solid #ccc; border-radius:5px; flex:1; min-width:120px;">
+                        <input type="text" id="newSId" placeholder="학번 5자리 (예: 10419)" style="padding:8px; border:1px solid #ccc; border-radius:5px; flex:1; min-width:120px;">
+                        <input type="text" id="newSDept" placeholder="학과 (예: 스마트기계)" style="padding:8px; border:1px solid #ccc; border-radius:5px; flex:1; min-width:120px;">
+                        <input type="text" id="newSPw" placeholder="초기 비밀번호 (예: 123456)" style="padding:8px; border:1px solid #ccc; border-radius:5px; flex:1; min-width:120px;">
+                        <button class="btn btn-orange" style="padding: 8px 15px;" onclick="addSingleStudent()">추가하기</button>
+                        <button class="btn btn-dark" style="padding: 8px 15px;" onclick="document.getElementById('addStudentBox').style.display='none'">닫기</button>
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <select id="filterGrade" onchange="updateTableHeaders(); loadData();"><option value="1" selected>1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
+                    <select id="filterDept" onchange="loadData()">
+                        <option value="ALL">전체 학과</option>
+                    </select>
+                    <select id="filterClass" onchange="loadData()"><option value="ALL">전체 반</option><option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option></select>
+                    <select id="filterCert" onchange="loadData()"><option value="ALL">모든 학생</option><option value="PASS">인증 통과자(6개↑)</option></select>
+                    <button onclick="loadData()" class="btn btn-green" style="padding: 8px 20px;">🔄 조회</button>
+                    
+                    <div class="action-group">
+                        <button onclick="deleteSelectedStudents()" class="btn btn-red">🗑️ 선택 삭제</button>
+                        <button onclick="resetSelectedPasswords()" class="btn btn-orange">🔄 선택 비번 초기화</button>
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto; width: 100%;">
+                    <table class="data-table" id="studentTable">
+                        <thead><tr id="tableHeaderRow"></tr></thead><tbody id="studentTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="uploadData" style="display:none;">
+                <h2>📁 9대 역량 엑셀 업로드 (초기 셋팅용)</h2>
+                <div class="summary-box"><strong>💡 안내</strong><br>업로드 시 전교생의 초기 비밀번호는 자동으로 <b>123456</b>으로 지정됩니다. 기존 양식에 있던 생년월일 열은 더 이상 사용하지 않습니다.</div>
+                <button onclick="window.downloadTemplate()" class="btn btn-dark" style="margin-bottom: 20px;">📄 엑셀 빈 양식 다운로드</button>
+                <div style="background: #fff; padding: 20px; border: 1px dashed #bdc3c7; border-radius: 8px;">
+                    <input type="file" id="excelFileInput" accept=".xlsx" /><br><br>
+                    <button id="uploadExcelBtn" class="btn btn-orange">🚀 자동 계산 및 DB 업로드 실행</button><h4 id="uploadStatus"></h4>
+                </div>
+            </div>
+
+            <div id="photoUpload" style="display:none;">
+                <h2>📸 학생 증명사진 일괄 등록</h2>
+                <div class="summary-box" style="border-left-color: #9b59b6;"><strong>💡 학번 자동 매칭 시스템</strong><br>학생들의 사진 파일 이름을 <b>'학번.jpg' 또는 '학번.png'</b> 로 변경한 뒤 한 번에 선택하여 올려주세요.</div>
+                <div style="background: #fff; padding: 20px; border: 1px dashed #bdc3c7; border-radius: 8px;">
+                    <input type="file" id="photoFilesInput" accept="image/*" multiple /><br><br>
+                    <button id="uploadPhotosBtn" class="btn btn-purple">🚀 선택한 사진 일괄 업로드</button>
+                    <div id="photoUploadProgress" style="display:none; margin-top:10px; font-weight:bold; color:#2980b9;"></div>
+                </div>
+            </div>
+
+            <div id="badgeManagement" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                    <h2>🎁 월별 실물 배지 지급 대상자 결산</h2>
+                    <button onclick="downloadExcelReport('badgeTable', '스마트시티_배지결산명단')" class="btn btn-dark">⬇️ 결산 명단 다운로드</button>
+                </div>
+                <div class="filter-group">
+                    <select id="badgeFilterGrade" onchange="loadBadgeData()"><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
+                    <select id="badgeFilterDept" onchange="loadBadgeData()">
+                        <option value="ALL">전체 학과</option>
+                    </select>
+                    <button onclick="loadBadgeData()" class="btn btn-green">🔄 결산 명단 뽑기</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" id="badgeTable">
+                        <thead style="background-color: #c0392b; color: white;"><tr><th>학과</th><th>학번</th><th>이름</th><th>지급 대상 배지</th><th>관리</th></tr></thead><tbody id="badgeTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="promotion" style="display:none;">
+                <h2>🎓 연말 진급 및 3학년 졸업 백업 시스템</h2>
+                <div style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #e74c3c;">
+                    <h3 style="margin-top:0; color:#c0392b;">1단계: 3학년 졸업 처리 (백업 및 DB 삭제)</h3><button onclick="graduateSeniors()" class="btn btn-red">🎓 3학년 백업 및 졸업 처리</button>
+                </div>
+                <div style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #3498db;">
+                    <h3 style="margin-top:0; color:#2980b9;">2단계: 1, 2학년 진급 양식 다운로드</h3><button onclick="downloadPromoteTemplate()" class="btn btn-blue">⬇️ 진급 엑셀 양식 다운로드</button>
+                </div>
+                <div style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; border-left: 5px solid #2ecc71;">
+                    <h3 style="margin-top:0; color:#27ae60;">3단계: 새 학번으로 진급 업데이트</h3>
+                    <input type="file" id="promoteFileInput" accept=".xlsx" style="margin-right:10px; margin-bottom:10px;"/><button onclick="uploadPromotion()" class="btn btn-green">🚀 새 학번으로 진급 실행</button>
+                </div>
+            </div>
+
+            <div id="teacherManage" style="display:none;">
+                <h2>👨‍🏫 교사 계정 및 권한 관리</h2>
+                <div class="summary-box" style="border-left-color: #16a085;"><strong>💡 권한: 자율 운영 방식(Open Access) 적용</strong><br>여기에 등록된 선생님들은 로그인 시 전교생의 데이터를 검색하고 평가할 수 있습니다.</div>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 300px; background: #fff; padding: 20px; border: 1px dashed #16a085; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="margin-top: 0; color: #16a085;">📂 새 학기 교사 일괄 등록 (엑셀)</h3>
+                        <button onclick="window.downloadTeacherTemplate()" class="btn btn-dark" style="margin-bottom: 15px;">📄 교사 등록 양식 다운로드</button><br>
+                        <input type="file" id="teacherExcelInput" accept=".xlsx" style="margin-bottom:15px;"/><br><button id="uploadTeacherExcelBtn" class="btn btn-purple">🚀 교사 계정 일괄 업로드 실행</button>
+                    </div>
+                    <div style="flex: 1; min-width: 300px; background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="margin-top: 0; color: #34495e;">➕ 학기 중 개별 교사 추가</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <input type="text" id="tName" placeholder="교사 성함 (예: 김인덕)" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
+                            <input type="text" id="tId" placeholder="로그인 아이디 (영문/숫자)" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
+                            <input type="password" id="tPw" placeholder="초기 비밀번호" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
+                            <select id="tRoleDetail" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
+                                <option value="일반교사">일반교사 (조회/평가)</option>
+                                <option value="담임교사">담임교사</option>
+                                <option value="교과교사">교과교사</option>
+                            </select>
+                            <input type="text" id="tAssignment" placeholder="담당 반/과목 편하게 입력 (예: 1-4, 체육)" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
+                            <button class="btn btn-green" style="padding: 12px; font-size:14px;" onclick="window.addTeacher()">개별 등록하기</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead style="background-color: #16a085; color:white;"><tr><th>교사 성함</th><th>아이디</th><th>권한(담당)</th><th>등록일</th><th>관리</th></tr></thead><tbody id="teacherTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="systemLog" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap:10px;">
+                    <h2>🔍 시스템 활동 로그 (CCTV)</h2><button onclick="downloadExcelReport('logTable', '스마트시티_시스템로그')" class="btn btn-dark">⬇️ 로그 엑셀 다운로드</button>
+                </div>
+                <div class="summary-box" style="border-left-color: #8e44ad;"><strong>💡 투명한 시스템 감시 기록</strong><br>로그인 및 데이터 수정 기록이 영구 보존됩니다. (최근 200건 표시)</div>
+                <button onclick="loadLogs()" class="btn btn-purple" style="margin-bottom: 10px;">🔄 로그 새로고침</button>
+                <div style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; overflow-x: auto;">
+                    <table class="log-table" id="logTable">
+                        <thead><tr><th style="width: 180px;">발생 일시</th><th style="width: 150px;">수행자 (유형)</th><th>상세 작업 내역</th></tr></thead><tbody id="logTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="changePwModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-content" style="max-width: 350px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; margin-bottom: 5px;">
+                <span style="font-size: 18px;">🔐 최고관리자 비번 변경</span>
+            </div>
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-size: 12px; font-weight: bold; color: #7f8c8d;">새 비밀번호 (6자리 이상)</label>
+                <input type="password" id="newAdminPwInput" class="form-control" placeholder="••••••••" style="margin-top: 5px; text-align: center; font-size: 16px;">
+            </div>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button class="btn btn-dark" style="padding: 10px 20px;" onclick="document.getElementById('changePwModal').style.display='none'">취소</button>
+                <button class="btn btn-orange" style="padding: 10px 20px;" onclick="window.executeChangePw()">변경하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="photoViewModal" class="modal-overlay" onclick="closePhotoView()"><div class="photo-view-content" onclick="event.stopPropagation();"><h3 id="photoViewName" class="photo-view-name">학생 이름</h3><p id="photoViewInfo" style="margin:0 0 15px 0; color:#7f8c8d; font-size:13px;"></p><img id="photoViewImg" src=""><div style="margin-top: 15px;"><button class="btn btn-dark" onclick="closePhotoView()">닫기</button></div></div></div>
+    
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><span>학생 정보 및 점수 개별 수정</span></div>
+            <input type="hidden" id="editDocId"><input type="hidden" id="editGrade">
+            <div class="edit-profile-header">
+                <div class="edit-photo-box"><img id="edit-PhotoImg" src="" alt="사진"></div>
+                <div class="info-grid">
+                    <div><label>이름</label><input type="text" id="edit-Name"></div><div><label>학번 (5자리)</label><input type="text" id="edit-StudentId"></div>
+                    <div><label>학과</label>
+                        <select id="edit-Dept">
+                            <option value="미지정">미지정</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="score-grid">
+                <div><span>[S] 정보화:</span><input type="number" id="edit-S"></div><div><span>[M] 전공성적:</span><input type="number" id="edit-M"></div><div><span>[A] 예체능:</span><input type="number" id="edit-A"></div>
+                <div><span>[R] 한국사:</span><input type="number" id="edit-R"></div><div><span>[T] 전공자격:</span><input type="number" id="edit-T"></div><div><span>[C] 직업기초:</span><input type="number" id="edit-C"></div>
+                <div><span>[I] 외국어:</span><input type="number" id="edit-I"></div><div><span>[Tr] 성실:</span><input type="number" id="edit-Tr"></div><div><span>[Y] 인성:</span><input type="number" id="edit-Y"></div>
+            </div>
+            <div style="display: flex; justify-content: center; margin-top: 15px; flex-wrap: wrap; gap:10px;">
+                <div style="display:flex; gap:5px;"><button class="btn btn-dark" onclick="closeEditModal()">취소</button><button class="btn btn-orange" onclick="saveEdit()">💾 즉시 반영</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editTeacherModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header"><span>👨‍🏫 교사 정보 개별 수정</span></div>
+            <input type="hidden" id="edit-tDocId">
+            <div class="info-grid" style="display: flex; flex-direction: column; gap: 12px;">
+                <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">교사 성함</label><input type="text" id="edit-tName" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></div>
+                <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">아이디 (수정 불가)</label><input type="text" id="edit-tId" readonly style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background: #f4f6f7;"></div>
+                <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">권한 설정</label>
+                    <select id="edit-tRoleDetail" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                        <option value="일반교사">일반교사 (조회/평가)</option>
+                        <option value="담임교사">담임교사</option>
+                        <option value="교과교사">교과교사</option>
+                    </select>
+                </div>
+                <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">담당 반/과목</label><input type="text" id="edit-tAssignment" placeholder="예: 1-4, 체육" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></div>
+            </div>
+            <div style="display: flex; justify-content: center; margin-top: 20px; gap:10px;">
+                <button class="btn btn-dark" onclick="closeEditTeacherModal()">취소</button>
+                <button class="btn btn-orange" onclick="saveTeacherEdit()">💾 수정 완료</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pendingModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header"><span>📝 전교생 미승인 결재 대기 명단</span><button class="btn btn-dark" onclick="document.getElementById('pendingModal').style.display='none'">✕</button></div>
+            <div class="summary-box" style="margin-bottom: 15px;">전교생이 신청한 배지 인증 증빙자료를 통합 관리자가 확인하고 승인/반려할 수 있습니다.</div>
+            <div style="overflow-x: auto; border: 1px solid #eee; border-radius: 8px;">
+                <table class="data-table" style="min-width: 600px; margin: 0;">
+                    <thead style="background:#34495e; color:white;"><tr><th>신청일</th><th>학번/이름</th><th>신청 역량(점수)</th><th>증빙자료</th><th>상태관리</th></tr></thead>
+                    <tbody id="adminPendingList">
+                        <tr><td colspan="5" style="text-align: center; padding: 30px; color: #7f8c8d; font-weight: bold;">결재 데이터를 불러오는 중입니다...⏳</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminProofModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-content" style="max-width: 700px; text-align: center;">
+            <div class="modal-header">
+                <h3>📄 제출된 증빙 자료 (관리자 확인용)</h3>
+                <button class="close-btn" onclick="document.getElementById('adminProofModal').style.display='none'">✕</button>
+            </div>
+            <div id="adminProofContent" style="margin-top: 15px; max-height: 60vh; overflow-y: auto; background: #eee; border-radius: 8px; display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, increment, query, where, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const app = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        
+        window.db = db; 
+        window.authV10 = auth; // ★ 신분증 전역 공유 (엑셀 튕김 방지용 핵심!)
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.updateDoc = updateDoc;
+        window.deleteDoc = deleteDoc;
+        window.query = query;
+        window.where = where;
+        window.addDoc = addDoc;
 
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        const errorMsg = document.getElementById('errorMsg');
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("✅ 모듈 엔진 인증 확인 완료:", user.uid);
+                if (typeof window.loadLockStatus === "function") window.loadLockStatus();
+                if (typeof window.showSection === "function") window.showSection('dashboard');
+            } else {
+                console.warn("⚠️ 모듈 엔진에서 인증 사용자 없음. 대기 중...");
+            }
+        });
+    </script>
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errorMsg.style.display = 'none';
-            loginBtn.disabled = true;
-            loginBtn.innerText = '인증 확인 중... ⏳';
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
-            let inputId = document.getElementById('userId').value.trim();
-            const pw = document.getElementById('userPw').value.trim();
-            let authEmail = inputId;
+    <script>
+        firebase.initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
+        const secondaryApp = firebase.initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG, "ShadowApp");
+        const db_compat = firebase.firestore();
 
-            // ★ 스마트 로그인 로직: 학번만 치면 알아서 이메일로 변환
-            if (!authEmail.includes('@')) {
-                if (/^\d{5}$/.test(inputId)) {
-                    // 5자리 숫자면 학생!
-                    authEmail = `stu_${inputId}@induk.hs.kr`;
-                } else {
-                    // 그 외 영문/숫자면 교사 또는 관리자!
-                    authEmail = `${inputId}@induk.hs.kr`;
+        // ★ 성격 급한 경비원 교체! (엑셀 튕김 완벽 방지)
+        async function verifyRealAdmin() {
+            try {
+                const user = window.authV10 ? window.authV10.currentUser : null;
+                
+                if (!user) {
+                    alert('⚠️ 구글 보안 서버와 통신(동기화) 중입니다. 1~2초 후 버튼을 다시 눌러주세요.');
+                    return false;
                 }
+                
+                if (sessionStorage.getItem('userRole') !== 'admin') {
+                    alert('⚠️ 관리자 권한이 없습니다.');
+                    return false;
+                }
+                
+                return true;
+
+            } catch (e) {
+                console.error("관리자 검증 실패:", e);
+                alert('⚠️ 관리자 확인 중 오류가 발생했습니다.');
+                return false;
+            }
+        }
+
+        async function safeLog(message) {
+            try {
+                if (typeof logAction === "function") {
+                    await logAction(message);
+                }
+            } catch (_) {}
+        }
+
+        // =========================================
+        // ★ 학생 엑셀 업로드: Auth UID 기준 (평문 비번 저장 금지)
+        // =========================================
+        document.getElementById("uploadExcelBtn").addEventListener("click", async () => {
+            if (!(await verifyRealAdmin())) return;
+
+            const fileInput = document.getElementById("excelFileInput");
+            const statusEl = document.getElementById("uploadStatus");
+
+            if (!fileInput.files[0]) {
+                alert("파일을 선택해주세요.");
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                try {
+                    statusEl.textContent = "⏳ 데이터 분석 중...";
+
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+                    if (jsonData.length > 500) {
+                        alert("한 번에 500명 이상 업로드는 시스템 안정성을 위해 제한됩니다.");
+                        statusEl.textContent = "";
+                        return;
+                    }
+
+                    let successCount = 0;
+                    let failCount = 0;
+
+                    for (const row of jsonData) {
+                        const grade = Number(row["학년"]);
+                        const studentId = String(row["학번"] ?? "").trim();
+                        const dept = String(row["학과"] ?? "미지정").trim() || "미지정";
+                        const studentName = String(row["이름"] ?? "").trim();
+                        const prevStudentId = String(row["이전학번"] ?? "").trim();
+
+                        if (!grade || !studentId || !studentName) {
+                            failCount++;
+                            continue;
+                        }
+
+                        if (!/^\d{5}$/.test(studentId)) {
+                            failCount++;
+                            continue;
+                        }
+
+                        let createdUser = null;
+
+                        try {
+                            let targetDocId = null;
+                            let authEmail = null;
+                            let existingData = null;
+
+                            const dirSnap = await window.getDoc(window.doc(window.db, 'directory', studentId));
+                            if (dirSnap.exists()) {
+                                const dirData = dirSnap.data();
+                                targetDocId = dirData.stableId || null;
+                                authEmail = dirData.authEmail || null;
+
+                                if (targetDocId) {
+                                    const sSnap = await window.getDoc(window.doc(window.db, "students", targetDocId));
+                                    if (sSnap.exists()) existingData = sSnap.data();
+                                }
+                            }
+
+                            if (!targetDocId && prevStudentId) {
+                                const oldDirSnap = await window.getDoc(window.doc(window.db, 'directory', prevStudentId));
+                                if (oldDirSnap.exists()) {
+                                    const oldDirData = oldDirSnap.data();
+                                    targetDocId = oldDirData.stableId || null;
+                                    authEmail = oldDirData.authEmail || null;
+
+                                    if (targetDocId) {
+                                        const sSnap = await window.getDoc(window.doc(window.db, "students", targetDocId));
+                                        if (sSnap.exists()) existingData = sSnap.data();
+                                    }
+                                }
+                            }
+
+                            if (!targetDocId) {
+                                const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
+                                if (!qSnap.empty) { targetDocId = qSnap.docs[0].id; existingData = qSnap.docs[0].data(); }
+                            }
+
+                            if (!targetDocId) {
+                                authEmail = `stu_${studentId}@induk.hs.kr`;
+                                const initialPassword = "123456";
+                                const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, initialPassword);
+
+                                createdUser = cred.user;
+                                targetDocId = cred.user.uid;
+                            }
+
+                            let prevT = 0; let currentDelivery = {};
+                            if (existingData) {
+                                if (grade === 2 && existingData.year_1) prevT = existingData.year_1.scores?.T || 0;
+                                if (grade === 3 && existingData.year_2) prevT = existingData.year_2.scores?.T || 0;
+                                if (existingData[`year_${grade}`]) currentDelivery = existingData[`year_${grade}`].delivery_status || {};
+                            }
+
+                            let cap = CAPS[grade]; let cut = PASS_CUTOFF[grade]; let s_map = {}; let total_score = 0;
+                            AREAS.forEach(area => {
+                                const rawScore = Number(row[area] || 0);
+                                s_map[area] = area === 'T' ? Math.min(rawScore + prevT, cap[area]) : Math.min(rawScore, cap[area]);
+                                total_score += s_map[area];
+                            });
+
+                            let p_map = {};
+                            AREAS.forEach(area => { p_map[area] = s_map[area] >= cut[area]; });
+
+                            let earned = Object.values(p_map).filter(Boolean).length;
+                            let title = earned >= 6 ? (grade === 1 ? "🏆 CITY 스타터" : (grade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중";
+
+                            let payload = {
+                                name: studentName, current_grade: grade, current_studentId: studentId, department: dept, role: "student",
+                                [`year_${grade}`]: { scores: s_map, pass: p_map, earned_badges: earned, total_score: total_score, title: title, delivery_status: currentDelivery }
+                            };
+
+                            // ★ 평문 비밀번호 저장 삭제 완료!
+
+                            const batch = db_compat.batch();
+                            batch.set(db_compat.collection("students").doc(targetDocId), payload, { merge: true });
+                            batch.set(db_compat.collection("directory").doc(studentId), { stableId: targetDocId, authEmail: authEmail || null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+
+                            if (prevStudentId && prevStudentId !== studentId) {
+                                batch.delete(db_compat.collection("directory").doc(prevStudentId));
+                            }
+
+                            await batch.commit();
+                            successCount++;
+                            statusEl.textContent = `⏳ 진행 중... 성공 ${successCount}명 / 실패 ${failCount}명`;
+
+                        } catch (err) {
+                            failCount++;
+                            if (createdUser) {
+                                try { await createdUser.delete(); } catch (rollbackErr) {}
+                            }
+                        } finally {
+                            try { await secondaryApp.auth().signOut(); } catch (_) {}
+                        }
+                    }
+
+                    await safeLog(`학생 엑셀 업로드 완료 (성공: ${successCount}명, 실패: ${failCount}명)`);
+                    alert(`✅ 업로드 완료!\n성공: ${successCount}명\n실패: ${failCount}명`);
+                    statusEl.textContent = `✅ 완료 (성공: ${successCount}명 / 실패: ${failCount}명)`;
+
+                    if (typeof window.loadData === "function") window.loadData();
+                    if (typeof window.loadDashboard === "function") window.loadDashboard();
+
+                } catch (e) {
+                    statusEl.textContent = "❌ 업로드 중 오류 발생";
+                    alert("업로드 중 오류가 발생했습니다.\n" + e.message);
+                } finally {
+                    fileInput.value = "";
+                }
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        });
+
+        // =========================================
+        // ★ 개별 학생 추가: Auth UID 기준 (평문 비번 저장 금지)
+        // =========================================
+        window.addSingleStudent = async function() {
+            const sName = document.getElementById("newSName").value.trim();
+            const sId = document.getElementById("newSId").value.trim();
+            const sDept = document.getElementById("newSDept").value.trim();
+            const sPw = document.getElementById("newSPw").value.trim() || "123456";
+
+            if(!sName || !sId || !sDept) return alert("모든 항목(이름, 학번, 학과)을 입력해주세요.");
+            if(sId.length !== 5) return alert("학번은 반드시 5자리로 입력해주세요. (예: 10419)");
+
+            const grade = Number(sId.charAt(0));
+            if(isNaN(grade) || grade < 1 || grade > 3) return alert("학번의 첫 자리는 1~3학년 중 하나여야 합니다.");
+
+            try {
+                const dirSnap = await window.getDoc(window.doc(window.db, "directory", sId));
+                if(dirSnap.exists()) return alert(`오류: 이미 등록된 학번(${sId})입니다.`);
+
+                const authEmail = `stu_${sId}@induk.hs.kr`;
+                let targetDocId = null;
+
+                try {
+                    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, sPw);
+                    targetDocId = cred.user.uid;
+                    await secondaryApp.auth().signOut();
+                } catch(authErr) {
+                    if(authErr.code === 'auth/email-already-in-use') {
+                        return alert(`🚨 이미 시스템에 존재하는 학생 계정입니다!\n비밀번호 초기화가 필요하다면 Firebase 콘솔의 [Authentication] 탭에서 해당 학생을 삭제 후 다시 추가해주세요.`);
+                    }
+                    throw authErr;
+                }
+
+                let s_map = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
+                let p_map = {S:false, M:false, A:false, R:false, T:false, C:false, I:false, Tr:false, Y:false};
+                
+                let payload = { 
+                    name: sName, current_grade: grade, current_studentId: sId, department: sDept, role: "student", 
+                    // ★ 평문 비밀번호 저장 삭제 완료!
+                    [`year_${grade}`]: { scores: s_map, pass: p_map, earned_badges: 0, total_score: 0, title: "진행중", delivery_status: {} } 
+                };
+                
+                const batch = db_compat.batch();
+                batch.set(db_compat.collection("students").doc(targetDocId), payload);
+                batch.set(db_compat.collection("directory").doc(sId), { stableId: targetDocId, authEmail: authEmail, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                await batch.commit();
+                
+                if (typeof safeLog === "function") await safeLog(`개별 학생 [${sName}(${sId})] 추가`);
+                alert(`✅ [${sName}] 학생이 성공적으로 추가되었습니다.\n초기 비밀번호: ${sPw}`);
+                
+                document.getElementById("newSName").value = "";
+                document.getElementById("newSId").value = "";
+                document.getElementById("newSDept").value = "";
+                document.getElementById("newSPw").value = "";
+                document.getElementById("addStudentBox").style.display = 'none';
+
+                window.loadData();
+                window.loadDashboard();
+            } catch(e) { 
+                alert("학생 추가 중 오류가 발생했습니다: " + e.message); 
+            }
+        };
+
+        // =========================================
+        // ★ 학생 비밀번호 초기화 (안내문구 제공)
+        // =========================================
+        window.resetSelectedPasswords = async function() {
+            alert("🚨 [보안 정책 안내]\n\n구글 Auth 보안이 적용되어, 이제 웹 화면에서 학생의 비밀번호를 임의로 덮어쓸 수 없습니다.\n\n💡 비밀번호 초기화 방법:\n1. Firebase 콘솔 ➡️ [Authentication] 메뉴 접속\n2. 학생 이메일(예: stu_10401@induk.hs.kr) 검색 후 계정 '삭제'\n3. 관리자 화면에서 [개별 학생 추가]로 재등록 (기록은 유지됩니다!)");
+            const checkboxes = document.querySelectorAll('.student-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            const selectAllCb = document.getElementById('selectAllCheckbox');
+            if(selectAllCb) selectAllCb.checked = false;
+        };
+
+        // =========================================
+        // ★ 교사 일괄 등록 (Auth UID 기준 / Firestore 평문 비번 저장 금지)
+        // =========================================
+        document.getElementById("uploadTeacherExcelBtn").addEventListener("click", async () => {
+            const fileInput = document.getElementById("teacherExcelInput");
+            if (!fileInput.files[0]) return alert("파일을 선택해주세요.");
+
+            const btn = document.getElementById("uploadTeacherExcelBtn");
+            btn.innerText = "⏳ 교사 계정 생성 중...";
+            btn.disabled = true;
+
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                let successCount = 0;
+                let failCount = 0;
+                const failedList = [];
+
+                try {
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+                    for (const row of jsonData) {
+                        const tName = String(row["교사 성함"] || "").trim();
+                        const tId = String(row["아이디"] || "").trim();
+                        const tPw = String(row["초기 비밀번호"] || "").trim();
+                        const tRoleDetail = String(row["권한(담임/교과/일반)"] || "일반교사").trim();
+                        const tAssignment = String(row["담당(반/과목)"] || "-").trim() || "-";
+
+                        if (!tName || !tId || !tPw) {
+                            failCount++;
+                            failedList.push(`필수값 누락: ${tName || "(이름없음)"} / ${tId || "(아이디없음)"}`);
+                            continue;
+                        }
+
+                        const authEmail = `${tId}@induk.hs.kr`;
+
+                        try {
+                            const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, tPw);
+                            const uid = cred.user.uid;
+
+                            const dateString = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+                            await window.setDoc(
+                                window.doc(window.db, "teachers", uid),
+                                {
+                                    name: tName,
+                                    userId: tId,
+                                    email: authEmail,
+                                    role: "teacher",
+                                    roleDetail: tRoleDetail,
+                                    assignment: tAssignment,
+                                    createdAt: dateString
+                                }
+                            );
+
+                            successCount++;
+
+                        } catch (authErr) {
+                            console.error("교사 계정 생성 실패:", tId, authErr);
+
+                            if (authErr.code === "auth/email-already-in-use") {
+                                failCount++;
+                                failedList.push(`이미 존재하는 아이디: ${tId}`);
+                            } else {
+                                failCount++;
+                                failedList.push(`${tId}: ${authErr.message}`);
+                            }
+                        } finally {
+                            try { await secondaryApp.auth().signOut(); } catch (_) {}
+                        }
+                    }
+
+                    if (typeof safeLog === "function") {
+                        await safeLog(`교사 일괄 등록 완료 (성공: ${successCount}명, 실패: ${failCount}명)`);
+                    }
+
+                    alert(`✅ 교사 계정 일괄 등록 완료!\n성공: ${successCount}명\n실패: ${failCount}명` +
+                        (failedList.length ? `\n\n실패 목록:\n- ${failedList.join("\n- ")}` : "")
+                    );
+
+                    fileInput.value = "";
+                    if (typeof window.loadTeachers === "function") window.loadTeachers();
+
+                } catch (e) {
+                    console.error("교사 엑셀 업로드 전체 실패:", e);
+                    alert("교사 엑셀 처리 중 오류가 발생했습니다.\n" + e.message);
+                } finally {
+                    btn.innerText = "🚀 교사 계정 일괄 업로드 실행";
+                    btn.disabled = false;
+                }
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        });
+
+        // =========================================
+        // ★ 교사 개별 추가 (Auth UID 기준)
+        // =========================================
+        window.addTeacher = async function() {
+            const tName = document.getElementById("tName").value.trim();
+            const tId = document.getElementById("tId").value.trim();
+            const tPw = document.getElementById("tPw").value.trim();
+            const tRoleDetail = document.getElementById("tRoleDetail").value;
+            const tAssignment = document.getElementById("tAssignment").value.trim() || "-";
+
+            if (!tName || !tId || !tPw) return alert("필수 항목(이름, 아이디, 비번)을 모두 입력하세요.");
+
+            try {
+                const authEmail = tId + "@induk.hs.kr";
+                let uid = null;
+
+                try {
+                    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, tPw);
+                    uid = cred.user.uid;
+                    await secondaryApp.auth().signOut();
+                } catch (authErr) {
+                    if (authErr.code !== 'auth/email-already-in-use') throw authErr;
+                    return alert("이미 사용 중인 교사 아이디입니다. Firebase Auth의 기존 계정은 콘솔에서 UID를 확인해 직접 연결해야 합니다.");
+                }
+
+                const dateString = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+                await window.setDoc(
+                    window.doc(window.db, "teachers", uid),
+                    {
+                        name: tName,
+                        userId: tId,
+                        email: authEmail,
+                        role: "teacher",
+                        roleDetail: tRoleDetail,
+                        assignment: tAssignment,
+                        createdAt: dateString
+                    }
+                );
+
+                document.getElementById("tName").value = "";
+                document.getElementById("tId").value = "";
+                document.getElementById("tPw").value = "";
+                document.getElementById("tAssignment").value = "";
+
+                alert("✅ 교사 계정 생성 완료!");
+                if (typeof safeLog === "function") await safeLog(`신규 교사 [${tName}] 등록`);
+                if (typeof window.loadTeachers === "function") window.loadTeachers();
+
+            } catch (e) {
+                console.error(e);
+                alert("생성 실패: " + e.message);
+            }
+        };
+
+        // =========================================
+        // ★ 교사 정보 수정 모달 (비밀번호 감추기)
+        // =========================================
+        window.openEditTeacherModal = function(docId) {
+            const t = allTeachersData.find(x => x.docId === docId);
+            if(!t) return alert("교사 정보를 찾을 수 없습니다.");
+            
+            document.getElementById("edit-tDocId").value = docId;
+            document.getElementById("edit-tName").value = t.name;
+            document.getElementById("edit-tId").value = t.userId;
+            
+            // ★ 모달창에서 비밀번호 입력칸을 숨깁니다 (보안)
+            if(document.getElementById("edit-tPw")) document.getElementById("edit-tPw").parentElement.style.display = 'none';
+            
+            document.getElementById("edit-tRoleDetail").value = t.roleDetail || "일반교사";
+            document.getElementById("edit-tAssignment").value = t.assignment || "-";
+            
+            document.getElementById("editTeacherModal").style.display = "flex";
+        };
+
+        window.closeEditTeacherModal = function() {
+            document.getElementById("editTeacherModal").style.display = "none";
+        };
+
+        // =========================================
+        // ★ 교사 정보 저장 (비밀번호 업데이트 삭제)
+        // =========================================
+        window.saveTeacherEdit = async function() {
+            const docId = document.getElementById("edit-tDocId").value;
+            const tName = document.getElementById("edit-tName").value.trim();
+            const tRoleDetail = document.getElementById("edit-tRoleDetail").value;
+            const tAssignment = document.getElementById("edit-tAssignment").value.trim();
+
+            if(!tName) return alert("교사 이름은 필수 입력입니다.");
+
+            try {
+                await window.updateDoc(window.doc(window.db, "teachers", docId), {
+                    name: tName,
+                    roleDetail: tRoleDetail,
+                    assignment: tAssignment
+                });
+                if (typeof safeLog === "function") await safeLog(`[${tName}] 교사 정보 및 권한 수정`);
+                alert("교사 정보가 성공적으로 수정되었습니다!");
+                closeEditTeacherModal();
+                window.loadTeachers();
+            } catch(e) {
+                alert("수정 중 오류가 발생했습니다: " + e.message);
+            }
+        };
+
+        // =========================================
+        // ★ 비번 변경 모달 열기/실행 함수 (관리자 본인용)
+        // =========================================
+        window.openChangePwModal = function() {
+            document.getElementById('newAdminPwInput').value = ""; 
+            document.getElementById('changePwModal').style.display = "flex";
+        };
+
+        window.executeChangePw = async function() {
+            const newPassword = document.getElementById('newAdminPwInput').value.trim();
+            
+            if (newPassword.length < 6) {
+                alert("🚨 비밀번호는 최소 6자리 이상이어야 합니다. 다시 시도해주세요.");
+                return;
+            }
+
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert("🚨 로그인 상태가 아닙니다. 다시 로그인해주세요.");
+                return;
             }
 
             try {
-                // 1. Firebase Auth (은행급 보안) 로그인 시도
-                const userCredential = await signInWithEmailAndPassword(auth, authEmail, pw);
-                const uid = userCredential.user.uid;
-
-                loginBtn.innerText = '권한 확인 중... 🔍';
-
-                // 2. 권한 판별 (관리자 -> 교사 -> 학생 순으로 조회, 중간에 끊지 않음!)
-                
-                // [A] 최고 관리자 확인
-                const adminSnap = await getDoc(doc(db, "admin_users", uid));
-                if (adminSnap.exists()) {
-                    sessionStorage.setItem('userRole', 'admin');
-                    sessionStorage.setItem('loginName', adminSnap.data().name || '최고관리자');
-                    location.replace('admin.html');
-                    return; // 관리자면 여기서 종료하고 이동!
-                }
-
-                // [B] 교사 확인
-                const teacherSnap = await getDoc(doc(db, "teachers", uid));
-                if (teacherSnap.exists()) {
-                    const tData = teacherSnap.data();
-                    sessionStorage.setItem('userRole', 'teacher');
-                    sessionStorage.setItem('loginName', tData.name || '교사');
-                    sessionStorage.setItem('roleDetail', tData.roleDetail || '일반교사');
-                    sessionStorage.setItem('assignment', tData.assignment || '-');
-                    location.replace('teacher.html'); // 교사면 여기서 종료하고 이동!
-                    return;
-                }
-
-                // [C] 학생 확인
-                const studentSnap = await getDoc(doc(db, "students", uid));
-                if (studentSnap.exists()) {
-                    const sData = studentSnap.data();
-                    sessionStorage.setItem('userRole', 'student');
-                    sessionStorage.setItem('loginName', sData.name || '학생');
-                    sessionStorage.setItem('studentId', sData.current_studentId || '');
-                    sessionStorage.setItem('grade', sData.current_grade || '');
-                    location.replace('student.html'); // 학생이면 여기서 종료하고 이동!
-                    return;
-                }
-
-                // [D] 3군데 다 찾아봤는데도 없으면 그때서야 에러 발생!
-                throw new Error("role_not_found");
-
+                await user.updatePassword(newPassword);
+                alert("✅ 관리자 비밀번호가 성공적으로 변경되었습니다!\n다음 접속부터는 새 비밀번호를 사용해주세요.");
+                document.getElementById('changePwModal').style.display = "none";
+                if (typeof safeLog === "function") await safeLog("최고관리자 비밀번호 변경 완료");
             } catch (error) {
-                console.error("로그인 실패:", error);
-                errorMsg.style.display = 'block';
-                
-                if (error.message === "role_not_found") {
-                    errorMsg.innerText = "계정은 있으나 시스템에 등록된 권한 정보가 없습니다.";
-                } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    errorMsg.innerText = "아이디(학번) 또는 비밀번호를 다시 확인해주세요.";
-                } else if (error.code === 'auth/too-many-requests') {
-                    errorMsg.innerText = "로그인 실패가 반복되어 일시적으로 잠겼습니다. 잠시 후 다시 시도해주세요.";
+                console.error("비밀번호 변경 에러:", error);
+                if (error.code === 'auth/requires-recent-login') {
+                    alert("🚨 [보안 정책]\n안전한 비밀번호 변경을 위해 현재 세션을 만료시킵니다.\n\n[로그아웃]하신 후 다시 로그인해서 즉시 비밀번호를 변경해주세요!");
                 } else {
-                    errorMsg.innerText = "로그인 시스템 오류가 발생했습니다. 관리자에게 문의하세요.";
+                    alert("❌ 변경 실패: " + error.message);
                 }
-                
-                loginBtn.disabled = false;
-                loginBtn.innerText = '로그인';
-                // 실패 시 찌꺼기 세션 방지를 위해 강제 로그아웃 처리
-                auth.signOut();
             }
-        });
+        };
+    </script>
+
+    <script>
+        const AREAS = ['S', 'M', 'A', 'R', 'T', 'C', 'I', 'Tr', 'Y'];
+        const AREA_NAMES = { S:'정보화', M:'전공성적', A:'예체능', R:'한국사', T:'전공자격', C:'직업기초', I:'외국어', Tr:'성실', Y:'인성' };
+        const CAPS = { 1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 2: { S:50, M:50, A:30, R:30, T:80, C:50, I:40, Tr:50, Y:30 }, 3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 } };
+        const PASS_CUTOFF = { 1: { S:20, M:20, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 }, 2: { S:20, M:20, A:20, R:20, T:30, C:30, I:30, Tr:30, Y:20 }, 3: { S:20, M:40, A:20, R:10, T:30, C:30, I:20, Tr:30, Y:20 } };
+
+        let allStudentsData = []; 
+        let allTeachersData = []; 
+        let myDeptChart = null; let myBadgeChart = null; let myVisitorChart = null;
+        let isSystemLocked = false;
+
+        window.loadLockStatus = async function() {
+            try {
+                const docSnap = await window.getDoc(window.doc(window.db, "settings", "config"));
+                if(docSnap.exists()) {
+                    isSystemLocked = docSnap.data().isLocked || false;
+                    updateLockButtonUI();
+                }
+            } catch(e) {}
+        }
+
+        function updateLockButtonUI() {
+            const btn = document.getElementById("globalLockBtn");
+            if(isSystemLocked) { btn.className = "btn-lock lock-active"; btn.innerHTML = "🔒 시스템 마감됨 (해제하기)"; } 
+            else { btn.className = "btn-lock lock-inactive"; btn.innerHTML = "🔓 시스템 개방 중 (마감하기)"; }
+        }
+
+        window.toggleGlobalLock = async function() {
+            const actionText = isSystemLocked ? "마감을 해제하시겠습니까?" : "올해 평가를 마감하시겠습니까?";
+            if(!confirm(actionText)) return;
+            isSystemLocked = !isSystemLocked;
+            try {
+                await window.setDoc(window.doc(window.db, "settings", "config"), { isLocked: isSystemLocked }, { merge: true });
+                updateLockButtonUI();
+                if (typeof safeLog === "function") safeLog(`시스템 전체 평가 입력 ${isSystemLocked ? '마감' : '개방'} 처리`);
+                alert(`성공적으로 ${isSystemLocked ? '마감' : '개방'} 되었습니다.`);
+            } catch(e) { alert("DB 에러: " + e.message); }
+        }
+
+        window.showSection = function(id) {
+            ['dashboard', 'studentList', 'uploadData', 'photoUpload', 'teacherManage', 'badgeManagement', 'promotion', 'systemLog'].forEach(s => { document.getElementById(s).style.display = 'none'; document.getElementById('nav-' + s).classList.remove('menu-active'); });
+            document.getElementById(id).style.display = 'block'; document.getElementById('nav-' + id).classList.add('menu-active');
+            if(id === 'dashboard') window.loadDashboard();
+            if(id === 'studentList') { window.updateTableHeaders(); window.loadData(); }
+            if(id === 'teacherManage') window.loadTeachers();
+            if(id === 'systemLog') window.loadLogs();
+            if(id === 'badgeManagement') window.loadBadgeData();
+        };
+
+        window.currentAdminPendingApps = [];
+
+        window.openPendingModal = async function() {
+            document.getElementById('pendingModal').style.display = 'flex';
+            const tbody = document.getElementById('adminPendingList');
+            if(!tbody) return;
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:30px;'>데이터를 불러오는 중입니다...⏳</td></tr>";
+
+            try {
+                const qSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중")));
+                let apps = [];
+                qSnap.forEach(doc => { apps.push({ id: doc.id, ...doc.data() }); });
+                
+                apps.sort((a, b) => a.timestamp - b.timestamp); 
+                window.currentAdminPendingApps = apps;
+
+                if(apps.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; padding: 30px; color: #7f8c8d; font-weight: bold;'>현재 승인 대기 중인 내역이 없습니다.</td></tr>";
+                    return;
+                }
+
+                tbody.innerHTML = "";
+                apps.forEach(app => {
+                    let dateObj = new Date(app.timestamp);
+                    let dateStr = `${dateObj.getMonth()+1}/${dateObj.getDate()}`;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="text-align:center;">${dateStr}</td>
+                            <td style="text-align:center;">${app.grade}-${app.classNum}<br><strong>${app.studentName}</strong></td>
+                            <td style="text-align:center; color:#3498db; font-weight:bold;">[${app.area}] ${app.score}점</td>
+                            <td style="text-align:center;"><button class="btn btn-dark" onclick="window.viewAdminProof('${app.id}')">📄 보기</button></td>
+                            <td style="text-align:center;">
+                                <button class="btn btn-green" onclick="window.approveAdminApp('${app.id}', '${app.studentId}', '${app.area}', ${app.score}, ${app.grade})">승인</button>
+                                <button class="btn btn-red" onclick="window.rejectAdminApp('${app.id}')">반려</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch(e) {
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red; padding:30px;'>오류가 발생했습니다. API 연결을 확인하세요.</td></tr>";
+            }
+        };
+
+        window.viewAdminProof = function(appId) {
+            const app = window.currentAdminPendingApps.find(a => a.id === appId);
+            if(!app || !app.fileData) return alert("증빙 자료가 존재하지 않거나 이미 파기되었습니다.");
+
+            const contentBox = document.getElementById('adminProofContent');
+            if(app.fileType === 'image') {
+                contentBox.innerHTML = `<img src="${app.fileData}" style="max-width:100%; max-height:55vh; border-radius:8px; object-fit:contain;">`;
+            } else if(app.fileType === 'pdf') {
+                contentBox.innerHTML = `<iframe src="${app.fileData}" style="width:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
+            } else {
+                contentBox.innerHTML = `미리보기를 지원하지 않는 형식입니다.`;
+            }
+            document.getElementById('adminProofModal').style.display = 'flex';
+        };
+
+        window.approveAdminApp = async function(appId, studentId, area, score, grade) {
+            if(!confirm(`[${studentId}] 학생의 ${area}영역 ${score}점 신청을 최고관리자 권한으로 강제 승인하시겠습니까?\n(승인 시 즉시 점수가 반영됩니다.)`)) return;
+
+            try {
+                await window.updateDoc(window.doc(window.db, "applications", appId), { status: "승인" });
+
+                const studentRef = window.doc(window.db, "students", studentId);
+                const studentSnap = await window.getDoc(studentRef);
+                
+                if(studentSnap.exists()) {
+                    const sData = studentSnap.data();
+                    let yData = sData[`year_${grade}`] || { scores: {}, pass: {} };
+                    
+                    yData.scores[area] = score; 
+                    yData.pass[area] = score >= PASS_CUTOFF[grade][area]; 
+                    
+                    let total = 0, badges = 0;
+                    AREAS.forEach(a => { total += (yData.scores[a] || 0); if(yData.pass[a]) badges++; });
+
+                    let title = yData.title || "진행중";
+                    if(badges >= 6) {
+                        if(grade === 1) title = "🏆 CITY 스타터"; else if(grade === 2) title = "🏆 CITY 빌더"; else title = "🏆 CITY 프로";
+                    }
+
+                    yData.total_score = total; yData.earned_badges = badges; yData.title = title;
+                    await window.updateDoc(studentRef, { [`year_${grade}`]: yData });
+                }
+
+                alert("✅ 최고관리자 승인 완료 및 점수가 업데이트되었습니다.");
+                if (typeof safeLog === "function") safeLog(`관리자 권한으로 [${studentId}] 학생 ${area}영역 결재 승인`);
+                window.openPendingModal(); 
+                window.loadDashboard();    
+            } catch(e) {
+                alert("승인 중 오류 발생: " + e.message);
+            }
+        };
+
+        window.rejectAdminApp = async function(appId) {
+            if(!confirm("이 신청을 반려하시겠습니까?\n(반려 시 DB 서버 용량 확보를 위해 첨부된 증빙자료는 즉시 영구 삭제(null 처리)됩니다.)")) return;
+
+            try {
+                await window.updateDoc(window.doc(window.db, "applications", appId), { 
+                    status: "반려",
+                    fileData: null 
+                });
+                alert("❌ 반려 처리되었으며, 용량 확보를 위해 증빙 파일이 삭제되었습니다.");
+                if (typeof safeLog === "function") safeLog(`관리자 권한으로 결재 반려 (자료 파기)`);
+                window.openPendingModal(); 
+                window.loadDashboard();
+            } catch(e) {
+                alert("반려 처리 중 오류 발생.");
+            }
+        };
+
+        window.printClassChart = function() {
+            const filterClass = document.getElementById("filterClass").value; const filterGrade = document.getElementById("filterGrade").value;
+            if (filterClass === "ALL") return alert("❗ [필터]에서 특정 '반'을 먼저 선택 후 [조회]를 눌러주세요.");
+            if (allStudentsData.length === 0) return alert("출력할 데이터가 없습니다.");
+
+            const labels = []; const dataValues = [];
+            allStudentsData.forEach(s => { labels.push(s.name); dataValues.push(s.yearData.earned_badges || 0); });
+            const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            const printWindow = window.open('', '_blank', 'width=1100,height=800');
+            printWindow.document.write(`
+                <html><head><title>우리 반 역량 현황 출력</title><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+                <style>@page { size: A4 landscape; margin: 10mm; } body { font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 20px; background: white; } .title-wrap { margin-bottom: 30px; } h1 { color: #2c3e50; font-size: 32px; border-bottom: 4px solid #3498db; padding-bottom: 10px; margin-bottom: 10px; display: inline-block; font-weight: 900;} .date-text { color: #7f8c8d; font-size: 16px; font-weight: bold; } .chart-container { width: 100%; max-width: 1050px; margin: 0 auto; height: 500px; } .footer { margin-top: 50px; font-size: 16px; color: #7f8c8d; font-weight: bold; letter-spacing: 2px;}</style></head>
+                <body><div class="title-wrap"><h1>👑 ${filterGrade}학년 ${filterClass}반 스마트시티 배지 획득 현황</h1><div class="date-text">[ ${todayStr} 기준 ]</div></div><div class="chart-container"><canvas id="classChart"></canvas></div><div class="footer">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
+                <script>const badgeLabelPlugin = { id: 'badgeLabels', afterDatasetsDraw(chart, args, pluginOptions) { const { ctx } = chart; chart.data.datasets.forEach((dataset, i) => { const meta = chart.getDatasetMeta(i); meta.data.forEach((bar, index) => { const data = dataset.data[index]; ctx.fillStyle = '#c0392b'; ctx.font = 'bold 18px "Malgun Gothic"'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(data + '개', bar.x, bar.y - 8); }); }); } }; const ctx = document.getElementById('classChart').getContext('2d'); new Chart(ctx, { type: 'bar', data: { labels: [${labels.map(l => `'${l}'`).join(',')}], datasets: [{ label: '획득 배지', data: [${dataValues.join(',')}], backgroundColor: 'rgba(52, 152, 219, 0.85)', borderColor: 'rgba(41, 128, 185, 1)', borderWidth: 2, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1000 }, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 9, ticks: { stepSize: 1, font: { size: 16, weight: 'bold' }, color: '#7f8c8d' }, grid: { color: '#ecf0f1' } }, x: { ticks: { font: { size: 15, weight: 'bold' }, color: '#2c3e50' }, grid: { display: false } } } }, plugins: [badgeLabelPlugin] }); setTimeout(() => { window.print(); }, 1500);<\/script></body></html>
+            `); printWindow.document.close(); 
+            if (typeof safeLog === "function") safeLog(`[${filterGrade}학년 ${filterClass}반] 막대그래프 출력`);
+        };
+        
+        window.downloadExcelReport = function(tableId, fileName) { const table = document.getElementById(tableId); const wb = XLSX.utils.table_to_book(table, {sheet: "보고서"}); XLSX.writeFile(wb, `${fileName}.xlsx`); if (typeof safeLog === "function") safeLog(`엑셀 다운로드 (${fileName})`); };
+
+        window.loadDashboard = async function() {
+            try {
+                let dToday = new Date(new Date().getTime() + 9*60*60*1000);
+                let todayStr = dToday.toISOString().slice(0,10);
+                try {
+                    const todaySnap = await window.getDoc(window.doc(window.db, "system_stats", todayStr));
+                    document.getElementById('visitorCount').innerText = todaySnap.exists() ? todaySnap.data().visitors : 0;
+                } catch(e) { document.getElementById('visitorCount').innerText = 0; }
+
+                const appSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중")));
+                document.getElementById('dashPendingApprove').innerText = appSnap.size + "건";
+
+                const querySnapshot = await window.getDocs(window.collection(window.db, "students"));
+                let totalBadges = 0, topAchievers = 0, pendingAlerts = 0; 
+                let badgeCounts = { S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0 };
+                
+                let dynamicDeptCounts = {}; 
+                
+                querySnapshot.forEach(doc => { 
+                    let d = doc.data(); if(!d.current_grade) return; 
+                    let g = d.current_grade; let yData = d[`year_${g}`]; if(!yData) return; 
+                    let dept = d.department && d.department !== "-" ? d.department : "미지정"; 
+                    
+                    if(!dynamicDeptCounts[dept]) dynamicDeptCounts[dept] = 0;
+
+                    if(yData.earned_badges >= 6) { 
+                        topAchievers++; 
+                        dynamicDeptCounts[dept]++; 
+                    } 
+                    AREAS.forEach(a => { 
+                        if(yData.pass && yData.pass[a]) { badgeCounts[a]++; totalBadges++; }
+                        if(yData.pass && yData.pass[a] === true && (!yData.delivery_status || yData.delivery_status[a] !== true)) { pendingAlerts++; }
+                    }); 
+                });
+                
+                document.getElementById('dashMonthlyBadges').innerText = totalBadges + "개"; document.getElementById('dashTopAchievers').innerText = topAchievers + "명"; document.getElementById('dashPendingAlert').innerText = pendingAlerts + "건";
+                
+                if(dynamicDeptCounts["미지정"] === 0) delete dynamicDeptCounts["미지정"];
+
+                const chartLabels = Object.keys(dynamicDeptCounts).map(name => name.length > 5 ? [name.substring(0, 4), name.substring(4)] : name);
+                const chartData = Object.values(dynamicDeptCounts);
+
+                const ctxDept = document.getElementById('deptChart').getContext('2d'); if(myDeptChart) myDeptChart.destroy(); 
+                myDeptChart = new Chart(ctxDept, { 
+                    type: 'bar', 
+                    data: { 
+                        labels: chartLabels, 
+                        datasets: [{ label: '인증 달성자', data: chartData, backgroundColor: '#3498db' }] 
+                    } 
+                });
+
+                const ctxBadge = document.getElementById('badgeChart').getContext('2d'); if(myBadgeChart) myBadgeChart.destroy(); myBadgeChart = new Chart(ctxBadge, { type: 'doughnut', data: { labels: AREAS.map(a => AREA_NAMES[a]), datasets: [{ data: AREAS.map(a => badgeCounts[a]), backgroundColor: ['#1abc9c', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c', '#2ecc71', '#95a5a6'] }] }, options: { plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } } } } });
+
+                let dates = []; let visitors = [];
+                for(let i=6; i>=0; i--) {
+                    let d = new Date(new Date().getTime() + 9*60*60*1000 - (i*24*60*60*1000)); let dStr = d.toISOString().slice(0,10); dates.push(dStr.slice(5));
+                    try { const snap = await window.getDoc(window.doc(window.db, "system_stats", dStr)); visitors.push(snap.exists() ? snap.data().visitors : 0); } catch(e) { visitors.push(0); }
+                }
+                const ctxVis = document.getElementById('visitorChart').getContext('2d'); if(myVisitorChart) myVisitorChart.destroy(); myVisitorChart = new Chart(ctxVis, { type: 'line', data: { labels: dates, datasets: [{ label: '방문자', data: visitors, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)', fill: true, tension: 0.3 }] }, options: { maintainAspectRatio: false } });
+            } catch(e) {}
+        };
+
+        window.updateTableHeaders = function() {
+            const grade = document.getElementById("filterGrade").value; const cutoffs = PASS_CUTOFF[grade];
+            let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th>이름</th>`; 
+            AREAS.forEach(a => { 
+                headerHtml += `<th>[${a}]<br><span class="th-criteria">(${cutoffs[a]}점↑)</span></th>`; 
+            }); 
+            headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력</th>`; 
+            document.getElementById("tableHeaderRow").innerHTML = headerHtml;
+        };
+
+        window.toggleAllCheckboxes = function(source) {
+            const checkboxes = document.querySelectorAll('.student-checkbox');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+        };
+
+        window.loadData = async function() {
+            const tbody = document.getElementById("studentTableBody"); 
+            const filterGrade = document.getElementById("filterGrade").value; 
+            const filterDept = document.getElementById("filterDept").value; 
+            const filterClass = document.getElementById("filterClass").value; 
+            const filterCert = document.getElementById("filterCert").value;
+            tbody.innerHTML = "<tr><td colspan='17'>불러오는 중...</td></tr>";
+            
+            try {
+                const querySnapshot = await window.getDocs(window.collection(window.db, "students")); 
+                let students = []; allStudentsData = [];
+                
+                let dbDepartments = new Set();
+
+                querySnapshot.forEach(doc => {
+                    let data = doc.data(); 
+                    if(data.department && data.department !== "-" && data.department !== "미지정") {
+                        dbDepartments.add(data.department);
+                    }
+
+                    let yearData = data[`year_${filterGrade}`] || {};
+
+                    if (data.current_grade == filterGrade && data[`year_${filterGrade}`]) {
+                        if (filterDept !== "ALL" && (data.department || "미지정") !== filterDept) return;
+                        let classNum = parseInt(String(data.current_studentId).substring(1, 3), 10); 
+                        if (filterClass !== "ALL" && !isNaN(classNum) && classNum !== Number(filterClass)) return;
+                        if (filterCert === 'PASS' && (yearData.earned_badges || 0) < 6) return;
+                        
+                        let sInfo = { docId: doc.id, id: data.current_studentId, name: data.name, dept: data.department || "-", photo: data.photoUrl || null, birthdate: data.birthdate, yearData: yearData };
+                        students.push(sInfo); allStudentsData.push(sInfo);
+                    }
+                });
+
+                const filterDeptEl = document.getElementById("filterDept");
+                const badgeFilterDeptEl = document.getElementById("badgeFilterDept");
+                const editDeptEl = document.getElementById("edit-Dept");
+
+                let currentFilter = filterDeptEl.value;
+                let currentBadgeFilter = badgeFilterDeptEl.value;
+
+                let optionsHtml = `<option value="ALL">전체 학과</option>`;
+                let editOptionsHtml = `<option value="미지정">미지정</option>`;
+
+                let sortedDepts = Array.from(dbDepartments).sort();
+                sortedDepts.forEach(dept => {
+                    optionsHtml += `<option value="${dept}">${dept}</option>`;
+                    editOptionsHtml += `<option value="${dept}">${dept}</option>`;
+                });
+
+                filterDeptEl.innerHTML = optionsHtml;
+                badgeFilterDeptEl.innerHTML = optionsHtml;
+                editDeptEl.innerHTML = editOptionsHtml;
+
+                if(dbDepartments.has(currentFilter)) filterDeptEl.value = currentFilter;
+                if(dbDepartments.has(currentBadgeFilter)) badgeFilterDeptEl.value = currentBadgeFilter;
+
+                students.sort((a,b) => String(a.id).localeCompare(String(b.id))); allStudentsData.sort((a,b) => String(a.id).localeCompare(String(b.id)));
+
+                tbody.innerHTML = students.length === 0 ? `<tr><td colspan='17' style='padding:30px;'>조건에 맞는 데이터가 없습니다. <br><br>👉 필터가 <b>'${filterGrade}학년'</b>으로 맞춰져 있습니다!</td></tr>` : "";
+                
+                students.forEach(s => {
+                    let sc = s.yearData.scores || {}; let p = s.yearData.pass || {}; let d = s.yearData.delivery_status || {};
+                    let photoHtml = s.photo ? `<img src="${s.photo}" class="profile-img" onclick="openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
+                    
+                    let rowHtml = `<tr class="${(s.yearData.earned_badges || 0) >= 6 ? 'certified-row' : ''}">
+                        <td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}" data-name="${s.name}"></td>
+                        <td style="white-space:nowrap;">${s.dept}</td>
+                        <td>${s.id}</td>
+                        <td style="text-align: left; display: flex; align-items: center; justify-content: space-between;">
+                            <div>${photoHtml} <strong>${s.name}</strong></div>
+                            <div>
+                                <span style="cursor:pointer; color:#f39c12; font-size:16px;" onclick="openEditModal('${s.docId}', ${filterGrade})" title="정보 및 점수 수정">✏️</span>
+                            </div>
+                        </td>`;
+                    
+                    AREAS.forEach(area => { 
+                        let isDone = d[area] === true; let scoreVal = sc[area] || 0; let cellContent = scoreVal; 
+                        if(p[area]) { 
+                            cellContent = `<span class="pass-star">★</span>${scoreVal}<br><span class="badge-status ${isDone?'status-done':'status-yet'}" onclick="toggleDelivery('${s.docId}', ${filterGrade}, '${area}', ${isDone})">${isDone?'지급완료':'미지급'}</span>`; 
+                        }
+                        rowHtml += `<td class="score-cell">${cellContent}</td>`; 
+                    });
+                    
+                    let certBtn = (s.yearData.earned_badges || 0) >= 6 ? `<button class="btn ${filterGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="alert('인증서 출력 준비중')">🖨️</button>` : "-"; 
+                    rowHtml += `<td style="color:#2980b9; font-weight:bold;">${s.yearData.total_score || 0}점</td>
+                                <td><strong>${s.yearData.earned_badges || 0}개</strong></td>
+                                <td style="color:#27ae60; font-weight:bold; white-space:nowrap;">${s.yearData.title || '진행중'}</td>
+                                <td>${certBtn}</td></tr>`;
+                    tbody.innerHTML += rowHtml;
+                });
+            } catch(e) { 
+                console.error("🚨 loadData 실제 에러 원인:", e);
+                tbody.innerHTML = `<tr><td colspan='17' style='color:red; font-weight:bold;'>🚨 목록을 불러오는 중 에러가 발생했습니다: ${e.message} (F12 콘솔 확인)</td></tr>`; 
+            }
+        };
+
+        window.deleteSelectedStudents = async function() {
+            const selected = document.querySelectorAll('.student-checkbox:checked');
+            if(selected.length === 0) return alert('삭제할 학생을 체크박스로 선택해주세요.');
+            
+            const names = Array.from(selected).map(cb => cb.getAttribute('data-name')).join(', ');
+            if(!confirm(`선택한 ${selected.length}명의 학생(${names})을(를) 완전히 삭제하시겠습니까?\n이 작업은 복구할 수 없습니다.`)) return;
+
+            try {
+                for(let cb of selected) {
+                    await window.deleteDoc(window.doc(window.db, "students", cb.value));
+                }
+                if (typeof safeLog === "function") safeLog(`${selected.length}명의 학생 일괄 영구 삭제`);
+                alert(`✅ 총 ${selected.length}명의 학생 데이터가 삭제되었습니다.`);
+                window.loadData();
+                window.loadDashboard();
+            } catch(e) { alert("삭제 중 오류가 발생했습니다: " + e.message); }
+        };
+
+        window.openEditModal = function(docId, grade) { 
+            const student = allStudentsData.find(s => s.docId === docId); 
+            if(!student || !student.yearData) { alert("학생 데이터를 불러오지 못했습니다."); return; }
+            const scores = student.yearData.scores || {}; 
+            
+            document.getElementById("editDocId").value = docId; 
+            document.getElementById("editGrade").value = grade; 
+            
+            const photoEl = document.getElementById("edit-PhotoImg"); 
+            photoEl.src = student.photo ? student.photo : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E"; 
+            
+            document.getElementById("edit-Name").value = student.name; 
+            document.getElementById("edit-StudentId").value = student.id; 
+            document.getElementById("edit-Dept").value = student.dept; 
+            
+            AREAS.forEach(a => document.getElementById(`edit-${a}`).value = scores[a] || 0); 
+            document.getElementById("editModal").style.display = "flex"; 
+        };
+
+        window.loadTeachers = async function() {
+            const tbody = document.getElementById("teacherTableBody"); tbody.innerHTML = "<tr><td colspan='5'>불러오는 중...</td></tr>";
+            try { 
+                const querySnapshot = await window.getDocs(window.collection(window.db, "teachers")); 
+                tbody.innerHTML = ""; 
+                allTeachersData = []; 
+                querySnapshot.forEach(doc => { 
+                    let t = doc.data(); 
+                    t.docId = doc.id; 
+                    allTeachersData.push(t);
+
+                    let roleStr = t.roleDetail ? t.roleDetail : "교사";
+                    let assignStr = t.assignment && t.assignment !== "-" ? `(${t.assignment})` : "";
+                    
+                    tbody.innerHTML += `<tr>
+                        <td><strong>${t.name} 선생님</strong></td>
+                        <td>${t.userId}</td>
+                        <td><span style="color:#16a085; font-weight:bold;">${roleStr}</span> <span style="font-size:11px; color:#7f8c8d;">${assignStr}</span></td>
+                        <td>${t.createdAt || '-'}</td>
+                        <td>
+                            <button class="btn btn-orange" onclick="openEditTeacherModal('${doc.id}')">수정</button>
+                            <button class="btn btn-red" onclick="deleteTeacher('${doc.id}', '${t.name}')">삭제</button>
+                        </td>
+                    </tr>`; 
+                }); 
+                if(tbody.innerHTML === "") tbody.innerHTML = "<tr><td colspan='5'>등록된 교사가 없습니다.</td></tr>"; 
+            } catch(e) { tbody.innerHTML = "<tr><td colspan='5'>오류 발생</td></tr>"; }
+        };
+
+        window.deleteTeacher = async function(docId, name) { 
+            if(!confirm(`[${name}] 교사 데이터를 삭제하시겠습니까?\n(주의: Firebase Auth 계정은 콘솔에서 직접 삭제해야 합니다.)`)) return; 
+            await window.deleteDoc(window.doc(window.db, "teachers", docId)); 
+            if (typeof safeLog === "function") safeLog(`교사 삭제 [${name}]`); 
+            window.loadTeachers(); 
+        };
+
+        window.closeEditModal = function() { document.getElementById("editModal").style.display = "none"; };
+        
+        window.saveEdit = async function() { const docId = document.getElementById("editDocId").value; const newName = document.getElementById("edit-Name").value; const newId = document.getElementById("edit-StudentId").value; const newDept = document.getElementById("edit-Dept").value; const newGrade = Number(newId.charAt(0)); let cap = CAPS[newGrade], cut = PASS_CUTOFF[newGrade], s_map = {}, total_score = 0; AREAS.forEach(a => { let inputVal = Number(document.getElementById(`edit-${a}`).value || 0); s_map[a] = Math.min(inputVal, cap[a]); total_score += s_map[a]; }); let p_map = {}; AREAS.forEach(a => p_map[a] = s_map[a] >= cut[a]); let earned = Object.values(p_map).filter(Boolean).length; let title = earned >= 6 ? (newGrade === 1 ? "🏆 CITY 스타터" : (newGrade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중"; let updateData = { name: newName, current_studentId: newId, department: newDept, current_grade: newGrade }; updateData[`year_${newGrade}.scores`] = s_map; updateData[`year_${newGrade}.pass`] = p_map; updateData[`year_${newGrade}.earned_badges`] = earned; updateData[`year_${newGrade}.total_score`] = total_score; updateData[`year_${newGrade}.title`] = title; await window.updateDoc(window.doc(window.db, "students", docId), updateData); if (typeof safeLog === "function") safeLog(`[${newName}] 학생 정보 수정`); window.closeEditModal(); alert(`수정 완료!`); window.loadData(); window.loadDashboard(); };
+        
+        window.openPhotoView = function(photoUrl, name, studentId, dept) { document.getElementById("photoViewImg").src = photoUrl; document.getElementById("photoViewName").innerText = name; document.getElementById("photoViewInfo").innerText = `${dept} | 학번: ${studentId}`; document.getElementById("photoViewModal").style.display = "flex"; }
+        window.closePhotoView = function() { document.getElementById("photoViewModal").style.display = "none"; }
+        
+        window.toggleDelivery = async function(id, grade, area, currentStatus) { if(!confirm(`상태를 변경할까요?`)) return; await window.updateDoc(window.doc(window.db, "students", id), { [`year_${grade}.delivery_status.${area}`]: !currentStatus }); if (typeof safeLog === "function") safeLog(`배지 지급 상태 변경`); window.loadData(); window.loadDashboard(); };
+        
+        document.getElementById("uploadPhotosBtn").addEventListener("click", async () => { const fileInput = document.getElementById("photoFilesInput"); const files = fileInput.files; const progressDiv = document.getElementById("photoUploadProgress"); if (files.length === 0) return alert("사진 선택!"); if (!confirm(`업로드할까요?`)) return; progressDiv.style.display = "block"; progressDiv.innerText = "⏳ 사진 처리 중..."; let successCount = 0, failCount = 0; for (let i = 0; i < files.length; i++) { let file = files[i]; let studentId = file.name.split('.')[0]; const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId))); if (!qSnap.empty) { const targetDocId = qSnap.docs[0].id; const reader = new FileReader(); await new Promise((resolve) => { reader.onload = async function(e) { await window.updateDoc(window.doc(window.db, "students", targetDocId), { photoUrl: e.target.result }); successCount++; resolve(); }; reader.readAsDataURL(file); }); } else { failCount++; } } progressDiv.innerText = `✅ 완료! (성공: ${successCount}명)`; fileInput.value = ""; window.loadData(); });
+        
+        window.loadBadgeData = async function() { const tbody = document.getElementById("badgeTableBody"); const filterGrade = document.getElementById("badgeFilterGrade").value; const filterDept = document.getElementById("badgeFilterDept").value; tbody.innerHTML = ""; try { const querySnapshot = await window.getDocs(window.collection(window.db, "students")); querySnapshot.forEach(doc => { let data = doc.data(); if (data.current_grade == filterGrade && data[`year_${filterGrade}`]) { if (filterDept !== "ALL" && (data.department || "미지정") !== filterDept) return; let pass = data[`year_${filterGrade}`].pass || {}; let delivery = data[`year_${filterGrade}`].delivery_status || {}; let newBadges = AREAS.filter(a => pass[a] === true && delivery[a] !== true); if (newBadges.length > 0) { let badgeHtml = newBadges.map(a => `<span style="background:#e74c3c; color:white; padding:3px 6px; border-radius:4px; margin:2px; display:inline-block;">[${a}] ${AREA_NAMES[a]}</span>`).join(""); tbody.innerHTML += `<tr><td style="white-space:nowrap;">${data.department||"-"}</td><td>${data.current_studentId}</td><td><strong>${data.name}</strong></td><td>${badgeHtml}</td><td><button class="btn btn-blue" onclick="deliverSpecificBadges('${doc.id}', ${filterGrade}, '${newBadges.join(",")}')">지급 완료</button></td></tr>`; } } }); if(tbody.innerHTML === "") tbody.innerHTML = "<tr><td colspan='5'>지급 대상자 없음</td></tr>"; } catch(e) { tbody.innerHTML = "<tr><td colspan='5'>API 연결 필요</td></tr>"; } };
+        window.deliverSpecificBadges = async function(id, grade, areas) { if(!confirm("지급 완료 처리할까요?")) return; let updateData = {}; areas.split(",").forEach(a => updateData[`year_${grade}.delivery_status.${a}`] = true); await window.updateDoc(window.doc(window.db, "students", id), updateData); if (typeof safeLog === "function") safeLog(`배지 일괄 지급 처리`); window.loadBadgeData(); window.loadDashboard(); };
+
+        window.loadLogs = async function() {
+            const tbody = document.getElementById("logTableBody"); tbody.innerHTML = "<tr><td colspan='3'>불러오는 중...</td></tr>";
+            try {
+                const querySnapshot = await window.getDocs(window.collection(window.db, "system_logs"));
+                let logs = []; querySnapshot.forEach(doc => logs.push(doc.data()));
+                logs.sort((a, b) => b.timestamp - a.timestamp); tbody.innerHTML = "";
+                logs.slice(0, 200).forEach(log => { 
+                    let userIcon = "👤"; if(log.user.includes("학생")) userIcon = "🧑‍🎓"; else if(log.user.includes("교사")) userIcon = "👨‍🏫"; else if(log.user.includes("관리자") || log.user.includes("Admin")) userIcon = "👑";
+                    tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${userIcon} ${log.user}</td><td>${log.action}</td></tr>`; 
+                });
+                if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>활동 로그가 없습니다.</td></tr>";
+            } catch(e) { tbody.innerHTML = "<tr><td colspan='3'>API 키를 연결해주세요.</td></tr>"; }
+        };
+
     </script>
 </body>
 </html>
