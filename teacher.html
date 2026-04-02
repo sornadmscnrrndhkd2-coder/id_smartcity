@@ -88,14 +88,11 @@
         .all-grades-dashboard { display: none; margin-top: 30px; animation: fadeIn 0.4s ease; }
         .ranking-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; } 
         .grade-ranking-panel { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #edf0f2;}
-        
-        /* ★ 메달 크기 고정! */
         .rank-card { display: flex; align-items: center; padding: 12px 15px; border-radius: 12px; color: white; justify-content: space-between; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 10px;}
         .rank-card:last-child { margin-bottom: 0;}
         .rank-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
         .rare-medal { width: 32px; height: 32px; min-width: 32px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .rare-medal img { width: 100%; height: 100%; max-width: 32px; max-height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); display: block;}
-        
         .rank-details { display: flex; align-items: baseline; gap: 6px;}
         .rank-details h4 { margin: 0; font-size: 14px; font-weight: 900; }
         .rank-details p { margin: 0; font-size: 11px; opacity: 0.9; font-weight: 500;}
@@ -125,6 +122,7 @@
         .eval-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
         .eval-card { background: white; border-radius: 12px; padding: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.02); border: 1px solid #edf0f2; position: relative;}
         
+        /* 잠긴 체크박스를 위한 CSS */
         .readonly-area { pointer-events: none; background-color: #fdfdfe; opacity: 0.6; }
         .view-only-mode .check-label { pointer-events: none; }
 
@@ -188,16 +186,16 @@
     </style>
 </head>
 <body>
-    
+
     <script>
         window.MY_GLOBAL_FIREBASE_CONFIG = {
             apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
-            authDomain: "induk-smartcity.firebaseapp.com",
-            projectId: "induk-smartcity",
-            storageBucket: "induk-smartcity.firebasestorage.app",
-            messagingSenderId: "836222545739",
-            appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-            measurementId: "G-3SL84TXVHD"
+  authDomain: "induk-smartcity.firebaseapp.com",
+  projectId: "induk-smartcity",
+  storageBucket: "induk-smartcity.firebasestorage.app",
+  messagingSenderId: "836222545739",
+  appId: "1:836222545739:web:d370e05c68300ce6e202ce",
+  measurementId: "G-3SL84TXVHD"
         };
     </script>
 
@@ -257,6 +255,170 @@
             }
         };
     </script>
+
+    <header class="header">
+        <div class="header-left">
+            <div class="header-icon">👨‍🏫</div>
+            <div class="header-title"><h1>스마트시티 평가시스템</h1><p id="headerSubTitle">교사 전용 대시보드</p></div>
+        </div>
+        <div class="header-right">
+            <span id="teacherNameDisplay" style="color:white; font-weight:bold; margin-right: 10px;"></span>
+            <span id="roleBadgeDisplay" style="background:var(--accent-orange); color:white; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; margin-right: 10px;"></span>
+            <span id="systemLockBadge" style="display:none; background:var(--danger-red); color:white; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; margin-right: 10px;">
+                🔒 마감됨
+            </span>
+            <button class="btn-logout" onclick="sessionStorage.clear(); location.href='index.html';">로그아웃</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="tab-container" id="tabNav" style="display: flex;">
+            <button class="tab-btn active" onclick="window.switchTab('tab-approve')" id="btnTabApprove">📋 우리 반 결재함</button>
+            <button class="tab-btn" onclick="window.switchTab('tab-manual')" id="btnTabManual">🔍 학생 조회 및 입력</button>
+        </div>
+
+        <div id="tab-approve" class="tab-content active">
+            <div class="dashboard-summary">
+                <div class="stat-card">
+                    <div class="stat-icon bg-orange">🔔</div>
+                    <div class="stat-info"><p>승인 대기 중인 인증 요청</p><h3><span id="pendingCount">0</span><span class="highlight">건</span></h3></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue">📊</div>
+                    <div class="stat-info"><p>우리 반 평균 획득 점수</p><h3><span id="classAvgScore">0</span><span> / 410점</span></h3></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-green">🏅</div>
+                    <div class="stat-info"><p>우리 반 배지 획득률</p><h3><span id="classAvgBadge">0</span><span>%</span></h3></div>
+                </div>
+            </div>
+
+            <h3 class="section-title">⏱️ 우리 반 역량 인증 결재함</h3>
+            <div class="approval-list" id="approvalListContainer">
+                <div style="text-align:center; padding: 40px; color: var(--text-gray); font-weight: bold; background: white; border-radius: 16px; border: 1px solid #edf0f2;">
+                    결재함 데이터를 불러오는 중입니다...⏳
+                </div>
+            </div>
+
+            <div class="table-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <h3 class="section-title" style="margin:0;">📋 담당 학급 학생 달성 현황</h3>
+                    <button id="btnHomeroomTop10" style="background:var(--dark-blue); color:white; border:none; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);">🏆 학년별 TOP 10 보기</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="homeroomTable">
+                        <thead><tr><th>학번</th><th>이름</th><th>총점</th><th>획득 배지</th><th>현재 티어</th><th>조회</th></tr></thead>
+                        <tbody>
+                            <tr><td colspan="6" style="text-align:center; padding: 40px; color: var(--text-gray); font-weight: bold;">등록된 학생 데이터가 없습니다.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-manual" class="tab-content">
+            
+            <div id="top-search-area">
+                <div id="excelUploadGuide" style="display:none; background: #eef2fb; border: 1px solid #3b71ca; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                    <h3 style="margin-top:0; color: var(--primary-blue); font-size: 16px;">📁 [대량 입력] <span id="excelGuideSubj">담당 과목</span> 엑셀 업로드</h3>
+                    <p style="margin:0 0 10px 0; font-size: 13px; color: #555;">수백 명의 전교생 점수를 엑셀 명렬표를 이용해 한 번에 등록하세요.</p>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="window.downloadTeacherExcelTemplate()" style="background:#1a252f; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;">1. 양식 다운로드</button>
+                        <input type="file" id="teacherExcelInput" accept=".xlsx" style="background:white; padding:5px; border-radius:8px; border:1px solid #ccc;">
+                        <button onclick="window.uploadTeacherExcel()" style="background:#27ae60; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;">2. 업로드 및 반영</button>
+                    </div>
+                </div>
+
+                <h3 class="section-title" style="margin-bottom:15px;" id="manualTitle">✍️ 학생 역량 수동 검색 및 입력</h3>
+                <div class="search-box">
+                    <input type="tel" id="searchInput" placeholder="학번 5자리 검색 (예: 10101)">
+                    <button id="searchBtn">학생 검색</button>
+                </div>
+            </div>
+
+            <div id="all-grades-dashboard" class="all-grades-dashboard" style="display: none;">
+                <div class="dashboard-summary">
+                    <div class="stat-card"><div class="stat-icon bg-blue">📊</div><div class="stat-info"><p>1학년 달성률</p><h3 id="grade1Avg">0<span>%</span></h3></div></div>
+                    <div class="stat-card"><div class="stat-icon bg-orange">📊</div><div class="stat-info"><p>2학년 달성률</p><h3 id="grade2Avg">0<span>%</span></h3></div></div>
+                    <div class="stat-card"><div class="stat-icon bg-green">📊</div><div class="stat-info"><p>3학년 달성률</p><h3 id="grade3Avg">0<span>%</span></h3></div></div>
+                </div>
+
+                <h3 class="section-title" style="margin-top: 30px; margin-bottom: 20px;">🏆 스마트시티 학년별 명예의 전당</h3>
+                <div class="ranking-grid">
+                    <div class="grade-ranking-panel">
+                        <h4 style="margin:0 0 15px 0; color:var(--text-dark); text-align:center; cursor:pointer;" onclick="window.openTeacherRankModal(1)">🌱 1학년 TOP 3 <span style="font-size:12px; color:var(--primary-blue);">[TOP 10 보기 👆]</span></h4>
+                        <div class="rank-card rank-1"><div class="rank-info"><div class="rare-medal"><img src="https://cdn-icons-png.flaticon.com/512/2583/2583344.png" alt="금메달"></div><div class="rank-details"><h4>-</h4><p>(-)</p></div></div><div class="rank-score">0점</div></div>
+                        <div class="rank-card rank-2"><div class="rank-info"><div class="rare-medal"><img src="https://cdn-icons-png.flaticon.com/512/2583/2583319.png" alt="은메달"></div><div class="rank-details"><h4>-</h4><p>(-)</p></div></div><div class="rank-score">0점</div></div>
+                        <div class="rank-card rank-3"><div class="rank-info"><div class="rare-medal"><img src="https://cdn-icons-png.flaticon.com/512/2583/2583434.png" alt="동메달"></div><div class="rank-details"><h4>-</h4><p>(-)</p></div></div><div class="rank-score">0점</div></div>
+                    </div>
+                    <div class="grade-ranking-panel">
+                        <h4 style="margin:0 0 15px 0; color:var(--text-dark); text-align:center; cursor:pointer;" onclick="window.openTeacherRankModal(2)">👑 2학년 TOP 3 <span style="font-size:12px; color:var(--primary-blue);">[TOP 10 보기 👆]</span></h4>
+                        <div class="rank-card rank-1"><div class="rank-info"><div class="rare-medal"><img src="https://cdn-icons-png.flaticon.com/512/2583/2583344.png" alt="금메달"></div><div class="rank-details"><h4>-</h4><p>(-)</p></div></div><div class="rank-score">0점</div></div>
+                        <div class="rank-card rank-2"><div class="rank-info"><div class="rare-medal"><img src="https://cdn-icons-png.flaticon.com/512/2583/2583319.png" alt="은메달"></div><div class="rank-details"><h4>-</h4><p>(-)</p></div></div><div class="rank-score">0점</div></div>
+                        <div class="rank-card rank-3"><div class="rank-info"><div class="rare-medal"><img src="https://cdn-icons-png.flaticon.com/512/2583/2583434.png" alt="동메달"></div><div class="rank-details"><h4>-</h4><p>(-)</p></div></div><div class="rank-score">0점</div></div>
+                    </div>
+                    <div class="grade-ranking-panel">
+                        <h4 style="margin:0 0 15px 0; color:var(--text-dark); text-align:center; cursor:pointer;" onclick="window.openTeacherRankModal(3)">💎 3학년 TOP 3 <span style="font-size:12px; color:var(--primary-blue);">[TOP 10 보기 👆]</span></h4>
+                        <div class="rank-card rank-1"><div class="rank-info"><div class="rare-medal"><img src="https://cdn-icons-png.flaticon.com/512/2583/2583344.png" alt="금메달"></div><div class="rank-details"><h4>-</h4><p>(-)</p></div></div><div class="rank-score">0점</div></div>
+                        <div class="rank-card rank-2"><div class="rank-info"><div class="rare-medal"><img src="https://cdn-icons-png.flaticon.com/512/2583/2583319.png" alt="은메달"></div><div class="rank-details"><h4>-</h4><p>(-)</p></div></div><div class="rank-score">0점</div></div>
+                        <div class="rank-card rank-3"><div class="rank-info"><div class="rare-medal"><img src="https://cdn-icons-png.flaticon.com/512/2583/2583434.png" alt="동메달"></div><div class="rank-details"><h4>-</h4><p>(-)</p></div></div><div class="rank-score">0점</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="student-detail-area" style="display:none; animation: fadeIn 0.3s ease;">
+                <div class="student-profile-card" id="studentCard" style="display: flex;">
+                    <div class="profile-header">
+                        <div class="profile-photo">
+                            <img id="sPhotoImg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="학생사진">
+                        </div>
+                        <div class="student-info-text">
+                            <h2 id="sName">이름 <span id="sTierBadge" class="tier-tag tier-none" style="font-size:12px; margin-left:8px; vertical-align:middle;">🌱 성장 중</span></h2>
+                            <p id="sInfo">학년 | 반 | 학번</p>
+                        </div>
+                    </div>
+                    <div class="profile-score">
+                        <p>현재 총 획득 점수</p>
+                        <h3 id="sTotalScore">0<span>점</span></h3>
+                    </div>
+                </div>
+
+                <div id="adminOverrideWarning" style="display:none; background:#fdedec; border:1px solid #fadbd8; color:#c0392b; padding:15px; border-radius:12px; margin-bottom:20px; font-weight:bold; font-size:13px; align-items:center; gap:10px;">
+                    <span style="font-size:20px;">🚨</span> <span>관리자가 연필 툴로 직접 입력한 점수가 포함되어 있어, 실제 체크박스 항목 합산 점수와 총점이 다를 수 있습니다.</span>
+                </div>
+
+                <div class="eval-section" id="evalSection"></div>
+                
+                <div class="action-buttons" id="actionButtons">
+                    <button class="btn-cancel" onclick="window.resetSearch()">🔙 다른 학생 검색 (뒤로가기)</button>
+                    <button class="btn-save" id="saveBtn">💾 평가 데이터 저장하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="rankModal" class="modal-overlay" onclick="window.closeTeacherModal(event, 'rankModal')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="rankModalTitle">🏆 명예의 전당 TOP 10</h3>
+                <button class="close-btn" onclick="document.getElementById('rankModal').classList.remove('active'); document.body.style.overflow = 'auto';">✕</button>
+            </div>
+            <div class="ranking-list" id="rankModalList">
+            </div>
+        </div>
+    </div>
+
+    <div id="proofModal" class="modal-overlay" onclick="window.closeTeacherModal(event, 'proofModal')">
+        <div class="modal-content" style="max-width: 700px; text-align: center;">
+            <div class="modal-header">
+                <h3>📄 제출된 증빙 자료</h3>
+                <button class="close-btn" onclick="document.getElementById('proofModal').classList.remove('active'); document.body.style.overflow = 'auto';">✕</button>
+            </div>
+            <div id="proofContent" style="margin-top: 15px; max-height: 60vh; overflow-y: auto; background: #eee; border-radius: 8px; display: flex; justify-content: center; align-items: center; min-height: 200px;">
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -334,57 +496,218 @@
         window.currentPendingApps = []; 
         window.isSystemLocked = false;
 
-        window.addEventListener('DOMContentLoaded', (event) => {
-            const roleDetail = sessionStorage.getItem('roleDetail') || "일반교사";
-            const assignmentStr = sessionStorage.getItem('assignment') || "";
-            const tabNav = document.getElementById('tabNav');
-            const manualTitle = document.getElementById('manualTitle');
-            const btnTabApprove = document.getElementById('btnTabApprove');
+        const userRole = sessionStorage.getItem('userRole');
+        const loginName = sessionStorage.getItem('loginName') || "선생님";
+        const assignmentStr = sessionStorage.getItem('assignment') || "";
+        const roleDetail = sessionStorage.getItem('roleDetail') || "일반교사";
 
-            const match = assignmentStr.match(/(\d+)[^\d]*(\d+)/);
-            if (match) {
-                homeroomGrade = parseInt(match[1]);
-                homeroomClass = parseInt(match[2]);
-                
-                const btnTop10 = document.getElementById('btnHomeroomTop10');
-                if(btnTop10) {
-                    btnTop10.innerText = `🏆 ${homeroomGrade}학년 TOP 10 보기`;
-                    btnTop10.onclick = function() { window.openTeacherRankModal(homeroomGrade); };
-                }
-            }
+        // 교사 권한 확인 및 튕기기
+        if (userRole !== 'teacher' && userRole !== 'admin') {
+            alert('⚠️ 선생님 권한이 필요한 페이지입니다. 로그인 페이지로 이동합니다.');
+            location.href = 'index.html';
+        }
 
-            // ★ 스마트키 로직: 특정 과목 교사에게만 엑셀 업로드 안내창 열기
-            if(roleDetail === '체육' || roleDetail === '직업기초' || roleDetail === '영어1') {
-                const excelGuide = document.getElementById('excelUploadGuide');
-                if(excelGuide) {
-                    excelGuide.style.display = 'block';
-                    document.getElementById('excelGuideSubj').innerText = roleDetail;
-                }
-            }
+        // 보안 타이머
+        let inactivityTimer;
+        function resetTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(function() {
+                sessionStorage.clear();
+                alert('⚠️ 자동 로그아웃 되었습니다.');
+                location.href = 'index.html';
+            }, 600000); 
+        }
+        window.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
+        document.ontouchstart = resetTimer;
 
-            if(assignmentStr !== '-' && assignmentStr !== '') {
-                // 담임교사인 경우
-                tabNav.style.display = "flex";
-                manualTitle.innerText = "✍️ 학생 역량 수동 검색 및 입력";
-                window.switchTab('tab-approve');
-                setTimeout(() => { 
-                    window.loadApplications(); 
-                    window.loadHomeroomStudents(); 
-                }, 1000); 
-            } else { 
-                // 비담임인 경우
-                if(btnTabApprove) btnTabApprove.style.display = "none";
-                manualTitle.innerText = roleDetail === "일반교사" ? "🔍 전교생 달성 현황 상세 조회" : "✍️ 전교생 담당 과목 역량 입력";
-                window.switchTab('tab-manual');
-            }
+        // ★ 지우개 에러 방지: HTML 로드 후 이름표 꽂아넣기
+        const tNameDisplay = document.getElementById('teacherNameDisplay');
+        if(tNameDisplay) {
+            tNameDisplay.innerText = `${loginName} (담임: ${assignmentStr !== '-' && assignmentStr !== '' ? assignmentStr : '없음'})`;
+        }
+        const roleBadge = document.getElementById('roleBadgeDisplay');
+        if(roleBadge) {
+            roleBadge.innerText = roleDetail;
+        }
+
+        // 초기 세팅 (DOMContentLoaded 대체)
+        const tabNav = document.getElementById('tabNav');
+        const manualTitle = document.getElementById('manualTitle');
+        const btnTabApprove = document.getElementById('btnTabApprove');
+
+        const match = assignmentStr.match(/(\d+)[^\d]*(\d+)/);
+        if (match) {
+            homeroomGrade = parseInt(match[1]);
+            homeroomClass = parseInt(match[2]);
             
-            setTimeout(() => { window.preloadAllGradesTop3(); }, 500);
-        });
+            const btnTop10 = document.getElementById('btnHomeroomTop10');
+            if(btnTop10) {
+                btnTop10.innerText = `🏆 ${homeroomGrade}학년 TOP 10 보기`;
+                btnTop10.onclick = function() { window.openTeacherRankModal(homeroomGrade); };
+            }
+        }
 
+        // ★ 스마트키 로직: 엑셀 업로드 탭 활성화
+        if(roleDetail === '체육' || roleDetail === '직업기초' || roleDetail === '영어1') {
+            const excelGuide = document.getElementById('excelUploadGuide');
+            if(excelGuide) {
+                excelGuide.style.display = 'block';
+                document.getElementById('excelGuideSubj').innerText = roleDetail;
+            }
+        }
+
+        if(assignmentStr !== '-' && assignmentStr !== '') {
+            // 담임교사인 경우
+            if(tabNav) tabNav.style.display = "flex";
+            if(manualTitle) manualTitle.innerText = "✍️ 학생 역량 수동 검색 및 입력";
+            window.switchTab('tab-approve');
+            setTimeout(() => { 
+                window.loadApplications(); 
+                window.loadHomeroomStudents(); 
+            }, 1000); 
+        } else { 
+            // 비담임인 경우
+            if(btnTabApprove) btnTabApprove.style.display = "none";
+            if(manualTitle) manualTitle.innerText = roleDetail === "일반교사" ? "🔍 전교생 달성 현황 상세 조회" : "✍️ 전교생 담당 과목 역량 입력";
+            window.switchTab('tab-manual');
+        }
+        
+        setTimeout(() => { window.preloadAllGradesTop3(); }, 500);
+
+        // 이벤트 리스너 연결 (안전하게)
+        const searchBtnEl = document.getElementById("searchBtn");
+        if(searchBtnEl) {
+            searchBtnEl.addEventListener("click", async () => {
+                const sid = document.getElementById("searchInput").value.trim();
+                if(!sid || sid.length !== 5) return alert("학번 5자리를 정확히 입력해주세요.");
+                
+                const grade = parseInt(sid.charAt(0)); 
+                if(grade < 1 || grade > 3) return alert("올바른 학번(1~3학년)을 입력하세요.");
+                window.lastSearchedGrade = grade;
+
+                try {
+                    const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", sid)));
+                    
+                    if (qSnap.empty) {
+                        return alert(`데이터베이스에 학번이 [${sid}]인 학생이 없습니다.\n학번을 다시 확인해주세요.`);
+                    }
+
+                    const studentData = qSnap.docs[0].data();
+                    window.currentSearchDocId = qSnap.docs[0].id; 
+
+                    let studentName = studentData.name || '학생';
+                    let photoUrl = studentData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+                    
+                    let yData = studentData[`year_${grade}`] || {};
+                    let initialScore = yData.total_score || 0;
+                    let badges = yData.earned_badges || 0;
+                    let title = yData.title || "진행중";
+                    
+                    let tierClass = "tier-none";
+                    if(badges >= 6) {
+                        if(grade === 1) tierClass = "tier-starter";
+                        else if(grade === 2) tierClass = "tier-builder";
+                        else tierClass = "tier-pro";
+                    }
+
+                    document.getElementById("sName").innerHTML = `${studentName} <span id="sTierBadge" class="tier-tag ${tierClass}" style="font-size:12px; margin-left:8px; vertical-align:middle;">${title}</span>`;
+                    document.getElementById("sInfo").innerText = `${grade}학년 | ${parseInt(sid.substring(1,3))}반 | 학번: ${sid}`;
+                    document.getElementById("sTotalScore").innerHTML = `${initialScore}<span>점</span>`;
+                    document.getElementById("sPhotoImg").src = photoUrl; 
+
+                    document.getElementById("top-search-area").style.display = "none";
+                    document.getElementById("all-grades-dashboard").style.display = "none"; 
+                    document.getElementById("student-detail-area").style.display = "block";
+                    
+                    const isMyHomeroom = (homeroomGrade === grade && homeroomClass === parseInt(sid.substring(1,3)));
+                    const btnSave = document.getElementById("saveBtn");
+                    
+                    // ★ 스마트 자물쇠 판별 로직
+                    if ((roleDetail === "일반교사" && !isMyHomeroom) || window.isSystemLocked) {
+                        if(btnSave) btnSave.style.display = "none";
+                        window.isViewOnlyAll = true; 
+                    } else {
+                        if(btnSave) {
+                            btnSave.style.display = "block";
+                            btnSave.disabled = false;
+                            btnSave.innerText = "💾 평가 데이터 저장하기";
+                        }
+                        window.isViewOnlyAll = false;
+                    }
+                    
+                    window.renderEvalCards(grade, sid, yData, roleDetail, isMyHomeroom); 
+                } catch(e) {
+                    alert("학생 검색 중 오류가 발생했습니다: " + e.message);
+                }
+            });
+        }
+
+        const saveBtnEl = document.getElementById("saveBtn");
+        if(saveBtnEl) {
+            saveBtnEl.addEventListener("click", async () => {
+                if(window.isSystemLocked) return alert("🔒 시스템이 마감되어 저장할 수 없습니다.");
+                if(!window.currentSearchDocId) return;
+
+                const docId = window.currentSearchDocId;
+                const grade = window.lastSearchedGrade;
+                const sid = document.getElementById("searchInput").value.trim(); 
+                
+                saveBtnEl.innerText = "⏳ 저장 중...";
+                saveBtnEl.disabled = true;
+
+                try {
+                    const docRef = window.doc(window.db, "students", docId);
+                    const sSnap = await window.getDoc(docRef);
+                    let currentData = sSnap.data()[`year_${grade}`] || { scores: {}, pass: {} };
+
+                    let s_map = currentData.scores || {};
+                    let total_score = 0;
+                    
+                    window.AREAS.forEach(area => {
+                        const scoreElement = document.getElementById(`tScore-${area}`);
+                        if (!scoreElement.closest('.eval-card').classList.contains('readonly-area')) {
+                            let textScore = scoreElement.innerText.replace('점', '');
+                            s_map[area] = parseInt(textScore) || 0;
+                        }
+                        total_score += (s_map[area] || 0);
+                    });
+
+                    let p_map = {};
+                    window.AREAS.forEach(area => {
+                        p_map[area] = (s_map[area] || 0) >= window.PASS_CUTOFF[grade][area];
+                    });
+
+                    let earned = Object.values(p_map).filter(Boolean).length; 
+                    let title = earned >= 6 ? (grade === 1 ? "🏆 CITY 스타터" : (grade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중"; 
+                    
+                    let updateData = {};
+                    updateData[`year_${grade}.scores`] = s_map; 
+                    updateData[`year_${grade}.pass`] = p_map; 
+                    updateData[`year_${grade}.earned_badges`] = earned; 
+                    updateData[`year_${grade}.total_score`] = total_score; 
+                    updateData[`year_${grade}.title`] = title; 
+
+                    await window.updateDoc(docRef, updateData);
+                    alert("✅ 평가 데이터가 성공적으로 저장되었습니다!");
+                    
+                    await window.logTeacherAction(`[평가 입력] 학번(${sid}) 학생 역량 점수 수정 완료`);
+                    
+                } catch(e) {
+                    alert("저장 중 오류가 발생했습니다: " + e.message);
+                } finally {
+                    saveBtnEl.innerText = "💾 평가 데이터 저장하기";
+                    saveBtnEl.disabled = false;
+                }
+            });
+        }
+
+        // =========================================
+        // 기타 함수들
+        // =========================================
         window.logTeacherAction = async function(actionDetail) {
             try {
-                const userName = sessionStorage.getItem('loginName') || "교사";
-                const userStr = `${userName} 선생님`; 
                 const now = new Date();
                 const kstTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
                 const timeString = kstTime.toISOString().replace('T', ' ').substring(0, 19);
@@ -392,7 +715,7 @@
                 await window.addDoc(window.collection(window.db, "system_logs"), { 
                     timestamp: kstTime.getTime(), 
                     timeString: timeString, 
-                    user: userStr, 
+                    user: `${loginName} 선생님`, 
                     action: actionDetail 
                 });
             } catch(e) {}
@@ -419,16 +742,15 @@
                 });
 
                 apps.sort((a, b) => a.timestamp - b.timestamp); 
-                
                 window.currentPendingApps = apps; 
                 if(pendingCountEl) pendingCountEl.innerText = apps.length; 
 
                 if(apps.length === 0) {
-                    listEl.innerHTML = "<div style='text-align:center; padding: 40px; color: var(--text-gray); font-weight: bold; background: white; border-radius: 16px; border: 1px solid #edf0f2;'>🎉 현재 결재 대기 중인 인증 요청이 없습니다.</div>";
+                    if(listEl) listEl.innerHTML = "<div style='text-align:center; padding: 40px; color: var(--text-gray); font-weight: bold; background: white; border-radius: 16px; border: 1px solid #edf0f2;'>🎉 현재 결재 대기 중인 인증 요청이 없습니다.</div>";
                     return;
                 }
 
-                listEl.innerHTML = '';
+                if(listEl) listEl.innerHTML = '';
                 apps.forEach(app => {
                     let dateObj = new Date(app.timestamp);
                     let dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
@@ -464,7 +786,6 @@
             if(!app || !app.fileData) return alert("증빙 자료가 존재하지 않거나 이미 삭제되었습니다.");
 
             const contentBox = document.getElementById('proofContent');
-            
             if(app.fileType === 'image') {
                 contentBox.innerHTML = `<img src="${app.fileData}" style="max-width:100%; max-height:55vh; border-radius:8px; object-fit:contain;">`;
             } else if(app.fileType === 'pdf') {
@@ -472,7 +793,6 @@
             } else {
                 contentBox.innerHTML = `미리보기를 지원하지 않는 형식입니다.`;
             }
-
             document.getElementById('proofModal').classList.add('active');
             document.body.style.overflow = 'hidden';
         };
@@ -495,8 +815,7 @@
                     yData.scores[area] = score; 
                     yData.pass[area] = score >= window.PASS_CUTOFF[grade][area]; 
                     
-                    let total = 0;
-                    let badges = 0;
+                    let total = 0; let badges = 0;
                     window.AREAS.forEach(a => {
                         total += (yData.scores[a] || 0);
                         if(yData.pass[a]) badges++;
@@ -504,27 +823,18 @@
 
                     let title = yData.title || "진행중";
                     if(badges >= 6) {
-                        if(grade === 1) title = "🏆 CITY 스타터";
-                        else if(grade === 2) title = "🏆 CITY 빌더";
-                        else title = "🏆 CITY 프로";
+                        if(grade === 1) title = "🏆 CITY 스타터"; else if(grade === 2) title = "🏆 CITY 빌더"; else title = "🏆 CITY 프로";
                     }
 
-                    yData.total_score = total;
-                    yData.earned_badges = badges;
-                    yData.title = title;
-
+                    yData.total_score = total; yData.earned_badges = badges; yData.title = title;
                     await window.updateDoc(studentRef, { [`year_${grade}`]: yData });
                 }
 
                 alert("✅ 승인 완료 및 학생 점수가 업데이트되었습니다.");
                 await window.logTeacherAction(`[결재 승인] ${studentId} 학생 ${area}영역 ${score}점 부여`);
-                
                 window.loadApplications(); 
                 window.loadHomeroomStudents(); 
-
-            } catch(e) {
-                alert("승인 처리 중 오류가 발생했습니다: " + e.message);
-            }
+            } catch(e) { alert("오류가 발생했습니다: " + e.message); }
         };
 
         window.rejectApp = async function(appId) {
@@ -532,32 +842,23 @@
             if(!confirm("이 신청을 반려하시겠습니까?\n(반려 시 DB 서버 용량 확보를 위해 첨부된 증빙자료는 즉시 영구 삭제됩니다.)")) return;
 
             try {
-                await window.updateDoc(window.doc(window.db, "applications", appId), { 
-                    status: "반려",
-                    fileData: null 
-                });
-                
+                await window.updateDoc(window.doc(window.db, "applications", appId), { status: "반려", fileData: null });
                 alert("❌ 반려 처리되었으며, 용량 확보를 위해 증빙 파일이 삭제되었습니다.");
                 await window.logTeacherAction(`[결재 반려] 신청 번호(${appId}) 반려 및 자료 파기`);
-
                 window.loadApplications(); 
-            } catch(e) {
-                alert("반려 처리 중 오류가 발생했습니다.");
-            }
+            } catch(e) { alert("오류가 발생했습니다."); }
         };
 
         window.loadHomeroomStudents = async function() {
             const tbody = document.querySelector("#homeroomTable tbody");
-            let sumScore = 0;
-            let sumBadge = 0;
-            let stuCount = 0;
+            let sumScore = 0; let sumBadge = 0; let stuCount = 0;
             
             if (!homeroomGrade || !homeroomClass) {
-                tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 40px; color: var(--text-gray); font-weight: bold;'>담당 학급 정보가 명확하지 않아 명단을 불러올 수 없습니다. (예: 1-4)</td></tr>";
+                if(tbody) tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 40px; color: var(--text-gray); font-weight: bold;'>담당 학급 정보가 명확하지 않아 명단을 불러올 수 없습니다.</td></tr>";
                 return;
             }
 
-            tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 40px;'>우리 반 학생 데이터를 불러오는 중입니다...</td></tr>";
+            if(tbody) tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 40px;'>우리 반 학생 데이터를 불러오는 중입니다...</td></tr>";
 
             try {
                 setTimeout(async () => {
@@ -569,29 +870,25 @@
                             let data = doc.data();
                             if(data.current_grade === homeroomGrade) {
                                 let classNum = parseInt(String(data.current_studentId).substring(1, 3), 10);
-                                if(classNum === homeroomClass) {
-                                    students.push({ docId: doc.id, ...data });
-                                }
+                                if(classNum === homeroomClass) students.push({ docId: doc.id, ...data });
                             }
                         });
 
                         if(students.length === 0) {
-                            tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 40px; color: var(--text-gray); font-weight: bold;'>등록된 우리 반 학생 데이터가 없습니다.</td></tr>";
+                            if(tbody) tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 40px; color: var(--text-gray); font-weight: bold;'>등록된 우리 반 학생 데이터가 없습니다.</td></tr>";
                             return;
                         }
 
                         students.sort((a,b) => String(a.current_studentId).localeCompare(String(b.current_studentId)));
 
-                        tbody.innerHTML = "";
+                        if(tbody) tbody.innerHTML = "";
                         students.forEach(s => {
                             let yData = s[`year_${homeroomGrade}`] || {};
                             let totalScore = yData.total_score || 0;
                             let badges = yData.earned_badges || 0;
                             let title = yData.title || '진행중';
                             
-                            sumScore += totalScore;
-                            sumBadge += (badges >= 6 ? 1 : 0);
-                            stuCount++;
+                            sumScore += totalScore; sumBadge += (badges >= 6 ? 1 : 0); stuCount++;
 
                             let tierClass = "tier-none";
                             if(badges >= 6) {
@@ -600,7 +897,7 @@
                                 else tierClass = "tier-pro";
                             }
 
-                            tbody.innerHTML += `
+                            if(tbody) tbody.innerHTML += `
                                 <tr>
                                     <td><strong>${s.current_studentId}</strong></td>
                                     <td>${s.name}</td>
@@ -613,17 +910,16 @@
                         });
 
                         if(stuCount > 0) {
-                            document.getElementById('classAvgScore').innerText = Math.round(sumScore / stuCount);
-                            document.getElementById('classAvgBadge').innerText = Math.round((sumBadge / stuCount) * 100);
+                            const avgSc = document.getElementById('classAvgScore');
+                            const avgBd = document.getElementById('classAvgBadge');
+                            if(avgSc) avgSc.innerText = Math.round(sumScore / stuCount);
+                            if(avgBd) avgBd.innerText = Math.round((sumBadge / stuCount) * 100);
                         }
-
                     } catch(innerErr) {
-                        tbody.innerHTML = `<tr><td colspan='6' style='text-align:center; padding: 40px; color: var(--danger-red); font-weight: bold;'>데이터를 불러오지 못했습니다. API 키가 연결되어 있는지 확인해주세요.</td></tr>`;
+                        if(tbody) tbody.innerHTML = `<tr><td colspan='6' style='text-align:center; padding: 40px; color: var(--danger-red); font-weight: bold;'>데이터를 불러오지 못했습니다.</td></tr>`;
                     }
                 }, 500); 
-            } catch(e) {
-                tbody.innerHTML = `<tr><td colspan='6' style='text-align:center; padding: 40px; color: var(--danger-red); font-weight: bold;'>시스템 에러 발생</td></tr>`;
-            }
+            } catch(e) {}
         };
 
         window.switchTab = function(tabId) {
@@ -646,78 +942,7 @@
             }
         };
 
-        window.viewStudentDetails = function(sid) {
-            window.switchTab('tab-manual');
-            document.getElementById('searchInput').value = sid;
-            document.getElementById('searchBtn').click();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        document.getElementById("searchBtn").addEventListener("click", async () => {
-            const sid = document.getElementById("searchInput").value.trim();
-            if(!sid || sid.length !== 5) return alert("학번 5자리를 정확히 입력해주세요.");
-            
-            const grade = parseInt(sid.charAt(0)); 
-            if(grade < 1 || grade > 3) return alert("올바른 학번(1~3학년)을 입력하세요.");
-            window.lastSearchedGrade = grade;
-
-            try {
-                const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", sid)));
-                
-                if (qSnap.empty) {
-                    return alert(`데이터베이스에 학번이 [${sid}]인 학생이 없습니다.\n학번을 다시 확인해주세요.`);
-                }
-
-                const studentData = qSnap.docs[0].data();
-                window.currentSearchDocId = qSnap.docs[0].id; 
-
-                let studentName = studentData.name || '학생';
-                let photoUrl = studentData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-                
-                let yData = studentData[`year_${grade}`] || {};
-                let initialScore = yData.total_score || 0;
-                let badges = yData.earned_badges || 0;
-                let title = yData.title || "진행중";
-                
-                let tierClass = "tier-none";
-                if(badges >= 6) {
-                    if(grade === 1) tierClass = "tier-starter";
-                    else if(grade === 2) tierClass = "tier-builder";
-                    else tierClass = "tier-pro";
-                }
-
-                document.getElementById("sName").innerHTML = `${studentName} <span id="sTierBadge" class="tier-tag ${tierClass}" style="font-size:12px; margin-left:8px; vertical-align:middle;">${title}</span>`;
-                document.getElementById("sInfo").innerText = `${grade}학년 | ${parseInt(sid.substring(1,3))}반 | 학번: ${sid}`;
-                document.getElementById("sTotalScore").innerHTML = `${initialScore}<span>점</span>`;
-                document.getElementById("sPhotoImg").src = photoUrl; 
-
-                document.getElementById("top-search-area").style.display = "none";
-                document.getElementById("all-grades-dashboard").style.display = "none"; 
-                document.getElementById("student-detail-area").style.display = "block";
-                
-                const roleDetail = sessionStorage.getItem('roleDetail') || "일반교사";
-                const isMyHomeroom = (homeroomGrade === grade && homeroomClass === parseInt(sid.substring(1,3)));
-
-                const btnSave = document.getElementById("saveBtn");
-                
-                // ★ 스마트키 자물쇠 로직 (버튼 비활성화)
-                if ((roleDetail === "일반교사" && !isMyHomeroom) || window.isSystemLocked) {
-                    btnSave.style.display = "none";
-                    window.isViewOnlyAll = true; 
-                } else {
-                    btnSave.style.display = "block";
-                    btnSave.disabled = false;
-                    btnSave.innerText = "💾 평가 데이터 저장하기";
-                    window.isViewOnlyAll = false;
-                }
-                
-                renderEvalCards(grade, sid, yData, roleDetail, isMyHomeroom); 
-            } catch(e) {
-                alert("학생 검색 중 오류가 발생했습니다: " + e.message);
-            }
-        });
-
-        function renderEvalCards(grade, sid, yData, roleDetail, isMyHomeroom) {
+        window.renderEvalCards = function(grade, sid, yData, roleDetail, isMyHomeroom) {
             const container = document.getElementById("evalSection"); 
             container.innerHTML = "";
             const currentItems = window.EVAL_ITEMS_BY_GRADE[grade];
@@ -733,26 +958,24 @@
             
             const warningEl = document.getElementById('adminOverrideWarning');
             if (dbTotal > calculatedTotal + 5) { 
-                warningEl.style.display = 'flex';
+                if(warningEl) warningEl.style.display = 'flex';
             } else {
-                warningEl.style.display = 'none';
+                if(warningEl) warningEl.style.display = 'none';
             }
 
             window.AREAS.forEach(area => {
                 let currentScore = savedScores[area] || 0;
                 let isPassed = savedPass[area] || false;
 
-                // ★ 스마트 자물쇠 각 영역별 통제 로직
+                // ★ 스마트 자물쇠
                 let isAreaLocked = window.isViewOnlyAll; 
 
                 if (!window.isViewOnlyAll) {
                     isAreaLocked = true; 
-                    
                     if (roleDetail === "체육" && area === "A") isAreaLocked = false;
                     else if (roleDetail === "직업기초" && area === "C") isAreaLocked = false;
                     else if (roleDetail === "영어1" && grade === 1 && area === "I") isAreaLocked = false;
                     
-                    // 담임은 특정 교과 전담 구역(A, C, I)을 제외한 나머지 모든 구역 입력 가능
                     if (isMyHomeroom && area !== "A" && area !== "C" && area !== "I") {
                         isAreaLocked = false;
                     }
@@ -807,64 +1030,6 @@
             document.getElementById('sTotalScore').innerHTML = `${grandTotal}<span>점</span>`;
         }
 
-        document.getElementById("saveBtn").addEventListener("click", async () => {
-            if(window.isSystemLocked) return alert("🔒 시스템이 마감되어 저장할 수 없습니다.");
-            if(!window.currentSearchDocId) return;
-
-            const docId = window.currentSearchDocId;
-            const grade = window.lastSearchedGrade;
-            const sid = document.getElementById("searchInput").value.trim(); 
-            
-            const btn = document.getElementById("saveBtn");
-            btn.innerText = "⏳ 저장 중...";
-            btn.disabled = true;
-
-            try {
-                const docRef = window.doc(window.db, "students", docId);
-                const sSnap = await window.getDoc(docRef);
-                let currentData = sSnap.data()[`year_${grade}`] || { scores: {}, pass: {} };
-
-                let s_map = currentData.scores || {};
-                let total_score = 0;
-                
-                window.AREAS.forEach(area => {
-                    // ★ 스마트키: 화면에 열려있는(수정 권한이 있는) 구역의 점수만 덮어쓰기
-                    const scoreElement = document.getElementById(`tScore-${area}`);
-                    if (!scoreElement.closest('.eval-card').classList.contains('readonly-area')) {
-                        let textScore = scoreElement.innerText.replace('점', '');
-                        s_map[area] = parseInt(textScore) || 0;
-                    }
-                    total_score += (s_map[area] || 0);
-                });
-
-                let p_map = {};
-                window.AREAS.forEach(area => {
-                    p_map[area] = (s_map[area] || 0) >= window.PASS_CUTOFF[grade][area];
-                });
-
-                let earned = Object.values(p_map).filter(Boolean).length; 
-                let title = earned >= 6 ? (grade === 1 ? "🏆 CITY 스타터" : (grade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중"; 
-                
-                let updateData = {};
-                updateData[`year_${grade}.scores`] = s_map; 
-                updateData[`year_${grade}.pass`] = p_map; 
-                updateData[`year_${grade}.earned_badges`] = earned; 
-                updateData[`year_${grade}.total_score`] = total_score; 
-                updateData[`year_${grade}.title`] = title; 
-
-                await window.updateDoc(docRef, updateData);
-                alert("✅ 평가 데이터가 성공적으로 저장되었습니다!");
-                
-                await window.logTeacherAction(`[평가 입력] 학번(${sid}) 학생 역량 점수 수정 완료`);
-                
-            } catch(e) {
-                alert("저장 중 오류가 발생했습니다: " + e.message);
-            } finally {
-                btn.innerText = "💾 평가 데이터 저장하기";
-                btn.disabled = false;
-            }
-        });
-
         window.resetSearch = function() {
             document.getElementById("searchInput").value = "";
             document.getElementById("student-detail-area").style.display = "none";
@@ -889,26 +1054,14 @@
                     let data = doc.data();
                     if(data.current_grade === grade && data[`year_${grade}`]) {
                         let classNum = parseInt(String(data.current_studentId).substring(1, 3), 10);
-                        students.push({
-                            name: data.name,
-                            classStr: `${grade}-${classNum}`,
-                            score: data[`year_${grade}`].total_score || 0,
-                            yearData: data[`year_${grade}`]
-                        });
+                        students.push({ name: data.name, classStr: `${grade}-${classNum}`, score: data[`year_${grade}`].total_score || 0, yearData: data[`year_${grade}`] });
                     }
                 });
 
                 // ★ 10단계 동점자 규정 완벽 이식
                 students.sort((a, b) => {
                     if (b.score !== a.score) return b.score - a.score;
-                    
-                    const getSc = (student, area) => {
-                        if (student.yearData && student.yearData.scores && student.yearData.scores[area]) {
-                            return student.yearData.scores[area];
-                        }
-                        return 0;
-                    };
-                    
+                    const getSc = (student, area) => { if (student.yearData && student.yearData.scores && student.yearData.scores[area]) return student.yearData.scores[area]; return 0; };
                     if (getSc(b, 'T') !== getSc(a, 'T')) return getSc(b, 'T') - getSc(a, 'T');
                     if (getSc(b, 'M') !== getSc(a, 'M')) return getSc(b, 'M') - getSc(a, 'M');
                     if (getSc(b, 'Tr') !== getSc(a, 'Tr')) return getSc(b, 'Tr') - getSc(a, 'Tr');
@@ -918,7 +1071,6 @@
                     if (getSc(b, 'R') !== getSc(a, 'R')) return getSc(b, 'R') - getSc(a, 'R');
                     if (getSc(b, 'A') !== getSc(a, 'A')) return getSc(b, 'A') - getSc(a, 'A');
                     if (getSc(b, 'Y') !== getSc(a, 'Y')) return getSc(b, 'Y') - getSc(a, 'Y');
-                    
                     return String(a.name).localeCompare(String(b.name));
                 });
 
@@ -930,11 +1082,7 @@
                     return;
                 }
 
-                const medals = [
-                    'https://cdn-icons-png.flaticon.com/512/2583/2583344.png',
-                    'https://cdn-icons-png.flaticon.com/512/2583/2583319.png',
-                    'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'
-                ];
+                const medals = [ 'https://cdn-icons-png.flaticon.com/512/2583/2583344.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583319.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583434.png' ];
                 const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
 
                 top10.forEach((student, index) => {
@@ -988,12 +1136,7 @@
                         let sc = data[`year_${g}`].total_score || 0;
                         let badges = data[`year_${g}`].earned_badges || 0;
                         
-                        gradeStudents[g].push({
-                            name: data.name,
-                            classStr: `${g}-${classNum}`,
-                            score: sc,
-                            yearData: data[`year_${g}`]
-                        });
+                        gradeStudents[g].push({ name: data.name, classStr: `${g}-${classNum}`, score: sc, yearData: data[`year_${g}`] });
                         
                         gradeSum[g] += (badges >= 6 ? 1 : 0);
                         gradeCount[g]++;
@@ -1003,10 +1146,7 @@
                 for(let g = 1; g <= 3; g++) {
                     gradeStudents[g].sort((a, b) => {
                         if (b.score !== a.score) return b.score - a.score;
-                        const getSc = (student, area) => {
-                            if (student.yearData && student.yearData.scores && student.yearData.scores[area]) return student.yearData.scores[area];
-                            return 0;
-                        };
+                        const getSc = (student, area) => { if (student.yearData && student.yearData.scores && student.yearData.scores[area]) return student.yearData.scores[area]; return 0; };
                         if (getSc(b, 'T') !== getSc(a, 'T')) return getSc(b, 'T') - getSc(a, 'T');
                         if (getSc(b, 'M') !== getSc(a, 'M')) return getSc(b, 'M') - getSc(a, 'M');
                         if (getSc(b, 'Tr') !== getSc(a, 'Tr')) return getSc(b, 'Tr') - getSc(a, 'Tr');
@@ -1025,13 +1165,14 @@
                     });
 
                     let avgRate = gradeCount[g] > 0 ? Math.round((gradeSum[g] / gradeCount[g]) * 100) : 0;
-                    document.getElementById(`grade${g}Avg`).innerHTML = `${avgRate}<span>%</span>`;
+                    const avgEl = document.getElementById(`grade${g}Avg`);
+                    if(avgEl) avgEl.innerHTML = `${avgRate}<span>%</span>`;
                 }
             } catch(e) { console.log("TOP3 로딩 실패"); }
         };
 
         // =========================================
-        // ★ 교사 전용 과목 엑셀 업로드 로직
+        // ★ 교사 전용 엑셀 대량 업로드 로직
         // =========================================
         window.downloadTeacherExcelTemplate = function() { 
             const roleDetail = sessionStorage.getItem('roleDetail');
@@ -1074,17 +1215,11 @@
                         const studentId = row["학번"] ? String(row["학번"]).trim() : "";
                         const targetScore = Number(row[areaCode] || 0);
 
-                        if (!grade || !studentId || !/^\d{5}$/.test(studentId)) { 
-                            failCount++; 
-                            continue; 
-                        }
+                        if (!grade || !studentId || !/^\d{5}$/.test(studentId)) { failCount++; continue; }
 
                         try {
                             const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
-                            if (qSnap.empty) { 
-                                failCount++; 
-                                continue; 
-                            }
+                            if (qSnap.empty) { failCount++; continue; }
                             
                             const targetDocId = qSnap.docs[0].id;
                             const existingData = qSnap.docs[0].data();
@@ -1094,16 +1229,11 @@
                             let cap = window.CAPS[grade]; 
                             let cut = window.PASS_CUTOFF[grade];
                             
-                            // ★ 해당 과목 점수만 덮어쓰기 (다른 과목 보존)
                             yData.scores[areaCode] = Math.min(targetScore, cap[areaCode]);
                             yData.pass[areaCode] = yData.scores[areaCode] >= cut[areaCode];
 
-                            // 총점 및 배지 재계산
                             let total = 0, badges = 0;
-                            window.AREAS.forEach(a => { 
-                                total += (yData.scores[a] || 0); 
-                                if(yData.pass[a]) badges++; 
-                            });
+                            window.AREAS.forEach(a => { total += (yData.scores[a] || 0); if(yData.pass[a]) badges++; });
 
                             let title = yData.title || "진행중"; 
                             if(badges >= 6) { 
@@ -1119,9 +1249,7 @@
                             await window.updateDoc(window.doc(window.db, "students", targetDocId), { [`year_${grade}`]: yData });
                             successCount++;
 
-                        } catch (err) { 
-                            failCount++; 
-                        }
+                        } catch (err) { failCount++; }
                     }
 
                     alert(`✅ [${roleDetail}] 엑셀 업로드 완료!\n성공: ${successCount}명\n실패: ${failCount}명`);
@@ -1129,15 +1257,10 @@
                     
                     if (window.loadHomeroomStudents) window.loadHomeroomStudents();
                     
-                } catch (e) { 
-                    alert("업로드 오류: " + e.message); 
-                } finally { 
-                    fileInput.value = ""; 
-                }
+                } catch (e) { alert("업로드 오류: " + e.message); } finally { fileInput.value = ""; }
             };
             reader.readAsArrayBuffer(fileInput.files[0]);
         }
-
     </script>
 </body>
 </html>
