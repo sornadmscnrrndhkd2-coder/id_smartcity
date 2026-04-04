@@ -419,7 +419,6 @@
         window.sameGradeStudents = [];
         window.myRadarChartInstance = null; 
 
-        // ★ Firebase 인증 상태를 먼저 확인한 뒤 안전하게 DB에 접근합니다.
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const loginName = sessionStorage.getItem('loginName') || "학생";
@@ -447,11 +446,11 @@
                         });
                         
                         sessionStorage.setItem('hasCountedVisit', 'true');
-                    } catch(e) { console.log("카운터 에러", e); }
+                    } catch(e) {} // 에러 발생 시 조용히 넘어감
                 }
 
                 window.myStudentId = loginId;
-                window.myAuthUid = user.uid; // ★ 학번이 아닌, 인증된 진짜 장부 번호(UID) 저장
+                window.myAuthUid = user.uid;
                 window.myStudentName = loginName;
                 window.CURRENT_GRADE = parseInt(loginId.charAt(0)); 
                 const classNum = parseInt(loginId.substring(1,3));
@@ -539,15 +538,26 @@
 
         window.loadStudentRealData = async function(dbInstance) {
             try {
-                // ★ 학번이 아닌, 인증된 진짜 장부 번호(UID)로 안전하게 데이터를 꺼내옵니다.
-                const docRef = doc(dbInstance, "students", window.myAuthUid);
-                const docSnap = await getDoc(docRef);
+                // ★ 2중 안전 장치 도입! UID로 먼저 찾아보고 없으면 학번(20601)으로 찾습니다.
+                let docSnap = null;
+                try {
+                    docSnap = await getDoc(doc(dbInstance, "students", window.myAuthUid));
+                } catch(e) {} // 권한 거부 시 무시
+
+                if (!docSnap || !docSnap.exists()) {
+                    try {
+                        docSnap = await getDoc(doc(dbInstance, "students", window.myStudentId));
+                    } catch(e) {
+                        console.error("데이터를 불러올 권한이 없습니다.", e);
+                        return; // 완전 실패 시 종료
+                    }
+                }
                 
                 let totalScore = 0;
                 let badges = 0;
                 let title = "🌱 성장 중"; 
 
-                if (docSnap.exists()) {
+                if (docSnap && docSnap.exists()) {
                     const data = docSnap.data();
                     const yData = data[`year_${window.CURRENT_GRADE}`] || {};
                     window.myScoreData = yData.scores || {};
@@ -627,7 +637,13 @@
                 window.renderHallOfFame();
 
             } catch(e) {
-                console.error(e);
+                // ★ 랭킹 접근 권한이 없을 경우 부드럽게 대처
+                console.log("랭킹 접근 권한 없음");
+                const scoreBoxes = document.querySelectorAll('.score-box h3');
+                if(scoreBoxes.length > 1) {
+                    scoreBoxes[1].innerHTML = `<span class="rank-text" style="font-size:15px;">순위 비공개</span>`;
+                }
+                document.getElementById('hofList').innerHTML = '<div style="text-align:center; padding:20px; font-size:13px; color:var(--text-gray);">랭킹 데이터를 불러올 수 없습니다.</div>';
             }
         };
 
