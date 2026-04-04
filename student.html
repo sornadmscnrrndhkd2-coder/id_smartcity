@@ -44,7 +44,7 @@
         .user-info h2 { margin: 0 0 12px 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;}
         .badge-pill { background: linear-gradient(135deg, #f39c12, #d35400); display: inline-block; padding: 6px 18px; border-radius: 20px; font-size: 14px; font-weight: 900; box-shadow: 0 4px 10px rgba(211, 84, 0, 0.4); border: 1px solid rgba(255,255,255,0.3);}
         
-        /* ★ 레이더 차트 게임 UI 업그레이드! */
+        /* 레이더 차트 (게임 느낌으로 디테일업 반영) */
         .radar-chart-container { 
             width: 220px; height: 220px; 
             position: relative; z-index: 2; flex-shrink: 0; 
@@ -235,7 +235,9 @@
 </head>
 <body>
     <script>
-        if (!sessionStorage.getItem('studentId')) {
+        // 로그인 인증 체크 (loginUserId 와 studentId 호환 완벽 대응)
+        const activeUserId = sessionStorage.getItem('loginUserId') || sessionStorage.getItem('studentId');
+        if (!activeUserId) {
             alert('⚠️ 로그인이 필요한 서비스입니다. 로그인 페이지로 이동합니다.');
             location.href = 'index.html';
         }
@@ -318,8 +320,7 @@
                         <h3 class="section-title">📚 SMARTCITY 9대 역량 배지</h3>
                         <button class="btn-apply-inline" onclick="window.openApplyModal()">➕ 인증 신청</button>
                     </div>
-                    <div class="badge-grid" id="badgeGridContainer">
-                        </div>
+                    <div class="badge-grid" id="badgeGridContainer"></div>
                 </div>
             </div>
             
@@ -328,8 +329,7 @@
                     <div class="section-header" style="margin-bottom: 25px;">
                         <h3 class="section-title" id="hofTitle">🏆 명예의 전당</h3>
                     </div>
-                    <div class="ranking-list" id="hofList">
-                        </div>
+                    <div class="ranking-list" id="hofList"></div>
                 </div>
 
                 <div class="panel-bg">
@@ -404,8 +404,7 @@
                 <h3 id="rankModalTitle">🏆 명예의 전당 TOP 10</h3>
                 <button class="close-btn" onclick="window.closeRankModal()">✕</button>
             </div>
-            <div class="ranking-list" id="rankModalList">
-                </div>
+            <div class="ranking-list" id="rankModalList"></div>
         </div>
     </div>
 
@@ -430,7 +429,7 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const loginName = sessionStorage.getItem('loginName') || "학생";
-                const loginId = sessionStorage.getItem('studentId'); 
+                const loginId = sessionStorage.getItem('loginUserId') || sessionStorage.getItem('studentId'); 
                 
                 if(!loginId || loginId.length !== 5) {
                     alert("잘못된 로그인 정보입니다. 다시 로그인 해주세요.");
@@ -438,7 +437,7 @@
                     return;
                 }
 
-                // 📊 [조회수 카운터 엔진 내장] 
+                // 📊 [보안 통과] 정확히 +1 연산과 최초 생성 시 1만 넣는 완벽한 동기화
                 if (!sessionStorage.getItem('hasCountedVisit')) {
                     try {
                         const totalRef = doc(db, "system", "visitorStats");
@@ -480,7 +479,7 @@
             }
         });
 
-        // ★ 게임 UI 느낌으로 업그레이드된 차트 그리기 엔진!
+        // 🎮 [업그레이드] 간격(stepSize: 20)을 줄여 디테일과 각을 살린 역동적 게임 UI 차트
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             if (window.myRadarChartInstance) window.myRadarChartInstance.destroy();
@@ -538,7 +537,7 @@
                             angleLines: { color: 'rgba(255, 255, 255, 0.3)', lineWidth: 1.5 },
                             grid: { color: 'rgba(255, 255, 255, 0.2)', lineWidth: 1 },
                             pointLabels: { color: '#fdfefe', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } },
-                            ticks: { display: false, min: 0, max: 100, stepSize: 25 }
+                            ticks: { display: false, min: 0, max: 100, stepSize: 20 }
                         }
                     },
                     plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', titleFont: { size: 12, family: 'Pretendard' }, bodyFont: { size: 12, family: 'Pretendard', weight: 'bold' }, displayColors: false, callbacks: { label: function(context) { return context.raw + '% 달성'; } } } }
@@ -548,7 +547,6 @@
 
         window.loadStudentRealData = async function(dbInstance) {
             try {
-                // ★ 2중 안전 장치! UID로 찾고, 혹시 권한에서 막히거나 없으면 학번(20601)으로 찾습니다.
                 let docSnap = null;
                 try {
                     docSnap = await getDoc(doc(dbInstance, "students", window.myAuthUid));
@@ -558,7 +556,7 @@
                     try {
                         docSnap = await getDoc(doc(dbInstance, "students", window.myStudentId));
                     } catch(e) {
-                        console.error("데이터를 불러올 권한이 없습니다.", e);
+                        console.error("데이터 권한 오류:", e);
                         return; 
                     }
                 }
@@ -619,18 +617,23 @@
 
         window.loadRankingData = async function(dbInstance) {
             try {
-                const qSnap = await getDocs(query(collection(dbInstance, "students"), where("current_grade", "==", window.CURRENT_GRADE)));
+                // 🌟 [보안 통과] 철통 방어된 publicRanking 컬렉션에서 안전하게 조회
+                const qSnap = await getDocs(query(collection(dbInstance, "publicRanking"), where("current_grade", "==", window.CURRENT_GRADE)));
                 window.sameGradeStudents = [];
                 
                 qSnap.forEach(d => {
                     let s = d.data();
-                    let sc = s[`year_${window.CURRENT_GRADE}`] ? (s[`year_${window.CURRENT_GRADE}`].total_score || 0) : 0;
-                    let cNum = parseInt(String(s.current_studentId).substring(1,3), 10);
+                    let displayName = s.maskedName || "알수없음";
+                    
+                    if (s.studentId === window.myStudentId) {
+                        displayName = window.myStudentName; 
+                    }
+
                     window.sameGradeStudents.push({
-                        id: s.current_studentId,
-                        name: s.name,
-                        classStr: `${window.CURRENT_GRADE}-${cNum}`,
-                        score: sc
+                        id: s.studentId,
+                        name: displayName,
+                        classStr: `${s.current_grade}-${s.classNum}`,
+                        score: s.total_score || 0
                     });
                 });
 
@@ -647,7 +650,7 @@
                 window.renderHallOfFame();
 
             } catch(e) {
-                console.log("랭킹 접근 권한 없음");
+                console.log("랭킹 접근 권한 없음", e);
                 const scoreBoxes = document.querySelectorAll('.score-box h3');
                 if(scoreBoxes.length > 1) {
                     scoreBoxes[1].innerHTML = `<span class="rank-text" style="font-size:15px;">순위 비공개</span>`;
@@ -659,7 +662,6 @@
         window.loadMyApplications = async function(dbInstance) {
             const listEl = document.getElementById('myApplyList');
             try {
-                // ★ 학생 본인의 암호화된 UID를 사용하여 보안 규칙과 완벽하게 매칭!
                 const q = query(collection(dbInstance, "applications"), where("studentUid", "==", window.myAuthUid));
                 const qSnap = await getDocs(q);
                 
@@ -711,6 +713,7 @@
         window.cancelApplication = async function(docId) {
             if(!confirm("정말 이 인증 신청을 취소하시겠습니까?")) return;
             try {
+                // 🌟 문서를 지우면 파일(Base64)도 완벽하게 소멸됩니다!
                 await deleteDoc(doc(db, "applications", docId));
                 alert("신청이 취소되었습니다.");
                 window.loadMyApplications(db); 
@@ -719,7 +722,7 @@
             }
         };
 
-        // ★ 초강력 이미지 압축기 (1MB 제한 무력화)
+        // 🌟 [초강력 압축 엔진] 이미지는 무조건 800x800 최적화 압축
         async function compressImage(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -729,7 +732,6 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        // 해상도를 800x800으로 제한하여 극단적 다이어트
                         const MAX_WIDTH = 800; 
                         const MAX_HEIGHT = 800; 
                         let width = img.width;
@@ -745,7 +747,6 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // 화질을 0.5(50%)로 낮춰서 용량을 50~100KB 수준으로 최소화!
                         resolve(canvas.toDataURL('image/jpeg', 0.5)); 
                     };
                     img.onerror = error => reject(error);
@@ -773,11 +774,9 @@
                 let fileType = "";
 
                 if (file.type.startsWith('image/')) {
-                    // 이미지는 무제한 자동 압축!
                     fileData = await compressImage(file);
                     fileType = "image";
                 } else if (file.type === 'application/pdf') {
-                    // PDF는 캔버스 압축이 불가하므로 700KB 사이즈 방어막 가동!
                     if (file.size > 700 * 1024) {
                         alert("🚨 [용량 초과 안내]\nPDF 파일은 700KB 이하만 업로드 가능합니다.\n\n💡 해결 방법:\n해당 화면을 '사진(캡처)'으로 찍어서 올려주세요!\n사진은 아무리 커도 시스템이 알아서 무제한 압축해 줍니다.");
                         btn.innerText = "해당 점수로 제출하기";
@@ -797,19 +796,19 @@
                     return;
                 }
 
-                // ★ 보안 규칙(Rules)과 완벽하게 매칭되는 찰떡 데이터 전송!
+                // 🌟 [보안 통과] 규칙(Rules)이 요구하는 정확히 11개의 필드만 정교하게 조립하여 전송!
                 const newApp = {
-                    studentUid: window.myAuthUid,    // 보안 규칙이 요구하는 본인 인증 키
-                    studentId: window.myStudentId,   // 교사가 볼 학번 (예: 20601)
-                    studentName: window.myStudentName,
-                    grade: window.CURRENT_GRADE,
+                    studentUid: String(window.myAuthUid),    
+                    studentId: String(window.myStudentId),   
+                    studentName: String(window.myStudentName),
+                    grade: parseInt(window.CURRENT_GRADE),
                     classNum: parseInt(window.myStudentId.substring(1,3)),
-                    area: areaSelect,
+                    area: String(areaSelect),
                     score: parseInt(scoreText),
-                    fileData: fileData, 
-                    fileType: fileType,
-                    status: "대기중",                // 보안 규칙이 허용한 상태값
-                    timestamp: Date.now()
+                    fileData: String(fileData), 
+                    fileType: String(fileType),
+                    status: "대기중",                
+                    timestamp: Number(Date.now())
                 };
 
                 await addDoc(collection(db, "applications"), newApp);
@@ -917,9 +916,9 @@
             const top10 = window.sameGradeStudents.slice(0,10);
             const medals = ['img/medal_gold.png', 'img/medal_silver.png', 'img/medal_bronze.png'];
             const fallbackMedals = [
-                'https://cdn-icons-png.flaticon.com/512/2583/2583344.png', // 금
-                'https://cdn-icons-png.flaticon.com/512/2583/2583319.png', // 은
-                'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'  // 동
+                'https://cdn-icons-png.flaticon.com/512/2583/2583344.png', 
+                'https://cdn-icons-png.flaticon.com/512/2583/2583319.png', 
+                'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'  
             ];
             const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
 
