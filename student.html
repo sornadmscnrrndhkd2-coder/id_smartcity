@@ -64,7 +64,6 @@
 
         .hero-bottom { width: 100%; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px; }
         
-        /* ★ 경험치 텍스트 예쁘게 배치하는 CSS */
         .exp-text-container { display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:8px; align-items: flex-end; }
         
         .exp-bar-container { width: 100%; background: rgba(0,0,0,0.25); border-radius: 10px; height: 12px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
@@ -228,7 +227,6 @@
 </head>
 <body>
     <script>
-        // ★ 여기서 loginUserId 대신 studentId를 검사하도록 수정했습니다!
         if (!sessionStorage.getItem('studentId')) {
             alert('⚠️ 로그인이 필요한 서비스입니다. 로그인 페이지로 이동합니다.');
             location.href = 'index.html';
@@ -405,67 +403,77 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, deleteDoc, updateDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         
         const app = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
         window.CURRENT_GRADE = 1;
         window.myStudentId = "";
+        window.myAuthUid = ""; 
         window.myStudentName = "";
         window.myScoreData = {};
         window.myPassData = {};
         window.sameGradeStudents = [];
         window.myRadarChartInstance = null; 
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            const loginName = sessionStorage.getItem('loginName') || "학생";
-            // ★ 여기서도 이름표를 정확하게 studentId로 맞췄습니다!
-            const loginId = sessionStorage.getItem('studentId'); 
-            
-            if(!loginId || loginId.length !== 5) {
-                alert("잘못된 로그인 정보입니다. 다시 로그인 해주세요.");
-                location.href = "index.html";
-                return;
-            }
-
-            // 📊 [조회수 카운터 엔진 내장] 학생이 화면에 들어오면 알아서 1 올려줍니다!
-            if (!sessionStorage.getItem('hasCountedVisit')) {
-                try {
-                    const totalRef = doc(db, "system", "visitorStats");
-                    await updateDoc(totalRef, { count: increment(1) }).catch(async () => {
-                        await setDoc(totalRef, { count: 1 });
-                    });
-
-                    const now = new Date();
-                    const kstDate = new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0,10);
-                    const dailyRef = doc(db, "system_stats", kstDate);
-                    await updateDoc(dailyRef, { visitors: increment(1) }).catch(async () => {
-                        await setDoc(dailyRef, { visitors: 1 });
-                    });
-                    
-                    sessionStorage.setItem('hasCountedVisit', 'true');
-                } catch(e) { console.log("카운터 에러", e); }
-            }
-
-            window.myStudentId = loginId;
-            window.myStudentName = loginName;
-            window.CURRENT_GRADE = parseInt(loginId.charAt(0)); 
-            const classNum = parseInt(loginId.substring(1,3));
-
-            document.getElementById('classDisplay').innerText = `${window.CURRENT_GRADE}학년 ${classNum}반`;
-            document.getElementById('userNameDisplay').innerText = loginName;
-
-            await window.loadStudentRealData(db);
-            await window.loadMyApplications(db); 
-
-            window.addEventListener('resize', () => {
-                if(window.myScoreData) {
-                    window.drawRadarChart();
+        // ★ Firebase 인증 상태를 먼저 확인한 뒤 안전하게 DB에 접근합니다.
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const loginName = sessionStorage.getItem('loginName') || "학생";
+                const loginId = sessionStorage.getItem('studentId'); 
+                
+                if(!loginId || loginId.length !== 5) {
+                    alert("잘못된 로그인 정보입니다. 다시 로그인 해주세요.");
+                    location.href = "index.html";
+                    return;
                 }
-            });
+
+                // 📊 [조회수 카운터 엔진 내장] 
+                if (!sessionStorage.getItem('hasCountedVisit')) {
+                    try {
+                        const totalRef = doc(db, "system", "visitorStats");
+                        await updateDoc(totalRef, { count: increment(1) }).catch(async () => {
+                            await setDoc(totalRef, { count: 1 });
+                        });
+
+                        const now = new Date();
+                        const kstDate = new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0,10);
+                        const dailyRef = doc(db, "system_stats", kstDate);
+                        await updateDoc(dailyRef, { visitors: increment(1) }).catch(async () => {
+                            await setDoc(dailyRef, { visitors: 1 });
+                        });
+                        
+                        sessionStorage.setItem('hasCountedVisit', 'true');
+                    } catch(e) { console.log("카운터 에러", e); }
+                }
+
+                window.myStudentId = loginId;
+                window.myAuthUid = user.uid; // ★ 학번이 아닌, 인증된 진짜 장부 번호(UID) 저장
+                window.myStudentName = loginName;
+                window.CURRENT_GRADE = parseInt(loginId.charAt(0)); 
+                const classNum = parseInt(loginId.substring(1,3));
+
+                document.getElementById('classDisplay').innerText = `${window.CURRENT_GRADE}학년 ${classNum}반`;
+                document.getElementById('userNameDisplay').innerText = loginName;
+
+                await window.loadStudentRealData(db);
+                await window.loadMyApplications(db); 
+
+                window.addEventListener('resize', () => {
+                    if(window.myScoreData) {
+                        window.drawRadarChart();
+                    }
+                });
+            } else {
+                alert('로그인이 만료되었습니다.');
+                location.href = 'index.html';
+            }
         });
 
+        // 차트 렌더링 로직
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             if (window.myRadarChartInstance) window.myRadarChartInstance.destroy();
@@ -493,7 +501,7 @@
             dataArr = dataArr.map(val => isNaN(val) ? 0 : val);
 
             const isMobile = window.innerWidth <= 850;
-            const labelFontSize = isMobile ? 9 : 11; // 폰트 크기
+            const labelFontSize = isMobile ? 9 : 11; 
             const chartPadding = isMobile ? 12 : 25;  
 
             window.myRadarChartInstance = new Chart(ctx, {
@@ -531,7 +539,8 @@
 
         window.loadStudentRealData = async function(dbInstance) {
             try {
-                const docRef = doc(dbInstance, "students", window.myStudentId);
+                // ★ 학번이 아닌, 인증된 진짜 장부 번호(UID)로 안전하게 데이터를 꺼내옵니다.
+                const docRef = doc(dbInstance, "students", window.myAuthUid);
                 const docSnap = await getDoc(docRef);
                 
                 let totalScore = 0;
@@ -906,7 +915,6 @@
 
         window.closeRankModal = function() { document.getElementById('rankModal').classList.remove('active'); document.body.style.overflow = 'auto'; };
 
-        // ★ 학생이 직접 신청하는 항목 (S, R, T, I)의 세부 찰떡 로직 세팅
         const EVAL_ITEMS_BY_GRADE = {
             1: {
                 'S': [{ label: 'ITQ 2과목(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목(20점)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
@@ -941,7 +949,6 @@
             document.getElementById('dynamicLogicSection').style.display = "block";
         };
 
-        // ★ 학생이 직접 체크할 때도 만점 캡 및 그룹핑(라디오버튼화) 적용 완료!
         window.handleStudentCheck = function(checkbox) {
             if (checkbox.checked && checkbox.dataset.group) {
                 document.querySelectorAll(`#checkboxContainer input[data-group="${checkbox.dataset.group}"]`).forEach(other => {
@@ -957,7 +964,6 @@
             let total = 0; document.querySelectorAll('#checkboxContainer input:checked').forEach(box => { total += Number(box.value); });
             let currentSelectedArea = document.getElementById('areaSelect').value;
             
-            // 만점 상한선을 넘지 못하게 자름
             let finalScore = Math.min(total, CAPS[window.CURRENT_GRADE][currentSelectedArea]);
             
             document.getElementById('currentPoint').innerText = finalScore;
