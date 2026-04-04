@@ -151,17 +151,20 @@
     </script>
 
     <script>
+        // ★ 새로운 기준에 맞춘 만점 캡 및 커트라인 설정 (오류 방지용 넉넉한 캡 적용)
         window.AREAS = ['S', 'M', 'A', 'R', 'T', 'C', 'I', 'Tr', 'Y'];
         window.AREA_NAMES = { S: '정보화', M: '전공성적', A: '예체능', R: '한국사', T: '전공자격', C: '직업기초', I: '외국어', Tr: '성실', Y: '인성' };
+        
         window.CAPS = {
-            1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 },
-            2: { S:50, M:50, A:30, R:30, T:80, C:50, I:40, Tr:50, Y:30 },
-            3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 }
+            1: { S:100, M:100, A:60, R:30, T:150, C:50, I:100, Tr:80, Y:50 },
+            2: { S:100, M:100, A:60, R:40, T:150, C:50, I:100, Tr:80, Y:50 },
+            3: { S:100, M:150, A:60, R:30, T:200, C:50, I:150, Tr:150, Y:50 }
         };
+        
         window.PASS_CUTOFF = {
             1: { S:20, M:20, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 },
-            2: { S:30, M:30, A:20, R:20, T:50, C:30, I:20, Tr:30, Y:20 },
-            3: { S:30, M:40, A:20, R:20, T:60, C:30, I:30, Tr:40, Y:20 }
+            2: { S:20, M:20, A:20, R:20, T:30, C:30, I:30, Tr:30, Y:20 },
+            3: { S:20, M:40, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 }
         };
     </script>
 
@@ -627,7 +630,7 @@
             } catch(e) { alert("오류: " + e.message); }
         };
 
-        // 3단계: 진급 엑셀 업로드 및 DB 적용
+        // 3단계: 진급 엑셀 업로드 및 DB 적용 (🔥스마트 진급 누적 엔진🔥)
         window.uploadPromotion = async function() {
             if(!window.isSystemLocked) return alert("🚨 먼저 시스템을 '마감(🔒)' 처리해야 진급 처리가 가능합니다.");
             const fileInput = document.getElementById("promoteFileInput");
@@ -636,7 +639,6 @@
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
-                    // ★ 진급 파일도 raw: false를 추가하여 날짜를 문자로 받아올 수 있게 보호
                     const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { raw: false });
                     let successCount = 0; let failCount = 0;
@@ -655,6 +657,7 @@
                         
                         if (!qSnap.empty) {
                             const targetDocId = qSnap.docs[0].id;
+                            const existingData = qSnap.docs[0].data();
                             
                             const oldDirSnap = await window.getDoc(window.doc(window.db, "directory", oldId));
                             let prefix = calculateAdmissionPrefix(newGrade); 
@@ -667,10 +670,61 @@
                             
                             let newAuthEmail = `stu${prefix}_${newId}@induk.hs.kr`;
                             
-                            let s_map = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
-                            let p_map = {S:false, M:false, A:false, R:false, T:false, C:false, I:false, Tr:false, Y:false};
+                            // 🔥 [핵심] 이전 학년 점수를 기반으로 한 진급 누적 인공지능 엔진
+                            let g1_R = existingData.year_1?.scores?.R || 0;
+                            let g1_T = existingData.year_1?.scores?.T || 0;
+                            let g2_R = existingData.year_2?.scores?.R || 0;
+                            let g2_T = existingData.year_2?.scores?.T || 0;
+                            let g2_I = existingData.year_2?.scores?.I || 0;
+
+                            let auto_R = 0, auto_T = 0, auto_I = 0;
+
+                            if (newGrade === 2) {
+                                // 한국사: 1학년 3급(30점) -> 2학년 20점 / 1학년 4급(20점) -> 2학년 10점
+                                if (g1_R >= 30) auto_R = 20; 
+                                else if (g1_R >= 20) auto_R = 10;
+                                // 전공자격: 기능사 1개 보유(+10점), 민간 1개 보유(+5점)
+                                if (g1_T >= 60) auto_T += 10;
+                                if (g1_T === 40 || g1_T >= 100) auto_T += 5;
+                            } 
+                            else if (newGrade === 3) {
+                                // 한국사: 1, 2학년 중 최고 등급 자동 판별
+                                let histLevel = 99;
+                                if (g2_R >= 40) histLevel = 1; 
+                                else if (g2_R >= 30) histLevel = 2; 
+                                else if (g2_R >= 20 || g1_R >= 30) histLevel = 3;
+
+                                if (histLevel === 1) auto_R = 30; 
+                                else if (histLevel === 2) auto_R = 20; 
+                                else if (histLevel === 3) auto_R = 10;
+                                
+                                // 전공자격: 누적 개수 계산
+                                let funcCount = 0, privCount = 0;
+                                if (g1_T >= 60) funcCount++;
+                                if (g1_T === 40 || g1_T >= 100) privCount++;
+                                if (g2_T >= 60) funcCount++;
+                                if ((g2_T % 60) >= 40) privCount++;
+                                
+                                if (funcCount >= 3) auto_T += 60; 
+                                else if (funcCount === 2) auto_T += 30; 
+                                else if (funcCount === 1) auto_T += 10;
+                                
+                                if (privCount >= 3) auto_T += 30; 
+                                else if (privCount === 2) auto_T += 20; 
+                                else if (privCount === 1) auto_T += 5;
+                                
+                                // 영어: 2학년 공인어학시험 등급 보유(10점)
+                                if (g2_I >= 40) auto_I = 10;
+                            }
+
+                            // 누적된 점수를 새 학년 장부에 이월하여 저장
+                            let s_map = {S:0, M:0, A:0, R:auto_R, T:auto_T, C:0, I:auto_I, Tr:0, Y:0};
+                            let p_map = {}; window.AREAS.forEach(a => p_map[a] = s_map[a] >= window.PASS_CUTOFF[newGrade][a]);
+                            let earned = Object.values(p_map).filter(Boolean).length; 
+                            let title = earned >= 6 ? (newGrade === 1 ? "🏆 CITY 스타터" : (newGrade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중";
+
                             let updatePayload = { current_studentId: newId, current_grade: newGrade, department: newDept };
-                            updatePayload[`year_${newGrade}`] = { scores: s_map, pass: p_map, earned_badges: 0, total_score: 0, title: "진행중", delivery_status: {} };
+                            updatePayload[`year_${newGrade}`] = { scores: s_map, pass: p_map, earned_badges: earned, total_score: (auto_R+auto_T+auto_I), title: title, delivery_status: {} };
 
                             batch.update(window.doc(window.db, "students", targetDocId), updatePayload);
                             batch.delete(window.doc(window.db, "directory", oldId));
@@ -698,7 +752,6 @@
                 try {
                     statusEl.textContent = "⏳ 데이터 분석 중...";
                     const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                    // ★ 학생 엑셀 업로드 시 raw: false 옵션 적용 (안전 장치)
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { raw: false });
                     if (jsonData.length > 500) { alert("500명 이상 업로드 제한."); statusEl.textContent = ""; return; }
                     let successCount = 0; let failCount = 0;
@@ -924,7 +977,6 @@
                 let successCount = 0; let failCount = 0;
                 try {
                     const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' }); 
-                    // ★ 엑셀의 날짜 변환 등 raw data 대신 텍스트 그대로 가져오기 위해 { raw: false } 추가!
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { raw: false });
                     for (const row of jsonData) {
                         const keys = Object.keys(row);
@@ -940,7 +992,6 @@
                         
                         if (!tName || !tId) { failCount++; continue; }
 
-                        // 1. 담임학급 찰떡 변환 엔진 (1-2, 1학년 2반, 1월 2일, 심지어 1/2/26 모두 '1-2'로)
                         let tHomeroom = "";
                         if (rawRoom && rawRoom !== "비담임" && rawRoom !== "없음" && rawRoom !== "-") {
                             let match = rawRoom.match(/(\d+)[^\d]+(\d+)/);
@@ -953,7 +1004,6 @@
                             }
                         }
 
-                        // 2. 특별권한 찰떡 변환 엔진
                         let tSubject = "일반";
                         if (rawSubj.includes("체육")) tSubject = "체육";
                         else if (rawSubj.includes("직업") || rawSubj.includes("기초")) tSubject = "직업기초";
@@ -975,7 +1025,6 @@
             }; reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
-        // 교사 개별 추가 
         window.addTeacher = async function() {
             const tName = document.getElementById("tName").value.trim(); 
             const tId = document.getElementById("tId").value.trim();
@@ -1030,7 +1079,6 @@
             try { await window.updateDoc(window.doc(window.db, "teachers", docId), { name: tName, homeroom: tHomeroom || null, subject: tSubject }); alert("수정 완료!"); window.closeEditTeacherModal(); if(typeof window.loadTeachers === 'function') window.loadTeachers(); } catch(e) { alert("오류"); }
         };
 
-        // ★ 교사 양식 다운로드 (홍길동 삭제 완료)
         window.downloadTeacherTemplate = function() { 
             const ws = XLSX.utils.json_to_sheet([{ "교사 성함": "", "아이디": "", "담임학급(예: 1-1)": "", "특별권한(일반/체육/직업기초/영어1)": "일반" }]); 
             ws['!cols'] = [{wch: 15}, {wch: 15}, {wch: 30}, {wch: 35}];
