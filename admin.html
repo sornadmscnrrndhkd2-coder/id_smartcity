@@ -341,14 +341,20 @@
             <div id="promotion" style="display:none;">
                 <h2>🎓 연말 진급 및 3학년 졸업 백업 시스템</h2>
                 <div style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #e74c3c;">
-                    <h3 style="margin-top:0; color:#c0392b;">1단계: 3학년 졸업 처리 (백업 및 DB 삭제)</h3><button onclick="window.graduateSeniors()" class="btn btn-red">🎓 3학년 백업 및 졸업 처리</button>
+                    <h3 style="margin-top:0; color:#c0392b;">1단계: 3학년 졸업 처리 (백업 및 DB 삭제)</h3>
+                    <p style="font-size:12px; color:#7f8c8d;">※ 마감(🔒) 상태에서만 실행 가능합니다. 3학년 학생 정보를 엑셀로 백업 후 DB에서 영구 삭제합니다.</p>
+                    <button onclick="window.graduateSeniors()" class="btn btn-red">🎓 3학년 백업 및 졸업 처리</button>
                 </div>
                 <div style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #3498db;">
-                    <h3 style="margin-top:0; color:#2980b9;">2단계: 1, 2학년 진급 양식 다운로드</h3><button onclick="window.downloadPromoteTemplate()" class="btn btn-blue">⬇️ 진급 엑셀 양식 다운로드</button>
+                    <h3 style="margin-top:0; color:#2980b9;">2단계: 1, 2학년 진급 양식 다운로드</h3>
+                    <p style="font-size:12px; color:#7f8c8d;">※ 언제든 다운로드 가능합니다. 현재 1, 2학년 전체 학생 명단을 바탕으로 새 학번을 적을 수 있는 엑셀 양식을 생성합니다.</p>
+                    <button onclick="window.downloadPromoteTemplate()" class="btn btn-blue">⬇️ 진급 엑셀 양식 다운로드</button>
                 </div>
                 <div style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; border-left: 5px solid #2ecc71;">
                     <h3 style="margin-top:0; color:#27ae60;">3단계: 새 학번으로 진급 업데이트</h3>
-                    <input type="file" id="promoteFileInput" accept=".xlsx" style="margin-right:10px; margin-bottom:10px;"/><button onclick="window.uploadPromotion()" class="btn btn-green">🚀 새 학번으로 진급 실행</button>
+                    <p style="font-size:12px; color:#7f8c8d;">※ 마감(🔒) 상태에서만 실행 가능합니다. 위에서 작성한 진급 엑셀을 업로드하여 DB의 학생 학번과 학년을 일괄 변경합니다.</p>
+                    <input type="file" id="promoteFileInput" accept=".xlsx" style="margin-right:10px; margin-bottom:10px;"/>
+                    <button onclick="window.uploadPromotion()" class="btn btn-green">🚀 새 학번으로 진급 실행</button>
                 </div>
             </div>
 
@@ -556,9 +562,164 @@
         };
 
         window.openChangePwModal = function() { document.getElementById('newAdminPwInput').value = ""; document.getElementById('changePwModal').style.display = "flex"; };
-        window.graduateSeniors = function() { alert("🎓 졸업 백업 시스템은 추후 연동됩니다."); };
-        window.downloadPromoteTemplate = function() { alert("⬇️ 진급 엑셀 양식은 추후 제공됩니다."); };
-        window.uploadPromotion = function() { alert("🚀 진급 업데이트 시스템은 추후 연동됩니다."); };
+        
+        // ============================================================================
+        // 🎓 연말 진급 및 백업 시스템 로직 (완벽 적용)
+        // ============================================================================
+        
+        // 1단계: 3학년 졸업 처리 및 백업 (마감 상태 필수)
+        window.graduateSeniors = async function() {
+            if (!window.isSystemLocked) return alert("🚨 먼저 시스템을 '마감(🔒)' 처리해야 졸업 및 삭제 처리가 가능합니다.");
+            if (!confirm("현재 3학년 학생들의 데이터를 엑셀로 백업하고 DB에서 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+
+            try {
+                const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_grade", "==", 3)));
+                if (qSnap.empty) return alert("졸업 처리할 3학년 학생이 없습니다.");
+
+                // 1. 백업 데이터 모아서 엑셀 다운로드
+                let backupData = [];
+                qSnap.forEach(doc => {
+                    let d = doc.data();
+                    let totalSc = d.year_3 ? (d.year_3.total_score || 0) : 0;
+                    let badges = d.year_3 ? (d.year_3.earned_badges || 0) : 0;
+                    backupData.push({ 
+                        "학번": d.current_studentId, "이름": d.name, "학과": d.department, "최종총점": totalSc, "최종배지개수": badges 
+                    });
+                });
+                
+                const ws = XLSX.utils.json_to_sheet(backupData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "졸업생백업");
+                const todayStr = new Date().toISOString().slice(0,10).replace(/-/g, "");
+                XLSX.writeFile(wb, `스마트시티_3학년_졸업백업_${todayStr}.xlsx`);
+
+                // 2. DB에서 일괄 영구 삭제 (배치 처리)
+                const batch = db_compat.batch();
+                qSnap.forEach(doc => {
+                    batch.delete(db_compat.collection("students").doc(doc.id));
+                    batch.delete(db_compat.collection("directory").doc(doc.data().current_studentId));
+                });
+                await batch.commit();
+
+                alert("✅ 3학년 엑셀 백업 다운로드 및 데이터 영구 삭제가 성공적으로 완료되었습니다.");
+                if(typeof safeLog === "function") safeLog("3학년 졸업 백업 및 DB 영구 삭제 완료");
+                if(typeof window.loadData === 'function') window.loadData();
+                if(typeof window.loadDashboard === 'function') window.loadDashboard();
+            } catch(e) {
+                alert("졸업 처리 중 오류 발생: " + e.message);
+            }
+        };
+
+        // 2단계: 1, 2학년 진급 엑셀 양식 다운로드 (언제든 가능)
+        window.downloadPromoteTemplate = async function() {
+            try {
+                const qSnap = await window.getDocs(window.collection(window.db, "students"));
+                let promoteData = [];
+                
+                qSnap.forEach(doc => {
+                    let d = doc.data();
+                    // 현재 1, 2학년 학생만 진급 대상
+                    if (d.current_grade === 1 || d.current_grade === 2) {
+                        promoteData.push({
+                            "현재학번": d.current_studentId,
+                            "이름": d.name,
+                            "현재학년": d.current_grade,
+                            "새학번(입력)": "",
+                            "새학과(입력)": d.department || "미지정"
+                        });
+                    }
+                });
+                
+                if (promoteData.length === 0) return alert("진급 대상(1, 2학년) 학생 데이터가 없습니다.");
+
+                promoteData.sort((a,b) => String(a.현재학번).localeCompare(String(b.현재학번)));
+                
+                const ws = XLSX.utils.json_to_sheet(promoteData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "진급입력양식");
+                const todayStr = new Date().toISOString().slice(0,10).replace(/-/g, "");
+                XLSX.writeFile(wb, `스마트시티_진급입력양식_${todayStr}.xlsx`);
+                
+                if(typeof safeLog === "function") safeLog("진급 업데이트용 엑셀 양식 다운로드");
+            } catch(e) {
+                alert("엑셀 양식 생성 중 오류 발생: " + e.message);
+            }
+        };
+
+        // 3단계: 진급 엑셀 업로드 및 DB 적용 (마감 상태 필수)
+        window.uploadPromotion = async function() {
+            if(!window.isSystemLocked) return alert("🚨 먼저 시스템을 '마감(🔒)' 처리해야 진급 처리가 가능합니다. (실수로 인한 데이터 꼬임 방지)");
+            
+            const fileInput = document.getElementById("promoteFileInput");
+            if (!fileInput.files[0]) return alert("작성된 진급 엑셀 파일을 먼저 선택해주세요.");
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    let successCount = 0; 
+                    let failCount = 0;
+                    
+                    const batch = db_compat.batch();
+
+                    for (const row of jsonData) {
+                        const oldId = String(row["현재학번"]).trim();
+                        const newId = String(row["새학번(입력)"] || "").trim();
+                        const newDept = String(row["새학과(입력)"] || "").trim();
+
+                        if (!oldId || !newId || !/^\d{5}$/.test(newId)) { 
+                            failCount++; 
+                            continue; 
+                        }
+                        
+                        const newGrade = Number(newId.charAt(0));
+
+                        // 기존 학번으로 학생 찾기
+                        const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", oldId)));
+                        
+                        if (!qSnap.empty) {
+                            const targetDocId = qSnap.docs[0].id;
+                            
+                            // 1. 학생 문서 자체 업데이트 (새 학번, 새 학년, 새 학과)
+                            batch.update(db_compat.collection("students").doc(targetDocId), {
+                                current_studentId: newId,
+                                current_grade: newGrade,
+                                department: newDept
+                            });
+                            
+                            // 2. 디렉토리(로그인 아이디) 업데이트 : 기존 학번 삭제 후 새 학번으로 덮어쓰기
+                            batch.delete(db_compat.collection("directory").doc(oldId));
+                            batch.set(db_compat.collection("directory").doc(newId), { 
+                                stableId: targetDocId, 
+                                authEmail: `stu_${newId}@induk.hs.kr`,
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            }, {merge: true});
+                            
+                            successCount++;
+                        } else {
+                            failCount++; // DB에 기존 학번이 없는 경우
+                        }
+                    }
+                    
+                    // 모아둔 일괄 작업(Batch) 실행
+                    await batch.commit();
+                    
+                    alert(`✅ 진급 처리가 완료되었습니다!\n(성공: ${successCount}명, 누락/실패: ${failCount}명)`);
+                    if(typeof safeLog === "function") safeLog(`연말 학생 진급 일괄 처리 완료 (엑셀 연동)`);
+                    
+                    if (typeof window.loadData === "function") window.loadData();
+                    if (typeof window.loadDashboard === "function") window.loadDashboard();
+                    
+                } catch(err) {
+                    alert("진급 처리 중 심각한 오류가 발생했습니다: " + err.message);
+                } finally {
+                    fileInput.value = "";
+                }
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        };
+        // ============================================================================
 
         async function verifyRealAdmin() {
             try {
@@ -807,7 +968,6 @@
 
         window.downloadTemplate = function() { const ws = XLSX.utils.json_to_sheet([{ "학년": "", "학과": "", "학번": "", "이름": "", "S": "", "M": "", "A": "", "R": "", "T": "", "C": "", "I": "", "Tr": "", "Y": "" }]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "입력양식"); XLSX.writeFile(wb, "스마트시티_학생양식.xlsx"); };
         
-        // ★★★ 누락되었던 학생 정보 수정 창 띄우기 함수 완벽 복구 !!! ★★★
         window.openEditModal = function(docId, grade) {
             const student = window.allStudentsData.find(s => s.docId === docId);
             if(!student) return alert("학생 데이터를 찾을 수 없습니다.");
@@ -855,15 +1015,47 @@
             try { const querySnapshot = await window.getDocs(window.collection(window.db, "system_logs")); let logs = []; querySnapshot.forEach(doc => logs.push(doc.data())); logs.sort((a, b) => b.timestamp - a.timestamp); tbody.innerHTML = ""; logs.slice(0, 200).forEach(log => { let userIcon = "👤"; if(log.user.includes("학생")) userIcon = "🧑‍🎓"; else if(log.user.includes("교사")) userIcon = "👨‍🏫"; else if(log.user.includes("관리자") || log.user.includes("Admin")) userIcon = "👑"; tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${userIcon} ${log.user}</td><td>${log.action}</td></tr>`; }); if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>활동 로그가 없습니다.</td></tr>"; } catch(e) { tbody.innerHTML = "<tr><td colspan='3'>오류</td></tr>"; }
         };
 
+        // ★ 막대 그래프 1페이지 꽉 채우기 (반응형 퍼펙트 CSS 적용)
         window.printClassChart = function() {
             const filterClass = document.getElementById("filterClass").value; const filterGrade = document.getElementById("filterGrade").value;
             if (filterClass === "ALL") return alert("❗ '반'을 먼저 선택 후 [조회]를 눌러주세요.");
-            if (!window.allStudentsData || window.allStudentsData.length === 0) return alert("데이터 없음");
-            const labels = []; const dataValues = []; window.allStudentsData.forEach(s => { labels.push(s.name); dataValues.push(s.yearData.earned_badges || 0); });
+            if (!window.allStudentsData || window.allStudentsData.length === 0) return alert("출력할 데이터가 없습니다.");
+            
+            const labels = []; const dataValues = []; 
+            window.allStudentsData.forEach(s => { labels.push(s.name); dataValues.push(s.yearData.earned_badges || 0); });
             const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+            
             const printWindow = window.open('', '_blank', 'width=1100,height=800');
-            printWindow.document.write(`<html><head><title>우리 반 역량 현황 출력</title><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>@page { size: A4 landscape; margin: 10mm; } body { font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 20px; background: white; } .title-wrap { margin-bottom: 30px; } h1 { color: #2c3e50; font-size: 32px; border-bottom: 4px solid #3498db; padding-bottom: 10px; margin-bottom: 10px; display: inline-block; font-weight: 900;} .date-text { color: #7f8c8d; font-size: 16px; font-weight: bold; } .chart-container { width: 100%; max-width: 1050px; margin: 0 auto; height: 500px; } .footer { margin-top: 50px; font-size: 16px; color: #7f8c8d; font-weight: bold; letter-spacing: 2px;}</style></head><body><div class="title-wrap"><h1>👑 ${filterGrade}학년 ${filterClass}반 스마트시티 배지 획득 현황</h1><div class="date-text">[ ${todayStr} 기준 ]</div></div><div class="chart-container"><canvas id="classChart"></canvas></div><div class="footer">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div><script>const badgeLabelPlugin = { id: 'badgeLabels', afterDatasetsDraw(chart) { const { ctx } = chart; chart.data.datasets.forEach((dataset, i) => { const meta = chart.getDatasetMeta(i); meta.data.forEach((bar, index) => { const data = dataset.data[index]; ctx.fillStyle = '#c0392b'; ctx.font = 'bold 18px "Malgun Gothic"'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(data + '개', bar.x, bar.y - 8); }); }); } }; const ctx = document.getElementById('classChart').getContext('2d'); new Chart(ctx, { type: 'bar', data: { labels: [${labels.map(l => `'${l}'`).join(',')}], datasets: [{ label: '획득 배지', data: [${dataValues.join(',')}], backgroundColor: 'rgba(52, 152, 219, 0.85)', borderColor: 'rgba(41, 128, 185, 1)', borderWidth: 2, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1000 }, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 9, ticks: { stepSize: 1, font: { size: 16, weight: 'bold' }, color: '#7f8c8d' }, grid: { color: '#ecf0f1' } }, x: { ticks: { font: { size: 15, weight: 'bold' }, color: '#2c3e50' }, grid: { display: false } } } }, plugins: [badgeLabelPlugin] }); setTimeout(() => { window.print(); }, 1500);<\/script></body></html>`); 
+            printWindow.document.write(`
+                <html><head><title>우리 반 역량 현황 출력</title><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+                <style>
+                    @page { size: landscape; margin: 0; } 
+                    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box; }
+                    body { display: flex; flex-direction: column; font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 3vh 3vw; background: white; justify-content: space-between; }
+                    .title-wrap { flex: 0 0 auto; margin-bottom: 2vh; }
+                    h1 { color: #2c3e50; font-size: 4vh; border-bottom: 0.4vh solid #3498db; padding-bottom: 1vh; margin: 0 0 1vh 0; display: inline-block; font-weight: 900;}
+                    .date-text { color: #7f8c8d; font-size: 2vh; font-weight: bold; }
+                    .chart-container { flex: 1 1 auto; position: relative; width: 100%; min-height: 0; padding: 1vh 0; }
+                    .footer { flex: 0 0 auto; font-size: 1.8vh; color: #7f8c8d; font-weight: bold; letter-spacing: 2px;}
+                </style>
+                </head>
+                <body>
+                    <div class="title-wrap">
+                        <h1>👑 ${filterGrade}학년 ${filterClass}반 스마트시티 배지 획득 현황</h1>
+                        <div class="date-text">[ ${todayStr} 기준 ]</div>
+                    </div>
+                    <div class="chart-container"><canvas id="classChart"></canvas></div>
+                    <div class="footer">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
+                    <script>
+                        const badgeLabelPlugin = { id: 'badgeLabels', afterDatasetsDraw(chart) { const { ctx } = chart; chart.data.datasets.forEach((dataset, i) => { const meta = chart.getDatasetMeta(i); meta.data.forEach((bar, index) => { const data = dataset.data[index]; ctx.fillStyle = '#c0392b'; ctx.font = 'bold 1.8vh "Malgun Gothic"'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(data + '개', bar.x, bar.y - 8); }); }); } }; 
+                        const ctx = document.getElementById('classChart').getContext('2d'); 
+                        new Chart(ctx, { type: 'bar', data: { labels: [${labels.map(l => `'${l}'`).join(',')}], datasets: [{ label: '획득 배지', data: [${dataValues.join(',')}], backgroundColor: 'rgba(52, 152, 219, 0.85)', borderColor: 'rgba(41, 128, 185, 1)', borderWidth: 2, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1000 }, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 9, ticks: { stepSize: 1, font: { size: 16, weight: 'bold' }, color: '#7f8c8d' }, grid: { color: '#ecf0f1' } }, x: { ticks: { font: { size: 15, weight: 'bold' }, color: '#2c3e50' }, grid: { display: false } } } }, plugins: [badgeLabelPlugin] }); 
+                        setTimeout(() => { window.print(); }, 1500);
+                    <\/script>
+                </body></html>
+            `); 
             printWindow.document.close(); 
+            if (typeof safeLog === "function") safeLog(`[${filterGrade}학년 ${filterClass}반] 그래프 인쇄`);
         };
         
         window.downloadExcelReport = function(tableId, fileName) { const table = document.getElementById(tableId); const wb = XLSX.utils.table_to_book(table, {sheet: "보고서"}); XLSX.writeFile(wb, `${fileName}.xlsx`); };
