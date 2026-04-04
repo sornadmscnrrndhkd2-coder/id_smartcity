@@ -25,7 +25,7 @@
         .g-system  { color: #af7ac5; border-bottom: 1px solid rgba(155, 89, 182, 0.3); }
         .menu-item { padding: 13px 15px; margin-bottom: 6px; background-color: transparent; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13.5px; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); color: #bdc3c7; display: flex; align-items: center; border: 1px solid transparent; }
         .menu-item:hover { background-color: rgba(255,255,255,0.05); color: white; }
-        .menu-active { background: rgba(255, 255, 255, 0.12) !important; backdrop-filter: blur(10px) !important; -webkit-backdrop-filter: blur(10px) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; color: #fff !important; font-weight: 800; }
+        .menu-active { background: rgba(255, 255, 255, 0.12) !important; backdrop-filter: blur(10px) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; color: #fff !important; font-weight: 800; }
         .content { flex: 1; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto; min-height: 80vh; min-width: 0;}
         .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
         .dash-card { padding: 20px; border-radius: 12px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -138,7 +138,6 @@
 <body>
 
     <script>
-        // 🚨 실제 API 키를 입력하세요.
         window.MY_GLOBAL_FIREBASE_CONFIG = {
             apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
   authDomain: "induk-smartcity.firebaseapp.com",
@@ -288,7 +287,6 @@
                     
                     <div class="action-group">
                         <button onclick="window.deleteSelectedStudents()" class="btn btn-red">🗑️ 선택 삭제</button>
-                        <button onclick="window.resetSelectedPasswords()" class="btn btn-orange">🔄 선택 비번 초기화</button>
                     </div>
                 </div>
                 
@@ -300,7 +298,7 @@
             </div>
 
             <div id="uploadData" style="display:none;">
-                <h2>📁 9대 역량 엑셀 업로드 (스마트 자동 입학연도 부여)</h2>
+                <h2>📁 9대 역량 엑셀 업로드</h2>
                 <div class="summary-box"><strong>💡 안내</strong><br>업로드 시 학년과 현재 년도를 계산하여 <b>stu입학년도_학번</b>(예: stu26_10101)으로 아이디가 자동 생성됩니다. 기존 유령 계정이 있어도 중복 가입 에러를 무시하고 진행합니다.</div>
                 <button onclick="window.downloadTemplate()" class="btn btn-dark" style="margin-bottom: 20px;">📄 엑셀 빈 양식 다운로드</button>
                 <div style="background: #fff; padding: 20px; border: 1px dashed #bdc3c7; border-radius: 8px;">
@@ -360,7 +358,7 @@
 
             <div id="teacherManage" style="display:none;">
                 <h2>👨‍🏫 교사 계정 및 권한 관리</h2>
-                <div class="summary-box" style="border-left-color: #16a085;"><strong>💡 권한 열쇠(분리) 방식 적용</strong><br>담임교사와 특정 과목(체육, 직업기초, 영어1) 담당 교사에게만 특수 입력/결재 권한이 부여됩니다. (나머지는 조회 전용)</div>
+                <div class="summary-box" style="border-left-color: #16a085;"><strong>💡 엑셀 업로드 인공지능 지원:</strong><br>담임학급에 '1-2', '1학년 2반', '1월 2일'을 적어도 시스템이 <b>'1-2'</b>로 자동 변환하여 저장합니다. 특별권한도 내용에 맞춰 자동 인식합니다.</div>
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 300px; background: #fff; padding: 20px; border: 1px dashed #16a085; border-radius: 8px; margin-bottom: 20px;">
                         <h3 style="margin-top: 0; color: #16a085;">📂 새 학기 교사 일괄 등록 (엑셀)</h3>
@@ -372,17 +370,14 @@
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <input type="text" id="tName" placeholder="교사 성함 (예: 김인덕)" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
                             <input type="text" id="tId" placeholder="로그인 아이디 (영문/숫자)" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
-                            
                             <select id="tHomeroom" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
                                 <option value="">비담임</option><option value="1-1">1-1</option><option value="1-2">1-2</option><option value="1-3">1-3</option><option value="1-4">1-4</option><option value="1-5">1-5</option><option value="1-6">1-6</option>
                                 <option value="2-1">2-1</option><option value="2-2">2-2</option><option value="2-3">2-3</option><option value="2-4">2-4</option><option value="2-5">2-5</option><option value="2-6">2-6</option>
                                 <option value="3-1">3-1</option><option value="3-2">3-2</option><option value="3-3">3-3</option><option value="3-4">3-4</option><option value="3-5">3-5</option><option value="3-6">3-6</option>
                             </select>
-
                             <select id="tSubject" style="padding:10px; border:1px solid #ccc; border-radius:5px; background-color: #ebf5fb;">
                                 <option value="일반">일반 교사 (조회 전용)</option><option value="체육">체육 담당 (A영역 입력)</option><option value="직업기초">직업기초 담당 (C영역 입력)</option><option value="영어1">1학년 영어 담당 (I영역 입력)</option>
                             </select>
-
                             <button class="btn btn-green" style="padding: 12px; font-size:14px;" onclick="window.addTeacher()">개별 등록하기</button>
                         </div>
                     </div>
@@ -689,7 +684,7 @@
             reader.readAsArrayBuffer(fileInput.files[0]);
         };
 
-        // ★ 엑셀 대량 업로드 (비번입력 없이 123456 고정)
+        // ★ 엑셀 대량 업로드
         document.getElementById("uploadExcelBtn").addEventListener("click", async () => {
             const fileInput = document.getElementById("excelFileInput"); const statusEl = document.getElementById("uploadStatus");
             if (!fileInput.files[0]) { alert("파일을 선택해주세요."); return; }
@@ -722,7 +717,6 @@
                                 authEmail = `stu${prefix}_${studentId}@induk.hs.kr`; 
                                 
                                 try {
-                                    // ★ 비번 123456 고정
                                     const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, "123456"); 
                                     createdUser = cred.user; targetDocId = cred.user.uid; 
                                 } catch (authErr) {
@@ -754,7 +748,7 @@
             }; reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
-        // ★ 개별 학생 추가 (비번입력칸 없이 123456 고정)
+        // ★ 개별 학생 추가
         window.addSingleStudent = async function() {
             const sName = document.getElementById("newSName").value.trim(); 
             const sId = document.getElementById("newSId").value.trim();
@@ -773,7 +767,6 @@
                 let targetDocId = null;
                 
                 try { 
-                    // ★ 비번 123456 고정
                     const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, "123456"); 
                     targetDocId = cred.user.uid; 
                     await secondaryApp.auth().signOut(); 
@@ -896,12 +889,7 @@
             } catch(e) { alert("반려 처리 중 오류 발생."); }
         };
 
-        // 더 이상 사용하지 않는 비번 초기화 버튼(선택)
-        window.resetSelectedPasswords = async function() { 
-            alert("🚨 비밀번호 초기화는 파이어베이스 인증센터에서 해당 학생을 삭제 후, '개별 학생 추가'로 다시 등록하셔야 합니다."); 
-        };
-
-        // 학생 일괄 삭제 처리 (DB에서만 날림, Auth는 수동)
+        // 학생 일괄 삭제 처리
         window.deleteSelectedStudents = async function() {
             const checkboxes = document.querySelectorAll('.student-checkbox:checked');
             if(checkboxes.length === 0) return alert("삭제할 학생을 먼저 체크해주세요.");
@@ -921,7 +909,7 @@
             } catch(e) { alert("오류: " + e.message); }
         };
 
-        // ★ 교사 일괄 업로드 (비번 9022060 고정)
+        // ★ 교사 일괄 업로드 (비번입력 없이 9022060 고정 + 인공지능 변환)
         document.getElementById("uploadTeacherExcelBtn").addEventListener("click", async () => {
             const fileInput = document.getElementById("teacherExcelInput"); if (!fileInput.files[0]) return alert("파일 선택");
             const btn = document.getElementById("uploadTeacherExcelBtn"); btn.innerText = "⏳ 생성 중..."; btn.disabled = true;
@@ -932,14 +920,36 @@
                     const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' }); 
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                     for (const row of jsonData) {
-                        const tName = row["교사 성함"] ? String(row["교사 성함"]).trim() : ""; 
-                        const tId = row["아이디"] ? String(row["아이디"]).trim() : "";
-                        const tHomeroom = row["담임학급"] ? String(row["담임학급"]).trim() : ""; 
-                        const tSubject = row["특별권한"] ? String(row["특별권한"]).trim() : "일반";
+                        // 템플릿 양식의 헤더 이름이 달라도 최대한 찾아내는 스마트 로직
+                        const keys = Object.keys(row);
+                        const nameKey = keys.find(k => k.includes("성함") || k.includes("이름"));
+                        const idKey = keys.find(k => k.includes("아이디") || k.includes("ID"));
+                        const roomKey = keys.find(k => k.includes("학급") || k.includes("반"));
+                        const subjKey = keys.find(k => k.includes("권한") || k.includes("과목"));
+
+                        const tName = nameKey ? String(row[nameKey]).trim() : ""; 
+                        const tId = idKey ? String(row[idKey]).trim() : "";
+                        let rawRoom = roomKey ? String(row[roomKey]).trim() : ""; 
+                        let rawSubj = subjKey ? String(row[subjKey]).trim() : "일반";
+                        
                         if (!tName || !tId) { failCount++; continue; }
+
+                        // 1. 담임학급 찰떡 변환 (1-2, 1학년 2반, 1월 2일 모두 '1-2'로)
+                        let tHomeroom = "";
+                        if (rawRoom && rawRoom !== "비담임" && rawRoom !== "없음") {
+                            let match = rawRoom.match(/(\d+)[^\d]+(\d+)/);
+                            if (match) tHomeroom = `${match[1]}-${match[2]}`;
+                            else tHomeroom = rawRoom;
+                        }
+
+                        // 2. 특별권한 찰떡 변환
+                        let tSubject = "일반";
+                        if (rawSubj.includes("체육")) tSubject = "체육";
+                        else if (rawSubj.includes("직업") || rawSubj.includes("기초")) tSubject = "직업기초";
+                        else if (rawSubj.includes("영어")) tSubject = "영어1";
+
                         const authEmail = `${tId}@induk.hs.kr`;
                         try { 
-                            // ★ 비번 9022060 고정
                             const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, "9022060"); 
                             const uid = cred.user.uid; 
                             const dateString = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10); 
@@ -954,7 +964,7 @@
             }; reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
-        // ★ 교사 개별 추가 (비번 9022060 고정)
+        // ★ 교사 개별 추가 (비번입력 없이 9022060 고정)
         window.addTeacher = async function() {
             const tName = document.getElementById("tName").value.trim(); 
             const tId = document.getElementById("tId").value.trim();
@@ -964,7 +974,6 @@
             try {
                 const authEmail = tId + "@induk.hs.kr"; let uid = null;
                 try { 
-                    // ★ 비번 9022060 고정
                     const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, "9022060"); 
                     uid = cred.user.uid; 
                     await secondaryApp.auth().signOut(); 
@@ -1010,7 +1019,15 @@
             try { await window.updateDoc(window.doc(window.db, "teachers", docId), { name: tName, homeroom: tHomeroom || null, subject: tSubject }); alert("수정 완료!"); window.closeEditTeacherModal(); if(typeof window.loadTeachers === 'function') window.loadTeachers(); } catch(e) { alert("오류"); }
         };
 
-        window.downloadTeacherTemplate = function() { const ws = XLSX.utils.json_to_sheet([{ "교사 성함": "", "아이디": "", "담임학급": "", "특별권한": "일반" }]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "교사등록양식"); XLSX.writeFile(wb, "스마트시티_교사등록양식.xlsx"); };
+        // ★ 교사 양식 다운로드 (안내문구 명확히 추가)
+        window.downloadTeacherTemplate = function() { 
+            const ws = XLSX.utils.json_to_sheet([{ "교사 성함": "홍길동", "아이디": "hong123", "담임학급(예: 1-1 또는 1학년 1반)": "1-1", "특별권한(일반/체육/직업기초/영어1)": "일반" }]); 
+            ws['!cols'] = [{wch: 15}, {wch: 15}, {wch: 30}, {wch: 35}];
+            const wb = XLSX.utils.book_new(); 
+            XLSX.utils.book_append_sheet(wb, ws, "교사등록양식"); 
+            XLSX.writeFile(wb, "스마트시티_교사등록양식.xlsx"); 
+        };
+        
         window.deleteTeacher = async function(docId, name) { if(!confirm(`삭제하시겠습니까?`)) return; await window.deleteDoc(window.doc(window.db, "teachers", docId)); if(typeof window.loadTeachers === 'function') window.loadTeachers(); };
 
         window.executeChangePw = async function() {
