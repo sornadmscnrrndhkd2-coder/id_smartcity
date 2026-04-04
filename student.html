@@ -44,7 +44,15 @@
         .user-info h2 { margin: 0 0 12px 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;}
         .badge-pill { background: linear-gradient(135deg, #f39c12, #d35400); display: inline-block; padding: 6px 18px; border-radius: 20px; font-size: 14px; font-weight: 900; box-shadow: 0 4px 10px rgba(211, 84, 0, 0.4); border: 1px solid rgba(255,255,255,0.3);}
         
-        .radar-chart-container { width: 160px; height: 160px; position: relative; z-index: 2; flex-shrink: 0; background: rgba(255,255,255,0.05); border-radius: 50%; padding: 10px; }
+        /* ★ 레이더 차트 게임 UI 업그레이드! */
+        .radar-chart-container { 
+            width: 220px; height: 220px; 
+            position: relative; z-index: 2; flex-shrink: 0; 
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 60%, transparent 100%); 
+            border-radius: 50%; padding: 15px; 
+            box-shadow: 0 0 25px rgba(241, 196, 15, 0.3), inset 0 0 20px rgba(241, 196, 15, 0.2);
+            border: 2px solid rgba(241, 196, 15, 0.4);
+        }
         
         .score-summary { display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 2; flex-shrink: 0;}
         
@@ -197,7 +205,7 @@
             .user-info h2 { font-size: 20px; margin-bottom: 6px; display:flex; flex-direction:column; gap:5px; align-items:flex-start;}
             .badge-pill { padding: 4px 12px; font-size: 12px;}
             
-            .radar-chart-container { width: 120px; height: 120px; padding: 0px; }
+            .radar-chart-container { width: 150px; height: 150px; padding: 10px; }
 
             .score-summary { width: 100%; flex-direction: row; justify-content: center; gap: 10px;} 
             .score-box { padding: 10px; min-width: auto; flex: 1; border-radius: 10px;}
@@ -446,11 +454,11 @@
                         });
                         
                         sessionStorage.setItem('hasCountedVisit', 'true');
-                    } catch(e) {} // 에러 발생 시 조용히 넘어감
+                    } catch(e) {} 
                 }
 
                 window.myStudentId = loginId;
-                window.myAuthUid = user.uid;
+                window.myAuthUid = user.uid; 
                 window.myStudentName = loginName;
                 window.CURRENT_GRADE = parseInt(loginId.charAt(0)); 
                 const classNum = parseInt(loginId.substring(1,3));
@@ -472,7 +480,7 @@
             }
         });
 
-        // 차트 렌더링 로직
+        // ★ 게임 UI 느낌으로 업그레이드된 차트 그리기 엔진!
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             if (window.myRadarChartInstance) window.myRadarChartInstance.destroy();
@@ -500,7 +508,7 @@
             dataArr = dataArr.map(val => isNaN(val) ? 0 : val);
 
             const isMobile = window.innerWidth <= 850;
-            const labelFontSize = isMobile ? 9 : 11; 
+            const labelFontSize = isMobile ? 9 : 12; 
             const chartPadding = isMobile ? 12 : 25;  
 
             window.myRadarChartInstance = new Chart(ctx, {
@@ -510,13 +518,15 @@
                     datasets: [{
                         label: '영역별 달성률(%)',
                         data: dataArr,
-                        backgroundColor: 'rgba(241, 196, 15, 0.4)', 
-                        borderColor: 'rgba(241, 196, 15, 1)',     
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: 'rgba(241, 196, 15, 1)',
+                        backgroundColor: 'rgba(241, 196, 15, 0.5)', 
+                        borderColor: '#f1c40f',     
+                        pointBackgroundColor: '#e67e22',
+                        pointBorderColor: '#fff',
                         pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(241, 196, 15, 1)',
-                        borderWidth: 2,
+                        pointHoverBorderColor: '#f1c40f',
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
@@ -525,9 +535,9 @@
                     layout: { padding: chartPadding },
                     scales: {
                         r: {
-                            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
-                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
-                            pointLabels: { color: 'rgba(255, 255, 255, 0.9)', font: { size: labelFontSize, family: 'Pretendard', weight: 'bold' } },
+                            angleLines: { color: 'rgba(255, 255, 255, 0.3)', lineWidth: 1.5 },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)', lineWidth: 1 },
+                            pointLabels: { color: '#fdfefe', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } },
                             ticks: { display: false, min: 0, max: 100, stepSize: 25 }
                         }
                     },
@@ -538,18 +548,18 @@
 
         window.loadStudentRealData = async function(dbInstance) {
             try {
-                // ★ 2중 안전 장치 도입! UID로 먼저 찾아보고 없으면 학번(20601)으로 찾습니다.
+                // ★ 2중 안전 장치! UID로 찾고, 혹시 권한에서 막히거나 없으면 학번(20601)으로 찾습니다.
                 let docSnap = null;
                 try {
                     docSnap = await getDoc(doc(dbInstance, "students", window.myAuthUid));
-                } catch(e) {} // 권한 거부 시 무시
+                } catch(e) {} 
 
                 if (!docSnap || !docSnap.exists()) {
                     try {
                         docSnap = await getDoc(doc(dbInstance, "students", window.myStudentId));
                     } catch(e) {
                         console.error("데이터를 불러올 권한이 없습니다.", e);
-                        return; // 완전 실패 시 종료
+                        return; 
                     }
                 }
                 
@@ -637,7 +647,6 @@
                 window.renderHallOfFame();
 
             } catch(e) {
-                // ★ 랭킹 접근 권한이 없을 경우 부드럽게 대처
                 console.log("랭킹 접근 권한 없음");
                 const scoreBoxes = document.querySelectorAll('.score-box h3');
                 if(scoreBoxes.length > 1) {
@@ -650,7 +659,8 @@
         window.loadMyApplications = async function(dbInstance) {
             const listEl = document.getElementById('myApplyList');
             try {
-                const q = query(collection(dbInstance, "applications"), where("studentId", "==", window.myStudentId));
+                // ★ 학생 본인의 암호화된 UID를 사용하여 보안 규칙과 완벽하게 매칭!
+                const q = query(collection(dbInstance, "applications"), where("studentUid", "==", window.myAuthUid));
                 const qSnap = await getDocs(q);
                 
                 let applies = [];
@@ -668,7 +678,7 @@
                     let tagHtml = '';
                     let cancelBtnHtml = '';
                     
-                    if(app.status === '대기중') {
+                    if(app.status === '대기중' || app.status === 'pending') {
                         tagHtml = '<span class="apply-status-tag tag-waiting">⏳ 심사 중</span>';
                         cancelBtnHtml = `<button class="btn-cancel-apply" onclick="window.cancelApplication('${app.id}')">신청 취소</button>`;
                     } else if(app.status === '승인') {
@@ -677,7 +687,7 @@
                         tagHtml = '<span class="apply-status-tag tag-reject">❌ 반려됨</span>';
                     }
 
-                    let dateObj = new Date(app.timestamp);
+                    let dateObj = new Date(app.timestamp || Date.now());
                     let dateStr = `${dateObj.getMonth()+1}월 ${dateObj.getDate()}일`;
 
                     listEl.innerHTML += `
@@ -709,6 +719,7 @@
             }
         };
 
+        // ★ 초강력 이미지 압축기 (1MB 제한 무력화)
         async function compressImage(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -718,8 +729,9 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 1200; 
-                        const MAX_HEIGHT = 1200; 
+                        // 해상도를 800x800으로 제한하여 극단적 다이어트
+                        const MAX_WIDTH = 800; 
+                        const MAX_HEIGHT = 800; 
                         let width = img.width;
                         let height = img.height;
 
@@ -733,7 +745,8 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+                        // 화질을 0.5(50%)로 낮춰서 용량을 50~100KB 수준으로 최소화!
+                        resolve(canvas.toDataURL('image/jpeg', 0.5)); 
                     };
                     img.onerror = error => reject(error);
                 };
@@ -760,9 +773,17 @@
                 let fileType = "";
 
                 if (file.type.startsWith('image/')) {
+                    // 이미지는 무제한 자동 압축!
                     fileData = await compressImage(file);
                     fileType = "image";
                 } else if (file.type === 'application/pdf') {
+                    // PDF는 캔버스 압축이 불가하므로 700KB 사이즈 방어막 가동!
+                    if (file.size > 700 * 1024) {
+                        alert("🚨 [용량 초과 안내]\nPDF 파일은 700KB 이하만 업로드 가능합니다.\n\n💡 해결 방법:\n해당 화면을 '사진(캡처)'으로 찍어서 올려주세요!\n사진은 아무리 커도 시스템이 알아서 무제한 압축해 줍니다.");
+                        btn.innerText = "해당 점수로 제출하기";
+                        btn.disabled = false;
+                        return;
+                    }
                     fileData = await new Promise((resolve) => {
                         const reader = new FileReader();
                         reader.onload = (e) => resolve(e.target.result);
@@ -770,11 +791,16 @@
                     });
                     fileType = "pdf";
                 } else {
-                    throw new Error("사진(JPG/PNG) 또는 PDF 파일만 업로드 가능합니다.");
+                    alert("🚨 사진(JPG, PNG 등) 또는 PDF 파일만 업로드 가능합니다.");
+                    btn.innerText = "해당 점수로 제출하기";
+                    btn.disabled = false;
+                    return;
                 }
 
+                // ★ 보안 규칙(Rules)과 완벽하게 매칭되는 찰떡 데이터 전송!
                 const newApp = {
-                    studentId: window.myStudentId,
+                    studentUid: window.myAuthUid,    // 보안 규칙이 요구하는 본인 인증 키
+                    studentId: window.myStudentId,   // 교사가 볼 학번 (예: 20601)
                     studentName: window.myStudentName,
                     grade: window.CURRENT_GRADE,
                     classNum: parseInt(window.myStudentId.substring(1,3)),
@@ -782,7 +808,7 @@
                     score: parseInt(scoreText),
                     fileData: fileData, 
                     fileType: fileType,
-                    status: "대기중",
+                    status: "대기중",                // 보안 규칙이 허용한 상태값
                     timestamp: Date.now()
                 };
 
