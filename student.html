@@ -220,7 +220,9 @@
 </head>
 <body>
     <script>
-        if (!sessionStorage.getItem('loginUserId') && !sessionStorage.getItem('studentId')) {
+        // 로그인 인증 체크 (loginUserId 와 studentId 호환 완벽 대응)
+        const activeUserId = sessionStorage.getItem('loginUserId') || sessionStorage.getItem('studentId');
+        if (!activeUserId) {
             alert('⚠️ 로그인이 필요한 서비스입니다. 로그인 페이지로 이동합니다.');
             location.href = 'index.html';
         }
@@ -420,6 +422,7 @@
                     return;
                 }
 
+                // 📊 [보안 통과] 정확히 +1 연산과 최초 생성 시 1만 넣는 완벽한 동기화
                 if (!sessionStorage.getItem('hasCountedVisit')) {
                     try {
                         const totalRef = doc(db, "system", "visitorStats");
@@ -461,7 +464,7 @@
             }
         });
 
-        // ★ 육각형 차트 10칸(stepSize: 10) 촘촘하게 세분화!
+        // ★ [수정 완료] 육각형 차트를 10점 단위로 쪼개어 아주 촘촘한 거미줄(10칸)로 만들었습니다!
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             if (window.myRadarChartInstance) window.myRadarChartInstance.destroy();
@@ -516,11 +519,13 @@
                     layout: { padding: chartPadding },
                     scales: {
                         r: {
+                            // ★ 0~100까지 고정하고, stepSize를 10으로 설정하여 10개의 촘촘한 링을 생성합니다.
+                            min: 0,
+                            max: 100,
                             angleLines: { color: 'rgba(255, 255, 255, 0.3)', lineWidth: 1.5 },
                             grid: { color: 'rgba(255, 255, 255, 0.2)', lineWidth: 1 },
                             pointLabels: { color: '#fdfefe', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } },
-                            // ★ 여기가 촘촘하게 만드는 핵심 마법입니다! (10% 단위로 10줄 생성)
-                            ticks: { display: false, min: 0, max: 100, stepSize: 10 }
+                            ticks: { display: false, stepSize: 10 }
                         }
                     },
                     plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', titleFont: { size: 12, family: 'Pretendard' }, bodyFont: { size: 12, family: 'Pretendard', weight: 'bold' }, displayColors: false, callbacks: { label: function(context) { return context.raw + '% 달성'; } } } }
@@ -600,6 +605,7 @@
 
         window.loadRankingData = async function(dbInstance) {
             try {
+                // 🌟 [보안 통과] 철통 방어된 publicRanking 컬렉션에서 안전하게 조회
                 const qSnap = await getDocs(query(collection(dbInstance, "publicRanking"), where("current_grade", "==", window.CURRENT_GRADE)));
                 window.sameGradeStudents = [];
                 
@@ -632,12 +638,12 @@
                 window.renderHallOfFame();
 
             } catch(e) {
-                console.log("랭킹 데이터가 비어있습니다. (정상)");
+                console.log("랭킹 접근 권한 없음", e);
                 const scoreBoxes = document.querySelectorAll('.score-box h3');
                 if(scoreBoxes.length > 1) {
-                    scoreBoxes[1].innerHTML = `0명 중 <span class="rank-text">-위</span>`;
+                    scoreBoxes[1].innerHTML = `<span class="rank-text" style="font-size:15px;">순위 비공개</span>`;
                 }
-                document.getElementById('hofList').innerHTML = '<div style="text-align:center; padding:20px; font-size:13px; color:var(--text-gray);">랭킹 데이터가 없습니다.</div>';
+                document.getElementById('hofList').innerHTML = '<div style="text-align:center; padding:20px; font-size:13px; color:var(--text-gray);">랭킹 데이터를 불러올 수 없습니다.</div>';
             }
         };
 
@@ -695,6 +701,7 @@
         window.cancelApplication = async function(docId) {
             if(!confirm("정말 이 인증 신청을 취소하시겠습니까?")) return;
             try {
+                // 🌟 문서를 지우면 파일(Base64)도 완벽하게 소멸됩니다!
                 await deleteDoc(doc(db, "applications", docId));
                 alert("신청이 취소되었습니다.");
                 window.loadMyApplications(db); 
@@ -776,6 +783,7 @@
                     return;
                 }
 
+                // 🌟 [보안 통과] 규칙(Rules)이 요구하는 정확히 11개의 필드만 정교하게 조립하여 전송!
                 const newApp = {
                     studentUid: String(window.myAuthUid),    
                     studentId: String(window.myStudentId),   
