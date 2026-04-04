@@ -181,7 +181,7 @@
 
             <div class="tab-container">
                 <button class="tab-btn active" id="tabStudent">🧑‍🎓 학생</button>
-                <button class="tab-btn" id="tabTeacher">👨‍🏫 교사/관리자</button>
+                <button class="tab-btn" id="tabTeacher">👨‍🏫 교사</button>
             </div>
 
             <div id="loginFormArea">
@@ -215,7 +215,6 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        // ★ 세션 유지를 위한 핵심 모듈 import 완료!
         import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
@@ -246,24 +245,24 @@
                 document.getElementById('tabTeacher').classList.remove('active');
                 document.getElementById('lblId').innerText = "학번 (5자리)";
                 document.getElementById('inputId').placeholder = "예: 10101";
-                document.getElementById('inputId').type = "text"; // 모바일 키보드 호환성을 위해 text 유지
+                document.getElementById('inputId').type = "text"; 
                 document.getElementById('inputPw').placeholder = "학교에서 발급한 비밀번호";
                 document.getElementById('helperText').innerHTML = "학생 초기 비밀번호는 <span>학교에서 발급한 비밀번호</span>입니다.<br>(비밀번호 분실 시 담임선생님께 문의하세요)";
             } else {
                 document.getElementById('tabTeacher').classList.add('active');
                 document.getElementById('tabStudent').classList.remove('active');
-                document.getElementById('lblId').innerText = "교사/관리자 아이디";
-                document.getElementById('inputId').placeholder = "발급된 계정 ID (예: admin)";
+                document.getElementById('lblId').innerText = "교사 아이디";
+                document.getElementById('inputId').placeholder = "발급된 계정 ID";
                 document.getElementById('inputId').type = "text";
                 document.getElementById('inputPw').placeholder = "비밀번호 입력";
-                document.getElementById('helperText').innerHTML = "시스템 관리 및 평가 권한을 가진 <span>교사/관리자 전용</span>입니다.<br>최초 접속 시 최고관리자 계정으로 로그인하세요.";
+                document.getElementById('helperText').innerHTML = "평가 권한을 가진 <span>교사 전용</span>입니다.";
             }
         }
 
         document.getElementById('tabStudent').addEventListener('click', () => switchTab('student'));
         document.getElementById('tabTeacher').addEventListener('click', () => switchTab('teacher'));
 
-        // ★ [완벽한 권한 판별 로그인 엔진]
+        // ★ [완벽한 권한 판별 및 입학 연도 자동 계산 로그인 엔진]
         document.getElementById('btnLogin').addEventListener('click', async function(e) {
             e.preventDefault();
             const idVal = document.getElementById('inputId').value.trim();
@@ -280,30 +279,40 @@
             btn.disabled = true;
 
             try {
-                // ★ 세션 영구 유지 설정 적용! (admin 접속 시 튕김 완벽 방지)
                 await setPersistence(auth, isAutoLogin ? browserLocalPersistence : browserSessionPersistence);
                 
                 let authEmail = idVal;
 
-                // ★ 스마트 이메일 자동 변환 (admin 예외 처리 완벽 복구!)
+                // 이메일 형식이 아닐 때만 자동 변환
                 if (!authEmail.includes('@')) {
+                    // 학번 5자리(학생)일 경우 입학 연도 자동 계산 로직 적용
                     if (/^\d{5}$/.test(idVal)) {
-                        authEmail = `stu_${idVal}@induk.hs.kr`;
+                        const grade = parseInt(idVal.charAt(0));
+                        const today = new Date();
+                        let currentYear = today.getFullYear();
+                        let currentMonth = today.getMonth() + 1;
+                        let academicYear = currentMonth <= 2 ? currentYear - 1 : currentYear;
+                        let admissionYear = academicYear - grade + 1;
+                        let prefix = String(admissionYear).slice(-2);
+
+                        // 자동 계산된 접두사 적용 (예: stu26_10101@...)
+                        authEmail = `stu${prefix}_${idVal}@induk.hs.kr`;
                     } else if (idVal === 'admin') {
                         // 🚨 2. 여기에 선생님이 실제로 구글에 가입한 최고관리자 이메일을 꼭 넣어주세요! 🚨
                         authEmail = 'admin@naver.com'; 
                     } else {
+                        // 교사 아이디인 경우
                         authEmail = `${idVal}@induk.hs.kr`;
                     }
                 }
 
-                // 1. Firebase Auth (은행급 보안) 로그인 시도
+                // 1. Firebase Auth 로그인 시도
                 const userCredential = await signInWithEmailAndPassword(auth, authEmail, pwVal);
                 const uid = userCredential.user.uid;
 
                 btn.innerText = "권한 판별 중... 🔍";
 
-                // 2. 권한 판별 (관리자 -> 교사 -> 학생 순서대로 물 흐르듯 통과!)
+                // 2. 권한 판별 (관리자 -> 교사 -> 학생)
                 
                 // [A] 최고 관리자 확인
                 const adminSnap = await getDoc(doc(db, "admin_users", uid));
@@ -314,7 +323,7 @@
                     return; 
                 }
 
-                // [B] 교사 확인 (★선생님 코드에서 빠져있던 핵심 로직 복구 완료!)
+                // [B] 교사 확인
                 const teacherSnap = await getDoc(doc(db, "teachers", uid));
                 if (teacherSnap.exists()) {
                     const tData = teacherSnap.data();
@@ -322,6 +331,8 @@
                     sessionStorage.setItem('loginName', tData.name || '교사');
                     sessionStorage.setItem('roleDetail', tData.roleDetail || '일반교사');
                     sessionStorage.setItem('assignment', tData.assignment || '-');
+                    sessionStorage.setItem('subject', tData.subject || '일반');
+                    sessionStorage.setItem('homeroom', tData.homeroom || '');
                     window.location.replace('teacher.html'); 
                     return;
                 }
@@ -338,7 +349,7 @@
                     return;
                 }
 
-                // [D] 3군데 다 찾아봤는데도 없으면 고아 계정 처리
+                // [D] DB에 정보가 없는 고아 계정 처리
                 throw new Error("role_not_found");
 
             } catch(error) {
@@ -355,7 +366,6 @@
                     errorMsg.innerText = `로그인 오류: ${error.code}`;
                 }
                 
-                // 로그인 실패 시 찌꺼기 방지용 강제 로그아웃
                 auth.signOut();
             } finally {
                 btn.innerText = "로그인";
