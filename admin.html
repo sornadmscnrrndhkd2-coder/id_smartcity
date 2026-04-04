@@ -151,14 +151,14 @@
     </script>
 
     <script>
-        // ★ 새로운 기준에 맞춘 만점 캡 및 커트라인 설정 (오류 방지용 넉넉한 캡 적용)
+        // ★ 문서 V. 영역별 운영 지침서에 명시된 '만점 상한선 제어' 완벽 반영!
         window.AREAS = ['S', 'M', 'A', 'R', 'T', 'C', 'I', 'Tr', 'Y'];
         window.AREA_NAMES = { S: '정보화', M: '전공성적', A: '예체능', R: '한국사', T: '전공자격', C: '직업기초', I: '외국어', Tr: '성실', Y: '인성' };
         
         window.CAPS = {
-            1: { S:100, M:100, A:60, R:30, T:150, C:50, I:100, Tr:80, Y:50 },
-            2: { S:100, M:100, A:60, R:40, T:150, C:50, I:100, Tr:80, Y:50 },
-            3: { S:100, M:150, A:60, R:30, T:200, C:50, I:150, Tr:150, Y:50 }
+            1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 },
+            2: { S:50, M:50, A:30, R:40, T:80, C:50, I:40, Tr:50, Y:30 },
+            3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 }
         };
         
         window.PASS_CUTOFF = {
@@ -561,7 +561,6 @@
 
         window.openChangePwModal = function() { document.getElementById('newAdminPwInput').value = ""; document.getElementById('changePwModal').style.display = "flex"; };
 
-        // ★★★ 입학년도(Cohort) 자동 계산 뇌(Brain) ★★★
         function calculateAdmissionPrefix(grade) {
             const today = new Date();
             let currentYear = today.getFullYear();
@@ -571,7 +570,6 @@
             return String(admissionYear).slice(-2);
         }
         
-        // 1단계: 3학년 졸업 처리
         window.graduateSeniors = async function() {
             if (!window.isSystemLocked) return alert("🚨 먼저 시스템을 '마감(🔒)' 처리해야 졸업 및 삭제 처리가 가능합니다.");
             if (!confirm("현재 3학년 학생들의 데이터를 엑셀로 백업하고 DB에서 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
@@ -609,7 +607,6 @@
             } catch(e) { alert("졸업 처리 중 오류 발생: " + e.message); }
         };
 
-        // 2단계: 1, 2학년 진급 엑셀 양식 다운로드
         window.downloadPromoteTemplate = async function() {
             try {
                 const qSnap = await window.getDocs(window.collection(window.db, "students"));
@@ -630,7 +627,6 @@
             } catch(e) { alert("오류: " + e.message); }
         };
 
-        // 3단계: 진급 엑셀 업로드 및 DB 적용 (🔥스마트 진급 누적 엔진🔥)
         window.uploadPromotion = async function() {
             if(!window.isSystemLocked) return alert("🚨 먼저 시스템을 '마감(🔒)' 처리해야 진급 처리가 가능합니다.");
             const fileInput = document.getElementById("promoteFileInput");
@@ -680,15 +676,15 @@
                             let auto_R = 0, auto_T = 0, auto_I = 0;
 
                             if (newGrade === 2) {
-                                // 한국사: 1학년 3급(30점) -> 2학년 20점 / 1학년 4급(20점) -> 2학년 10점
+                                // 한국사
                                 if (g1_R >= 30) auto_R = 20; 
                                 else if (g1_R >= 20) auto_R = 10;
-                                // 전공자격: 기능사 1개 보유(+10점), 민간 1개 보유(+5점)
+                                // 전공자격
                                 if (g1_T >= 60) auto_T += 10;
                                 if (g1_T === 40 || g1_T >= 100) auto_T += 5;
                             } 
                             else if (newGrade === 3) {
-                                // 한국사: 1, 2학년 중 최고 등급 자동 판별
+                                // 한국사 최고 등급
                                 let histLevel = 99;
                                 if (g2_R >= 40) histLevel = 1; 
                                 else if (g2_R >= 30) histLevel = 2; 
@@ -698,7 +694,7 @@
                                 else if (histLevel === 2) auto_R = 20; 
                                 else if (histLevel === 3) auto_R = 10;
                                 
-                                // 전공자격: 누적 개수 계산
+                                // 전공자격 누적 개수
                                 let funcCount = 0, privCount = 0;
                                 if (g1_T >= 60) funcCount++;
                                 if (g1_T === 40 || g1_T >= 100) privCount++;
@@ -713,11 +709,15 @@
                                 else if (privCount === 2) auto_T += 20; 
                                 else if (privCount === 1) auto_T += 5;
                                 
-                                // 영어: 2학년 공인어학시험 등급 보유(10점)
+                                // 영어 공인어학
                                 if (g2_I >= 40) auto_I = 10;
                             }
 
-                            // 누적된 점수를 새 학년 장부에 이월하여 저장
+                            // 상한선 적용 (안전 장치)
+                            auto_R = Math.min(auto_R, window.CAPS[newGrade].R);
+                            auto_T = Math.min(auto_T, window.CAPS[newGrade].T);
+                            auto_I = Math.min(auto_I, window.CAPS[newGrade].I);
+
                             let s_map = {S:0, M:0, A:0, R:auto_R, T:auto_T, C:0, I:auto_I, Tr:0, Y:0};
                             let p_map = {}; window.AREAS.forEach(a => p_map[a] = s_map[a] >= window.PASS_CUTOFF[newGrade][a]);
                             let earned = Object.values(p_map).filter(Boolean).length; 
@@ -743,8 +743,7 @@
             reader.readAsArrayBuffer(fileInput.files[0]);
         };
 
-        // ★ 엑셀 대량 업로드
-        document.getElementById("uploadExcelBtn").addEventListener("click", async () => {
+        window.document.getElementById("uploadExcelBtn").addEventListener("click", async () => {
             const fileInput = document.getElementById("excelFileInput"); const statusEl = document.getElementById("uploadStatus");
             if (!fileInput.files[0]) { alert("파일을 선택해주세요."); return; }
             const reader = new FileReader();
@@ -807,7 +806,6 @@
             }; reader.readAsArrayBuffer(fileInput.files[0]);
         });
 
-        // 개별 학생 추가
         window.addSingleStudent = async function() {
             const sName = document.getElementById("newSName").value.trim(); 
             const sId = document.getElementById("newSId").value.trim();
@@ -948,7 +946,6 @@
             } catch(e) { alert("반려 처리 중 오류 발생."); }
         };
 
-        // 학생 일괄 삭제 처리
         window.deleteSelectedStudents = async function() {
             const checkboxes = document.querySelectorAll('.student-checkbox:checked');
             if(checkboxes.length === 0) return alert("삭제할 학생을 먼저 체크해주세요.");
@@ -968,7 +965,6 @@
             } catch(e) { alert("오류: " + e.message); }
         };
 
-        // ★ 교사 일괄 업로드 (비번입력 없이 9022060 고정 + 인공지능 찰떡 변환)
         document.getElementById("uploadTeacherExcelBtn").addEventListener("click", async () => {
             const fileInput = document.getElementById("teacherExcelInput"); if (!fileInput.files[0]) return alert("파일 선택");
             const btn = document.getElementById("uploadTeacherExcelBtn"); btn.innerText = "⏳ 생성 중..."; btn.disabled = true;
