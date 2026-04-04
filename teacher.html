@@ -210,7 +210,6 @@
             3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 } 
         };
         
-        // 인증 통과 커트라인
         window.PASS_CUTOFF = { 
             1: { S:20, M:20, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 }, 
             2: { S:20, M:20, A:20, R:20, T:30, C:30, I:30, Tr:30, Y:20 }, 
@@ -341,10 +340,10 @@
             
             <div id="top-search-area">
                 <div id="excelUploadGuide" style="display:none; background: #eef2fb; border: 1px solid #3b71ca; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                    <h3 style="margin-top:0; color: var(--primary-blue); font-size: 16px;">📁 [대량 입력] <span id="excelGuideSubj">담당 과목</span> 엑셀 업로드</h3>
-                    <p style="margin:0 0 10px 0; font-size: 13px; color: #555;">수백 명의 전교생 점수를 엑셀 명렬표를 이용해 한 번에 등록하세요.</p>
+                    <h3 style="margin-top:0; color: var(--primary-blue); font-size: 16px;">📁 [상세 입력] <span id="excelGuideSubj">담당 과목</span> 엑셀 업로드</h3>
+                    <p style="margin:0 0 10px 0; font-size: 13px; color: #555;">학생들의 세부 항목을 가로 양식에 <b>'1'</b> 또는 <b>'O'</b>로 체크해서 올려주세요. 시스템이 알아서 계산하고 체크박스에 불을 켭니다!</p>
                     <div style="display:flex; gap:10px;">
-                        <button onclick="window.downloadTeacherExcelTemplate()" style="background:#1a252f; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;">1. 양식 다운로드</button>
+                        <button onclick="window.downloadTeacherExcelTemplate()" style="background:#1a252f; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;">1. 가로형 양식 다운로드</button>
                         <input type="file" id="teacherExcelInput" accept=".xlsx" style="background:white; padding:5px; border-radius:8px; border:1px solid #ccc;">
                         <button onclick="window.uploadTeacherExcel()" style="background:#27ae60; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer;">2. 업로드 및 반영</button>
                     </div>
@@ -404,10 +403,6 @@
                     </div>
                 </div>
 
-                <div id="adminOverrideWarning" style="display:none; background:#fdedec; border:1px solid #fadbd8; color:#c0392b; padding:15px; border-radius:12px; margin-bottom:20px; font-weight:bold; font-size:13px; align-items:center; gap:10px;">
-                    <span style="font-size:20px;">🚨</span> <span>관리자가 엑셀이나 개별 수정을 통해 직접 입력한 점수가 포함되어 있어, 실제 체크박스 항목 합산 점수와 다를 수 있습니다.</span>
-                </div>
-
                 <div class="eval-section" id="evalSection"></div>
                 
                 <div class="action-buttons" id="actionButtons">
@@ -463,7 +458,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 전역 바인딩
         window.db = db; 
         window.collection = collection;
         window.getDocs = getDocs;
@@ -723,18 +717,20 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
+        // ★ 저장된 체크박스 상태(checked_items)를 불러와 화면에 뿌려주는 로직 추가!
         window.renderEvalCards = function(grade, sid, yData, subjectStr, isMyHomeroom) {
             const container = document.getElementById("evalSection"); container.innerHTML = "";
             const currentItems = window.EVAL_ITEMS_BY_GRADE[grade]; container.className = `eval-section`;
-            const savedScores = yData.scores || {}; const savedPass = yData.pass || {};
-
-            let calculatedTotal = 0; window.AREAS.forEach(a => calculatedTotal += (savedScores[a] || 0));
-            const dbTotal = yData.total_score || 0; const warningEl = document.getElementById('adminOverrideWarning');
-            if (dbTotal > calculatedTotal + 5) { if(warningEl) warningEl.style.display = 'flex'; } else { if(warningEl) warningEl.style.display = 'none'; }
+            
+            const savedScores = yData.scores || {}; 
+            const savedPass = yData.pass || {};
+            // ★ DB에서 체크박스 배열 가져오기 (없으면 빈 배열)
+            const savedChecked = yData.checked_items || {}; 
 
             window.AREAS.forEach(area => {
                 let currentScore = savedScores[area] || 0; let isPassed = savedPass[area] || false;
                 let isAreaLocked = window.isViewOnlyAll; 
+                let areaChecked = savedChecked[area] || []; // 이 영역에서 체크되었던 인덱스들
 
                 if (!window.isViewOnlyAll) {
                     isAreaLocked = true; 
@@ -750,12 +746,19 @@
                 let disabledClass = isAreaLocked ? "readonly-area" : "";
                 let readonlyBadge = isAreaLocked ? `<span class="tag-readonly">🔒${window.isSystemLocked ? '마감됨' : '조회전용'}</span>` : "";
 
-                let itemsHtml = currentItems[area].map((item, idx) => `<label class="check-label" id="tLabel-${area}-${idx}"><span>${item.label}</span><span class="check-score">+${item.score}점</span><input type="checkbox" value="${item.score}" data-area="${area}" data-group="${item.group}" data-index="${idx}" onchange="window.handleTeacherCheck(this)"></label>`).join("");
+                // ★ 이전 체크 상태를 반영하여 태그 생성
+                let itemsHtml = currentItems[area].map((item, idx) => {
+                    let isChecked = areaChecked.includes(idx); // 이 항목이 예전에 체크되었었나?
+                    let checkedAttr = isChecked ? "checked" : "";
+                    let selectedClass = isChecked ? "selected" : "";
+                    return `<label class="check-label ${selectedClass}" id="tLabel-${area}-${idx}"><span>${item.label}</span><span class="check-score">+${item.score}점</span><input type="checkbox" value="${item.score}" data-area="${area}" data-group="${item.group}" data-index="${idx}" onchange="window.handleTeacherCheck(this)" ${checkedAttr}></label>`;
+                }).join("");
+                
                 container.innerHTML += `<div class="eval-card ${disabledClass}"><div class="eval-title-row"><div class="eval-title"><span class="tag-area">[${area}]</span> ${window.AREA_NAMES[area]} ${readonlyBadge}</div><div class="score-badge ${isPassed ? 'passed' : ''}" id="tScore-${area}">${currentScore}점</div></div><div class="checkbox-group">${itemsHtml}</div></div>`;
             });
         };
 
-        // ★ 체크박스 로직: 동일한 group(data-group)을 가지면 서로 라디오버튼처럼 밀어내고, 다르면 중복 가능!
+        // ★ 체크박스 로직: 동일한 group(data-group)을 가지면 서로 밀어내고, 다르면 독립적으로 체크 가능
         window.handleTeacherCheck = function(checkbox) {
             if(window.isSystemLocked) return;
             if (checkbox.checked && checkbox.dataset.group) {
@@ -768,7 +771,6 @@
             
             let total = 0; document.querySelectorAll(`#evalSection input[data-area="${checkbox.dataset.area}"]:checked`).forEach(box => total += Number(box.value));
             
-            // ★ 만점 상한선 제어 적용! (선생님이 설정한 CAPS 값을 절대 넘지 못함)
             let finalScore = Math.min(total, window.CAPS[window.lastSearchedGrade][checkbox.dataset.area]);
             
             const badge = document.getElementById(`tScore-${checkbox.dataset.area}`); 
@@ -880,6 +882,7 @@
             } catch(e) {}
         };
 
+        // ★ 가로형 상세 엑셀 양식 자동 생성기
         window.downloadTeacherExcelTemplate = function() { 
             const subjectStr = sessionStorage.getItem('subject') || "일반";
             let areaCode = ""; 
@@ -888,12 +891,24 @@
             else if (subjectStr === '영어1') areaCode = "I"; 
             else return alert("입력 권한이 없습니다.");
             
-            const ws = XLSX.utils.json_to_sheet([{ "학년": "", "학번": "", "이름": "", [areaCode]: "점수 입력" }]); 
+            let uniqueLabels = [];
+            [1, 2, 3].forEach(g => {
+                window.EVAL_ITEMS_BY_GRADE[g][areaCode].forEach(item => {
+                    if(!uniqueLabels.includes(item.label)) uniqueLabels.push(item.label);
+                });
+            });
+
+            let templateRow = { "학년": "1", "학번": "10101", "이름": "김스마트" };
+            uniqueLabels.forEach(label => templateRow[label] = "0"); 
+            if(uniqueLabels.length > 0) templateRow[uniqueLabels[0]] = "1"; // 예시로 첫 번째 항목에 1 표시
+
+            const ws = XLSX.utils.json_to_sheet([templateRow]); 
             const wb = XLSX.utils.book_new(); 
-            XLSX.utils.book_append_sheet(wb, ws, "입력양식"); 
-            XLSX.writeFile(wb, `스마트시티_${subjectStr}담당_입력양식.xlsx`); 
+            XLSX.utils.book_append_sheet(wb, ws, "상세입력양식"); 
+            XLSX.writeFile(wb, `스마트시티_${subjectStr}담당_상세입력양식.xlsx`); 
         };
 
+        // ★ 엑셀 업로드 시 [체크박스 자동 매칭 및 체크 상태 저장] 스마트 엔진 탑재!
         window.uploadTeacherExcel = async function() {
             if(window.isSystemLocked) return alert("🔒 마감됨");
             const fileInput = document.getElementById("teacherExcelInput"); 
@@ -916,9 +931,34 @@
                     for (const row of jsonData) {
                         const grade = Number(row["학년"]); 
                         const studentId = row["학번"] ? String(row["학번"]).trim() : ""; 
-                        const targetScore = Number(row[areaCode] || 0);
                         
                         if (!grade || !studentId || !/^\d{5}$/.test(studentId)) { failCount++; continue; }
+                        
+                        // 찰떡 매칭 로직: 엑셀의 열 이름과 평가 기준을 비교하여 1이나 O가 있으면 체크!
+                        let checkedIndices = [];
+                        let targetScore = 0;
+                        let groupCheck = {};
+                        
+                        if(window.EVAL_ITEMS_BY_GRADE[grade] && window.EVAL_ITEMS_BY_GRADE[grade][areaCode]) {
+                            window.EVAL_ITEMS_BY_GRADE[grade][areaCode].forEach((item, idx) => {
+                                let val = row[item.label];
+                                // 정확한 이름이 없으면 (30점) 같은 점수 텍스트를 빼고 다시 검색
+                                if (val === undefined) {
+                                    let cleanLabel = item.label.replace(/\([^)]+\)/g, '').trim();
+                                    let matchingKey = Object.keys(row).find(k => k.includes(cleanLabel));
+                                    if (matchingKey) val = row[matchingKey];
+                                }
+                                
+                                // 1, O, Y, TRUE 등 긍정 기호면 체크박스 선택!
+                                if (val == 1 || String(val).toUpperCase() === 'O' || String(val).toUpperCase() === 'Y' || String(val).toUpperCase() === 'TRUE') {
+                                    if (!groupCheck[item.group]) {
+                                        checkedIndices.push(idx);
+                                        targetScore += item.score;
+                                        groupCheck[item.group] = true; // 라디오버튼(같은 그룹) 중복 방지 방어막
+                                    }
+                                }
+                            });
+                        }
                         
                         try {
                             const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
@@ -926,7 +966,11 @@
                             
                             const targetDocId = qSnap.docs[0].id; 
                             const existingData = qSnap.docs[0].data();
-                            let yData = existingData[`year_${grade}`] || { scores: {}, pass: {}, delivery_status: {} };
+                            let yData = existingData[`year_${grade}`] || { scores: {}, pass: {}, delivery_status: {}, checked_items: {} };
+                            
+                            // ★ 엑셀로 올린 체크박스 내역을 DB에 저장
+                            if(!yData.checked_items) yData.checked_items = {};
+                            yData.checked_items[areaCode] = checkedIndices;
                             
                             yData.scores[areaCode] = Math.min(targetScore, window.CAPS[grade][areaCode]);
                             yData.pass[areaCode] = yData.scores[areaCode] >= window.PASS_CUTOFF[grade][areaCode];
@@ -941,17 +985,92 @@
                             successCount++;
                         } catch (err) { failCount++; }
                     }
-                    alert(`✅ 업로드 완료!\n성공: ${successCount}명\n실패: ${failCount}명`); 
-                    await window.logTeacherAction(`[엑셀 대량 업로드] ${subjectStr}과목 ${successCount}명 반영`);
+                    alert(`✅ 가로형 상세 엑셀 업로드 완료!\n성공: ${successCount}명\n실패: ${failCount}명\n(화면을 열어보면 알맞게 'V' 체크가 되어 있습니다!)`); 
+                    await window.logTeacherAction(`[엑셀 상세 업로드] ${subjectStr}과목 ${successCount}명 반영`);
                     
                     if (typeof window.loadHomeroomStudents === 'function') window.loadHomeroomStudents();
                 } catch (e) { alert("오류: " + e.message); } finally { fileInput.value = ""; }
             }; 
             reader.readAsArrayBuffer(fileInput.files[0]);
-        }
-    </script>
+        };
 
-    <script>
+        // ★ 개별 수정(수동 입력) 시에도 체크박스 상태를 영구 저장하도록 보완
+        document.addEventListener('DOMContentLoaded', () => {
+            const saveBtnEl = document.getElementById("saveBtn");
+            if(saveBtnEl) {
+                // 기존 이벤트 리스너를 덮어쓰기 위해 완전히 교체합니다.
+                let newSaveBtn = saveBtnEl.cloneNode(true);
+                saveBtnEl.parentNode.replaceChild(newSaveBtn, saveBtnEl);
+                
+                newSaveBtn.addEventListener("click", async () => {
+                    if(window.isSystemLocked) return alert("🔒 시스템이 마감되어 저장할 수 없습니다.");
+                    if(!window.currentSearchDocId) return;
+
+                    const docId = window.currentSearchDocId; 
+                    const grade = window.lastSearchedGrade; 
+                    const sid = document.getElementById("searchInput").value.trim(); 
+                    
+                    newSaveBtn.innerText = "⏳ 저장 중..."; 
+                    newSaveBtn.disabled = true;
+
+                    try {
+                        const docRef = window.doc(window.db, "students", docId);
+                        const sSnap = await window.getDoc(docRef);
+                        let currentData = sSnap.data()[`year_${grade}`] || { scores: {}, pass: {}, checked_items: {} };
+                        
+                        let s_map = currentData.scores || {}; 
+                        let checked_items = currentData.checked_items || {};
+                        let total_score = 0;
+                        
+                        window.AREAS.forEach(area => {
+                            const scoreElement = document.getElementById(`tScore-${area}`);
+                            if (!scoreElement.closest('.eval-card').classList.contains('readonly-area')) {
+                                let textScore = scoreElement.innerText.replace('점', '');
+                                s_map[area] = parseInt(textScore) || 0;
+                                
+                                // 현재 화면에 체크된 인덱스들을 모아서 저장
+                                checked_items[area] = [];
+                                document.querySelectorAll(`#evalSection input[data-area="${area}"]:checked`).forEach(box => {
+                                    checked_items[area].push(parseInt(box.dataset.index));
+                                });
+                            }
+                            total_score += (s_map[area] || 0);
+                        });
+
+                        let p_map = {}; 
+                        window.AREAS.forEach(area => { 
+                            p_map[area] = (s_map[area] || 0) >= window.PASS_CUTOFF[grade][area]; 
+                        });
+
+                        let earned = Object.values(p_map).filter(Boolean).length; 
+                        let title = earned >= 6 ? (grade === 1 ? "🏆 CITY 스타터" : (grade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중"; 
+                        
+                        let updateData = {};
+                        updateData[`year_${grade}.scores`] = s_map; 
+                        updateData[`year_${grade}.pass`] = p_map; 
+                        updateData[`year_${grade}.earned_badges`] = earned; 
+                        updateData[`year_${grade}.total_score`] = total_score; 
+                        updateData[`year_${grade}.title`] = title; 
+                        updateData[`year_${grade}.checked_items`] = checked_items; // 체크 상태 영구 저장
+
+                        await window.updateDoc(docRef, updateData);
+                        alert("✅ 성공적으로 저장되었습니다!");
+                        
+                        if(typeof window.logTeacherAction === 'function') {
+                            await window.logTeacherAction(`[평가 입력] 학번(${sid}) 학생 점수 및 체크항목 수정`);
+                        }
+                        if(typeof window.loadHomeroomStudents === 'function') window.loadHomeroomStudents();
+                    } catch(e) { 
+                        alert("저장 오류: " + e.message); 
+                    } finally { 
+                        newSaveBtn.innerText = "💾 평가 데이터 저장하기"; 
+                        newSaveBtn.disabled = false; 
+                    }
+                });
+            }
+        });
+        
+        // 하단 공통 세팅 로직
         document.addEventListener('DOMContentLoaded', () => {
             const userRole = sessionStorage.getItem('userRole');
             if (userRole !== 'teacher' && userRole !== 'admin') {
@@ -1090,70 +1209,6 @@
                         }
 
                     } catch(e) { alert("학생 검색 오류: " + e.message); }
-                });
-            }
-
-            const saveBtnEl = document.getElementById("saveBtn");
-            if(saveBtnEl) {
-                saveBtnEl.addEventListener("click", async () => {
-                    if(window.isSystemLocked) return alert("🔒 시스템이 마감되어 저장할 수 없습니다.");
-                    if(!window.currentSearchDocId) return;
-
-                    const docId = window.currentSearchDocId; 
-                    const grade = window.lastSearchedGrade; 
-                    const sid = document.getElementById("searchInput").value.trim(); 
-                    
-                    saveBtnEl.innerText = "⏳ 저장 중..."; 
-                    saveBtnEl.disabled = true;
-
-                    try {
-                        const docRef = window.doc(window.db, "students", docId);
-                        const sSnap = await window.getDoc(docRef);
-                        let currentData = sSnap.data()[`year_${grade}`] || { scores: {}, pass: {} };
-                        
-                        let s_map = currentData.scores || {}; 
-                        let total_score = 0;
-                        
-                        window.AREAS.forEach(area => {
-                            const scoreElement = document.getElementById(`tScore-${area}`);
-                            if (!scoreElement.closest('.eval-card').classList.contains('readonly-area')) {
-                                let textScore = scoreElement.innerText.replace('점', '');
-                                s_map[area] = parseInt(textScore) || 0;
-                            }
-                            total_score += (s_map[area] || 0);
-                        });
-
-                        let p_map = {}; 
-                        window.AREAS.forEach(area => { 
-                            p_map[area] = (s_map[area] || 0) >= window.PASS_CUTOFF[grade][area]; 
-                        });
-
-                        let earned = Object.values(p_map).filter(Boolean).length; 
-                        let title = earned >= 6 ? (grade === 1 ? "🏆 CITY 스타터" : (grade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중"; 
-                        
-                        let updateData = {};
-                        updateData[`year_${grade}.scores`] = s_map; 
-                        updateData[`year_${grade}.pass`] = p_map; 
-                        updateData[`year_${grade}.earned_badges`] = earned; 
-                        updateData[`year_${grade}.total_score`] = total_score; 
-                        updateData[`year_${grade}.title`] = title; 
-
-                        await window.updateDoc(docRef, updateData);
-                        alert("✅ 성공적으로 저장되었습니다!");
-                        
-                        if(typeof window.logTeacherAction === 'function') {
-                            await window.logTeacherAction(`[평가 입력] 학번(${sid}) 학생 점수 수정`);
-                        }
-                        
-                        if(typeof window.loadHomeroomStudents === 'function') {
-                            window.loadHomeroomStudents();
-                        }
-                    } catch(e) { 
-                        alert("저장 오류: " + e.message); 
-                    } finally { 
-                        saveBtnEl.innerText = "💾 평가 데이터 저장하기"; 
-                        saveBtnEl.disabled = false; 
-                    }
                 });
             }
 
