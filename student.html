@@ -15,7 +15,6 @@
 
         body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: var(--bg-light); color: var(--text-dark); scroll-behavior: smooth; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
 
-        /* 1. 헤더 */
         .header { background-color: #fff; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100;}
         .header-left { display: flex; align-items: center; gap: 10px; }
         .header-icon { width: 32px; height: 32px; background: var(--primary-blue); border-radius: 8px; display: flex; justify-content: center; align-items: center; color: white; font-size: 16px; box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3);}
@@ -26,9 +25,6 @@
 
         .container { max-width: 1200px; margin: 20px auto; padding: 0 20px 100px 20px; box-sizing: border-box; }
 
-        /* =========================================
-           ✨ [인스타 캡처용] 히어로 배너 & 스탯 & 경험치바
-        ========================================= */
         .hero-banner { 
             background: linear-gradient(135deg, #447fe5, var(--dark-blue)); 
             border-radius: 20px; padding: 25px 35px; color: white; 
@@ -44,7 +40,6 @@
         .user-info h2 { margin: 0 0 12px 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;}
         .badge-pill { background: linear-gradient(135deg, #f39c12, #d35400); display: inline-block; padding: 6px 18px; border-radius: 20px; font-size: 14px; font-weight: 900; box-shadow: 0 4px 10px rgba(211, 84, 0, 0.4); border: 1px solid rgba(255,255,255,0.3);}
         
-        /* 레이더 차트 (게임 느낌으로 디테일업 반영) */
         .radar-chart-container { 
             width: 220px; height: 220px; 
             position: relative; z-index: 2; flex-shrink: 0; 
@@ -79,7 +74,6 @@
         .exp-bar-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shine 2s infinite; }
         @keyframes shine { 100% { left: 200%; } }
 
-        /* 하단 레이아웃 */
         .content-grid { display: flex; gap: 20px; box-sizing: border-box; width: 100%;}
         .left-panel { flex: 7; }
         .right-panel { flex: 3; align-self: flex-start; max-width: 100%; display: flex; flex-direction: column; gap: 20px;}
@@ -91,7 +85,6 @@
         .btn-apply-inline { background: var(--text-dark); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px; }
         .btn-apply-inline:hover { transform: translateY(-2px); background: var(--primary-blue); }
 
-        /* 3. 3x3 배지 그리드 및 말풍선 */
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; overflow: visible; }
         .badge-card { border: 1.5px solid #edf0f2; border-radius: 16px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; background: #fff; position: relative; box-sizing: border-box; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; overflow: visible; }
         .badge-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(59, 113, 202, 0.18); border-color: var(--primary-blue); z-index: 10;}
@@ -117,7 +110,6 @@
         .badge-name { font-size: 14px; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px;}
         .badge-score { background: #eef2fb; color: var(--primary-blue); font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
 
-        /* 명예의 전당 공통 리스트 스타일 */
         .ranking-list { display: flex; flex-direction: column; gap: 10px; width: 100%;}
         .rank-card { display: flex; align-items: center; padding: 12px 15px; border-radius: 12px; color: white; justify-content: space-between; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); box-sizing: border-box; width: 100%; overflow: hidden; white-space: nowrap;}
         .rank-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
@@ -131,7 +123,6 @@
         .rank-2 { background: linear-gradient(135deg, #bdc3c7, #a4b0be); color: #2c3e50; }
         .rank-3 { background: linear-gradient(135deg, #e67e22, #d35400); }
         
-        /* 나의 신청 내역 리스트 스타일 */
         .apply-item { background: #fdfefe; border: 1px solid #edf0f2; border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;}
         .apply-item-top { display: flex; justify-content: space-between; align-items: center; }
         .apply-item-title { font-size: 13px; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 6px;}
@@ -144,7 +135,6 @@
         .btn-cancel-apply { background: white; border: 1px solid #e74c3c; color: #e74c3c; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s;}
         .btn-cancel-apply:hover { background: #e74c3c; color: white;}
 
-        /* 4~10등 일반 랭킹 디자인 (모달용) */
         .normal-rank { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: #f8f9fa; border-radius: 12px; border: 1px solid #edf0f2; color: var(--text-dark);}
         .normal-info { display: flex; align-items: center; gap: 15px; }
         .rank-num { font-size: 16px; font-weight: 900; color: #7f8c8d; width: 25px; text-align: center;}
@@ -152,14 +142,12 @@
         .normal-class { font-size: 12px; color: var(--text-gray); font-weight: bold; margin-left: 5px;}
         .normal-score { font-size: 16px; font-weight: 900; color: var(--primary-blue);}
 
-        /* 외부 링크 섹션 */
         .info-links-container { margin-top: 20px; width: 100%; }
         .links-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
         .link-card { background: white; border-radius: 12px; padding: 15px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid #edf0f2; text-align: center; cursor: pointer; text-decoration: none; color: inherit; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center;}
         .link-icon-text { font-size: 14px; font-weight: 800; color: var(--text-dark); margin-bottom: 5px; word-break: keep-all;}
         .link-desc { font-size: 11px; color: var(--text-gray); word-break: keep-all;}
 
-        /* 모달창 공통 CSS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(3px); }
         .modal-overlay.active { display: flex; }
         .modal-content { background: #f8f9fa; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 30px 25px 100px 25px; min-height: 60vh; box-sizing: border-box; animation: slideUp 0.3s forwards; }
@@ -184,9 +172,6 @@
         .modal-submit-btn { width: 100%; padding: 16px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3); }
         .modal-submit-btn:disabled { background: #bdc3c7; cursor: not-allowed; box-shadow: none; }
 
-        /* =========================================
-           📱 [모바일 최적화]
-        ========================================= */
         @media (max-width: 850px) {
             .container { margin: 10px auto; padding: 0 10px 100px 10px; width: 100%;} 
             .header { padding: 10px 15px; flex-direction: column; gap: 10px;}
@@ -235,9 +220,7 @@
 </head>
 <body>
     <script>
-        // 로그인 인증 체크 (loginUserId 와 studentId 호환 완벽 대응)
-        const activeUserId = sessionStorage.getItem('loginUserId') || sessionStorage.getItem('studentId');
-        if (!activeUserId) {
+        if (!sessionStorage.getItem('loginUserId') && !sessionStorage.getItem('studentId')) {
             alert('⚠️ 로그인이 필요한 서비스입니다. 로그인 페이지로 이동합니다.');
             location.href = 'index.html';
         }
@@ -437,7 +420,6 @@
                     return;
                 }
 
-                // 📊 [보안 통과] 정확히 +1 연산과 최초 생성 시 1만 넣는 완벽한 동기화
                 if (!sessionStorage.getItem('hasCountedVisit')) {
                     try {
                         const totalRef = doc(db, "system", "visitorStats");
@@ -479,7 +461,7 @@
             }
         });
 
-        // 🎮 [업그레이드] 간격(stepSize: 20)을 줄여 디테일과 각을 살린 역동적 게임 UI 차트
+        // ★ 육각형 차트 10칸(stepSize: 10) 촘촘하게 세분화!
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             if (window.myRadarChartInstance) window.myRadarChartInstance.destroy();
@@ -537,7 +519,8 @@
                             angleLines: { color: 'rgba(255, 255, 255, 0.3)', lineWidth: 1.5 },
                             grid: { color: 'rgba(255, 255, 255, 0.2)', lineWidth: 1 },
                             pointLabels: { color: '#fdfefe', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } },
-                            ticks: { display: false, min: 0, max: 100, stepSize: 20 }
+                            // ★ 여기가 촘촘하게 만드는 핵심 마법입니다! (10% 단위로 10줄 생성)
+                            ticks: { display: false, min: 0, max: 100, stepSize: 10 }
                         }
                     },
                     plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', titleFont: { size: 12, family: 'Pretendard' }, bodyFont: { size: 12, family: 'Pretendard', weight: 'bold' }, displayColors: false, callbacks: { label: function(context) { return context.raw + '% 달성'; } } } }
@@ -617,7 +600,6 @@
 
         window.loadRankingData = async function(dbInstance) {
             try {
-                // 🌟 [보안 통과] 철통 방어된 publicRanking 컬렉션에서 안전하게 조회
                 const qSnap = await getDocs(query(collection(dbInstance, "publicRanking"), where("current_grade", "==", window.CURRENT_GRADE)));
                 window.sameGradeStudents = [];
                 
@@ -650,12 +632,12 @@
                 window.renderHallOfFame();
 
             } catch(e) {
-                console.log("랭킹 접근 권한 없음", e);
+                console.log("랭킹 데이터가 비어있습니다. (정상)");
                 const scoreBoxes = document.querySelectorAll('.score-box h3');
                 if(scoreBoxes.length > 1) {
-                    scoreBoxes[1].innerHTML = `<span class="rank-text" style="font-size:15px;">순위 비공개</span>`;
+                    scoreBoxes[1].innerHTML = `0명 중 <span class="rank-text">-위</span>`;
                 }
-                document.getElementById('hofList').innerHTML = '<div style="text-align:center; padding:20px; font-size:13px; color:var(--text-gray);">랭킹 데이터를 불러올 수 없습니다.</div>';
+                document.getElementById('hofList').innerHTML = '<div style="text-align:center; padding:20px; font-size:13px; color:var(--text-gray);">랭킹 데이터가 없습니다.</div>';
             }
         };
 
@@ -713,7 +695,6 @@
         window.cancelApplication = async function(docId) {
             if(!confirm("정말 이 인증 신청을 취소하시겠습니까?")) return;
             try {
-                // 🌟 문서를 지우면 파일(Base64)도 완벽하게 소멸됩니다!
                 await deleteDoc(doc(db, "applications", docId));
                 alert("신청이 취소되었습니다.");
                 window.loadMyApplications(db); 
@@ -722,7 +703,6 @@
             }
         };
 
-        // 🌟 [초강력 압축 엔진] 이미지는 무조건 800x800 최적화 압축
         async function compressImage(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -796,7 +776,6 @@
                     return;
                 }
 
-                // 🌟 [보안 통과] 규칙(Rules)이 요구하는 정확히 11개의 필드만 정교하게 조립하여 전송!
                 const newApp = {
                     studentUid: String(window.myAuthUid),    
                     studentId: String(window.myStudentId),   
@@ -840,141 +819,6 @@
             1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 
             2: { S:50, M:50, A:30, R:40, T:80, C:50, I:40, Tr:50, Y:30 }, 
             3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 } 
-        };
-
-        window.renderDashboardBadges = function() {
-            const badgeContainer = document.getElementById('badgeGridContainer');
-            badgeContainer.innerHTML = '';
-            AREAS.forEach(area => {
-                const isPassed = window.myPassData && window.myPassData[area] === true;
-                const score = window.myScoreData && window.myScoreData[area] ? window.myScoreData[area] : 0;
-                
-                const tooltipText = BADGE_TOOLTIPS[window.CURRENT_GRADE][area];
-                const badgeHtml = `
-                    <div class="badge-card ${isPassed ? 'active' : 'inactive'}">
-                        <div class="badge-icon-wrapper">
-                            <img src="img/icon_${area.toLowerCase()}.png" alt="${AREA_KOR_NAMES[area]}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2942/2942784.png'">
-                            ${isPassed ? '<div class="check-mark">✔</div>' : ''}
-                        </div>
-                        <div class="badge-letter">[${area}]</div>
-                        <div class="badge-name">${AREA_KOR_NAMES[area]}</div>
-                        <div class="badge-score">${score}점</div>
-                        <div class="badge-tooltip">${tooltipText}</div>
-                    </div>
-                `;
-                badgeContainer.innerHTML += badgeHtml;
-            });
-        };
-
-        window.renderHallOfFame = function() {
-            document.getElementById('hofTitle').innerHTML = `🏆 ${window.CURRENT_GRADE}학년 명예의 전당`;
-            const hofList = document.getElementById('hofList');
-            hofList.innerHTML = '';
-            
-            const top3 = window.sameGradeStudents.slice(0,3);
-            const medals = ['img/medal_gold.png', 'img/medal_silver.png', 'img/medal_bronze.png'];
-            const fallbackMedals = [
-                'https://cdn-icons-png.flaticon.com/512/2583/2583344.png',
-                'https://cdn-icons-png.flaticon.com/512/2583/2583319.png',
-                'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'
-            ];
-            const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
-
-            if (top3.length === 0) {
-                hofList.innerHTML = '<div style="text-align:center; padding:20px; font-size:13px; color:var(--text-gray);">랭킹 데이터가 없습니다.</div>';
-                return;
-            }
-
-            top3.forEach((student, index) => {
-                hofList.innerHTML += `
-                    <div class="rank-card ${rankClasses[index]}">
-                        <div class="rank-info">
-                            <div class="rare-medal"><img src="${medals[index]}" alt="메달" onerror="this.src='${fallbackMedals[index]}'"></div>
-                            <div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr})</p></div>
-                        </div>
-                        <div class="rank-score">${student.score}점</div>
-                    </div>
-                `;
-            });
-        };
-
-        window.closeOutside = function(event, modalId) {
-            if(event.target.id === modalId) {
-                document.getElementById(modalId).classList.remove('active');
-                document.body.style.overflow = 'auto';
-            }
-        };
-
-        window.openApplyModal = function() { document.getElementById('applyModal').classList.add('active'); document.body.style.overflow = 'hidden'; };
-        window.closeApplyModal = function() { document.getElementById('applyModal').classList.remove('active'); document.body.style.overflow = 'auto'; document.getElementById('areaSelect').value = ""; document.getElementById('dynamicLogicSection').style.display = "none"; document.getElementById('applyFileInput').value = ""; };
-
-        window.openRankModal = function() {
-            document.getElementById('rankModalTitle').innerText = `🏆 ${window.CURRENT_GRADE}학년 명예의 전당 TOP 10`;
-            const modalList = document.getElementById('rankModalList');
-            modalList.innerHTML = '';
-            
-            const top10 = window.sameGradeStudents.slice(0,10);
-            const medals = ['img/medal_gold.png', 'img/medal_silver.png', 'img/medal_bronze.png'];
-            const fallbackMedals = [
-                'https://cdn-icons-png.flaticon.com/512/2583/2583344.png', 
-                'https://cdn-icons-png.flaticon.com/512/2583/2583319.png', 
-                'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'  
-            ];
-            const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
-
-            if (top10.length === 0) {
-                modalList.innerHTML = '<div style="text-align:center; padding:40px; font-weight:bold; color:var(--text-gray);">등록된 데이터가 없습니다.</div>';
-            } else {
-                top10.forEach((student, index) => {
-                    if(index < 3) {
-                        modalList.innerHTML += `
-                            <div class="rank-card ${rankClasses[index]}">
-                                <div class="rank-info">
-                                    <div class="rare-medal"><img src="${medals[index]}" alt="메달" onerror="this.src='${fallbackMedals[index]}'"></div>
-                                    <div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr})</p></div>
-                                </div>
-                                <div class="rank-score">${student.score}점</div>
-                            </div>
-                        `;
-                    } else {
-                        modalList.innerHTML += `
-                            <div class="normal-rank">
-                                <div class="normal-info">
-                                    <div class="rank-num">${index + 1}</div>
-                                    <div class="normal-name">${student.name}<span class="normal-class">(${student.classStr})</span></div>
-                                </div>
-                                <div class="normal-score">${student.score}점</div>
-                            </div>
-                        `;
-                    }
-                });
-            }
-
-            document.getElementById('rankModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        };
-
-        window.closeRankModal = function() { document.getElementById('rankModal').classList.remove('active'); document.body.style.overflow = 'auto'; };
-
-        const EVAL_ITEMS_BY_GRADE = {
-            1: {
-                'S': [{ label: 'ITQ 2과목(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목(20점)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
-                'R': [{ label: '한능검 3급(30점)', score: 30, group: 'r_his' }, { label: '한능검 4급(20점)', score: 20, group: 'r_his' }, { label: '한능검 5~6급(10점)', score: 10, group: 'r_his' }],
-                'T': [{ label: '기능사 자격증 취득(60점)', score: 60, group: 't_func' }, { label: '민간자격증 취득(40점)', score: 40, group: 't_priv' }, { label: '국가/민간 필기합격(30점)', score: 30, group: 't_written' }],
-                'I': [{ label: '영어 교과 성취도 A 이상(40점)', score: 40, group: 'i_grade' }, { label: '영어 교과 성취도 B 이상(30점)', score: 30, group: 'i_grade' }, { label: '영어 관련 대회 입상(30점)', score: 30, group: 'i_contest' }]
-            },
-            2: {
-                'S': [{ label: 'ITQ 마스터(3종)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득) AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
-                'R': [{ label: '한능검 1급(40점)', score: 40, group: 'r_his' }, { label: '한능검 2급(30점)', score: 30, group: 'r_his' }, { label: '한능검 3급(20점)', score: 20, group: 'r_his' }, { label: '한능검 4급(10점)', score: 10, group: 'r_his' }],
-                'T': [{ label: '(해당학년) 기능사 1개 취득(60점)', score: 60, group: 't_func_now' }, { label: '(해당학년) 민간 자격증 1개 취득(40점)', score: 40, group: 't_priv_now' }, { label: '(해당학년) 국가/민간 필기합격(20점)', score: 20, group: 't_written_now' }, { label: '(이전학년) 기능사 1개 보유(10점)', score: 10, group: 't_func_prev' }, { label: '(이전학년) 민간 자격증 1개 보유(5점)', score: 5, group: 't_priv_prev' }],
-                'I': [{ label: '영어/일어 교과 성취도 A(40점)', score: 40, group: 'i_grade' }, { label: '영어/일어 교과 성취도 B(30점)', score: 30, group: 'i_grade' }, { label: '토익 500점 등 공인어학시험(40점)', score: 40, group: 'i_cert_eng' }, { label: '일본어 JLPT N5 등 공인어학시험(40점)', score: 40, group: 'i_cert_jp' }]
-            },
-            3: {
-                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득) AI관련 (추가) 자격증 취득(20점)', score: 20, group: 's_ai' }],
-                'R': [{ label: '한능검 1급(30점)', score: 30, group: 'r_his' }, { label: '한능검 2급(20점)', score: 20, group: 'r_his' }, { label: '한능검 3급(10점)', score: 10, group: 'r_his' }],
-                'T': [{ label: '(해당학년) 기능사 1개 취득(60점)', score: 60, group: 't_now_func' }, { label: '(해당학년) 민간 자격증 1개 취득(40점)', score: 40, group: 't_now_priv' }, { label: '(해당학년) 국가/민간 필기합격(10점)', score: 10, group: 't_now_written' }, { label: '(누적) 기능사 3개 보유(60점)', score: 60, group: 't_prev_func' }, { label: '(누적) 기능사 2개 보유(30점)', score: 30, group: 't_prev_func' }, { label: '(누적) 기능사 1개 보유(10점)', score: 10, group: 't_prev_func' }, { label: '(누적) 민간 자격증 3개 보유(30점)', score: 30, group: 't_prev_priv' }, { label: '(누적) 민간 자격증 2개 보유(20점)', score: 20, group: 't_prev_priv' }, { label: '(누적) 민간 자격증 1개 보유(5점)', score: 5, group: 't_prev_priv' }],
-                'I': [{ label: '토익 600점 / JLPT N4 등 (50점)', score: 50, group: 'i_cert' }, { label: '2학년 공인어학시험 등급 보유(10점)', score: 10, group: 'i_prev' }]
-            }
         };
 
         window.renderStudentCheckboxes = function() {
