@@ -140,12 +140,12 @@
     <script>
         window.MY_GLOBAL_FIREBASE_CONFIG = {
             apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
-            authDomain: "induk-smartcity.firebaseapp.com",
-            projectId: "induk-smartcity",
-            storageBucket: "induk-smartcity.firebasestorage.app",
-            messagingSenderId: "836222545739",
-            appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-            measurementId: "G-3SL84TXVHD"
+  authDomain: "induk-smartcity.firebaseapp.com",
+  projectId: "induk-smartcity",
+  storageBucket: "induk-smartcity.firebasestorage.app",
+  messagingSenderId: "836222545739",
+  appId: "1:836222545739:web:d370e05c68300ce6e202ce",
+  measurementId: "G-3SL84TXVHD"
         };
     </script>
 
@@ -806,6 +806,26 @@
         };
 
         window.downloadTemplate = function() { const ws = XLSX.utils.json_to_sheet([{ "학년": "", "학과": "", "학번": "", "이름": "", "S": "", "M": "", "A": "", "R": "", "T": "", "C": "", "I": "", "Tr": "", "Y": "" }]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "입력양식"); XLSX.writeFile(wb, "스마트시티_학생양식.xlsx"); };
+        
+        // ★★★ 누락되었던 학생 정보 수정 창 띄우기 함수 완벽 복구 !!! ★★★
+        window.openEditModal = function(docId, grade) {
+            const student = window.allStudentsData.find(s => s.docId === docId);
+            if(!student) return alert("학생 데이터를 찾을 수 없습니다.");
+
+            document.getElementById("editDocId").value = docId;
+            document.getElementById("edit-Name").value = student.name;
+            document.getElementById("edit-StudentId").value = student.id;
+            document.getElementById("edit-Dept").value = student.dept !== "-" ? student.dept : "미지정";
+            document.getElementById("edit-PhotoImg").src = student.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
+            let scores = student.yearData.scores || {};
+            window.AREAS.forEach(a => {
+                document.getElementById(`edit-${a}`).value = scores[a] || 0;
+            });
+
+            document.getElementById("editModal").style.display = "flex";
+        };
+
         window.closeEditModal = function() { document.getElementById("editModal").style.display = "none"; };
         
         window.saveEdit = async function() { 
