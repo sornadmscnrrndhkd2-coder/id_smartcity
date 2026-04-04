@@ -138,7 +138,7 @@
 <body>
 
     <script>
-        // 🚨 실제 API 키를 입력하세요.
+        // 🚨 실제 연결된 API 키를 다시 넣어주세요!
         window.MY_GLOBAL_FIREBASE_CONFIG = {
             apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
   authDomain: "induk-smartcity.firebaseapp.com",
@@ -682,12 +682,27 @@
                         if (!qSnap.empty) {
                             const targetDocId = qSnap.docs[0].id;
                             
-                            // 1. 학생 문서 자체 업데이트 (새 학번, 학년, 학과 반영)
-                            batch.update(window.doc(window.db, "students", targetDocId), {
+                            // ★ 추가된 핵심 로직: 새 학년의 빈 점수 바구니(year_X)를 함께 생성해줍니다!
+                            let s_map = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
+                            let p_map = {S:false, M:false, A:false, R:false, T:false, C:false, I:false, Tr:false, Y:false};
+                            
+                            let updatePayload = {
                                 current_studentId: newId,
                                 current_grade: newGrade,
                                 department: newDept
-                            });
+                            };
+                            
+                            updatePayload[`year_${newGrade}`] = {
+                                scores: s_map,
+                                pass: p_map,
+                                earned_badges: 0,
+                                total_score: 0,
+                                title: "진행중",
+                                delivery_status: {}
+                            };
+
+                            // 1. 학생 문서 자체 업데이트 (새 학번, 학년, 학과, 새 점수 바구니 반영)
+                            batch.update(window.doc(window.db, "students", targetDocId), updatePayload);
                             
                             // 2. 디렉토리 업데이트 (기존 삭제 후 새 학번 생성)
                             batch.delete(window.doc(window.db, "directory", oldId));
@@ -846,10 +861,6 @@
                     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                     if (jsonData.length > 500) { alert("500명 이상 업로드 제한."); statusEl.textContent = ""; return; }
                     let successCount = 0; let failCount = 0;
-                    
-                    // ★ 해결 1 적용: 신형 모듈러 삽(writeBatch)으로 교체
-                    const batch = window.writeBatch(window.db);
-
                     for (const row of jsonData) {
                         const grade = Number(row["학년"]); const studentId = row["학번"] ? String(row["학번"]).trim() : "";
                         const dept = row["학과"] ? String(row["학과"]).trim() : "미지정"; const studentName = row["이름"] ? String(row["이름"]).trim() : "";
@@ -870,16 +881,11 @@
                             let p_map = {}; window.AREAS.forEach(area => { p_map[area] = s_map[area] >= cut[area]; });
                             let earned = Object.values(p_map).filter(Boolean).length; let title = earned >= 6 ? (grade === 1 ? "🏆 CITY 스타터" : (grade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중";
                             let payload = { name: studentName, current_grade: grade, current_studentId: studentId, department: dept, role: "student", [`year_${grade}`]: { scores: s_map, pass: p_map, earned_badges: earned, total_score: total_score, title: title, delivery_status: currentDelivery } };
-                            
-                            batch.set(window.doc(window.db, "students", targetDocId), payload, { merge: true }); 
-                            batch.set(window.doc(window.db, "directory", studentId), { stableId: targetDocId, authEmail: authEmail || null, updatedAt: window.serverTimestamp() }, { merge: true });
-                            if (prevStudentId && prevStudentId !== studentId) { batch.delete(window.doc(window.db, "directory", prevStudentId)); }
-                            
-                            successCount++; statusEl.textContent = `⏳ 진행 중... 성공 ${successCount}명 / 실패 ${failCount}명`;
+                            const batch = db_compat.batch(); batch.set(db_compat.collection("students").doc(targetDocId), payload, { merge: true }); batch.set(db_compat.collection("directory").doc(studentId), { stableId: targetDocId, authEmail: authEmail || null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                            if (prevStudentId && prevStudentId !== studentId) { batch.delete(db_compat.collection("directory").doc(prevStudentId)); }
+                            await batch.commit(); successCount++; statusEl.textContent = `⏳ 진행 중... 성공 ${successCount}명 / 실패 ${failCount}명`;
                         } catch (err) { failCount++; if (createdUser) { try { await createdUser.delete(); } catch (e) {} } } finally { try { await secondaryApp.auth().signOut(); } catch (_) {} }
                     }
-                    await batch.commit(); // 루프 다 돌고 나서 한 번에 빵!
-                    
                     await safeLog(`학생 엑셀 업로드 완료`); alert(`✅ 성공: ${successCount}명\n실패: ${failCount}명`); statusEl.textContent = `✅ 완료`;
                     if (typeof window.loadData === "function") window.loadData(); if (typeof window.loadDashboard === "function") window.loadDashboard();
                 } catch (e) { statusEl.textContent = "❌ 오류 발생"; alert(e.message); } finally { fileInput.value = ""; }
@@ -897,13 +903,7 @@
                 try { const cred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, sPw); targetDocId = cred.user.uid; await secondaryApp.auth().signOut(); } catch(e) { throw e; }
                 let s_map = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0}; let p_map = {S:false, M:false, A:false, R:false, T:false, C:false, I:false, Tr:false, Y:false};
                 let payload = { name: sName, current_grade: grade, current_studentId: sId, department: sDept, role: "student", [`year_${grade}`]: { scores: s_map, pass: p_map, earned_badges: 0, total_score: 0, title: "진행중", delivery_status: {} } };
-                
-                // ★ 해결 1 적용: 신형 모듈러 삽(writeBatch)으로 교체
-                const batch = window.writeBatch(window.db); 
-                batch.set(window.doc(window.db, "students", targetDocId), payload); 
-                batch.set(window.doc(window.db, "directory", sId), { stableId: targetDocId, authEmail: authEmail, updatedAt: window.serverTimestamp() }); 
-                await batch.commit();
-                
+                const batch = db_compat.batch(); batch.set(db_compat.collection("students").doc(targetDocId), payload); batch.set(db_compat.collection("directory").doc(sId), { stableId: targetDocId, authEmail: authEmail, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); await batch.commit();
                 alert(`✅ 추가됨`); document.getElementById("addStudentBox").style.display = 'none'; if(typeof window.loadData === 'function') window.loadData(); if(typeof window.loadDashboard === 'function') window.loadDashboard();
             } catch(e) { alert("오류: " + e.message); }
         };
@@ -1030,6 +1030,7 @@
             try { const querySnapshot = await window.getDocs(window.collection(window.db, "system_logs")); let logs = []; querySnapshot.forEach(doc => logs.push(doc.data())); logs.sort((a, b) => b.timestamp - a.timestamp); tbody.innerHTML = ""; logs.slice(0, 200).forEach(log => { let userIcon = "👤"; if(log.user.includes("학생")) userIcon = "🧑‍🎓"; else if(log.user.includes("교사")) userIcon = "👨‍🏫"; else if(log.user.includes("관리자") || log.user.includes("Admin")) userIcon = "👑"; tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${userIcon} ${log.user}</td><td>${log.action}</td></tr>`; }); if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>활동 로그가 없습니다.</td></tr>"; } catch(e) { tbody.innerHTML = "<tr><td colspan='3'>오류</td></tr>"; }
         };
 
+        // 막대그래프 출력
         window.printClassChart = function() {
             const filterClass = document.getElementById("filterClass").value; const filterGrade = document.getElementById("filterGrade").value;
             if (filterClass === "ALL") return alert("❗ '반'을 먼저 선택 후 [조회]를 눌러주세요.");
@@ -1069,6 +1070,7 @@
                 </body></html>
             `); 
             printWindow.document.close(); 
+            if (typeof safeLog === "function") safeLog(`[${filterGrade}학년 ${filterClass}반] 그래프 인쇄`);
         };
         
         window.downloadExcelReport = function(tableId, fileName) { const table = document.getElementById(tableId); const wb = XLSX.utils.table_to_book(table, {sheet: "보고서"}); XLSX.writeFile(wb, `${fileName}.xlsx`); };
