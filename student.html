@@ -189,7 +189,6 @@
             .hero-top { flex-direction: column; gap: 12px; }
             .hero-bottom { margin-top: 15px; padding-top: 12px; }
             
-            /* ★ 경험치 텍스트 모바일 2단 배열 마법 */
             .exp-text-container { flex-direction: column; align-items: flex-start; gap: 6px; }
             .exp-text-container span:last-child { align-self: flex-end; font-size: 11px !important;}
             
@@ -229,7 +228,8 @@
 </head>
 <body>
     <script>
-        if (!sessionStorage.getItem('loginUserId')) {
+        // ★ 여기서 loginUserId 대신 studentId를 검사하도록 수정했습니다!
+        if (!sessionStorage.getItem('studentId')) {
             alert('⚠️ 로그인이 필요한 서비스입니다. 로그인 페이지로 이동합니다.');
             location.href = 'index.html';
         }
@@ -420,7 +420,8 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             const loginName = sessionStorage.getItem('loginName') || "학생";
-            const loginId = sessionStorage.getItem('loginUserId'); 
+            // ★ 여기서도 이름표를 정확하게 studentId로 맞췄습니다!
+            const loginId = sessionStorage.getItem('studentId'); 
             
             if(!loginId || loginId.length !== 5) {
                 alert("잘못된 로그인 정보입니다. 다시 로그인 해주세요.");
@@ -465,7 +466,6 @@
             });
         });
 
-        // 차트 렌더링 (골격 100% 유지)
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             if (window.myRadarChartInstance) window.myRadarChartInstance.destroy();
@@ -787,9 +787,9 @@
         const AREA_KOR_NAMES = { 'S': '정보화', 'M': '전공성적', 'A': '예체능', 'R': '한국사', 'T': '전공자격', 'C': '직업기초', 'I': '외국어', 'Tr': '성실', 'Y': '인성' };
         
         const CAPS = { 
-            1: { S:100, M:100, A:60, R:30, T:150, C:50, I:100, Tr:80, Y:50 }, 
-            2: { S:100, M:100, A:60, R:40, T:150, C:50, I:100, Tr:80, Y:50 }, 
-            3: { S:100, M:150, A:60, R:30, T:200, C:50, I:150, Tr:150, Y:50 } 
+            1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 
+            2: { S:50, M:50, A:30, R:40, T:80, C:50, I:40, Tr:50, Y:30 }, 
+            3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 } 
         };
 
         window.renderDashboardBadges = function() {
@@ -906,7 +906,7 @@
 
         window.closeRankModal = function() { document.getElementById('rankModal').classList.remove('active'); document.body.style.overflow = 'auto'; };
 
-        // ★ 학생 본인이 신청하는 항목(S, R, T, I)도 교사용 엔진과 100% 동일하게 세팅 (그룹 유지)
+        // ★ 학생이 직접 신청하는 항목 (S, R, T, I)의 세부 찰떡 로직 세팅
         const EVAL_ITEMS_BY_GRADE = {
             1: {
                 'S': [{ label: 'ITQ 2과목(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목(20점)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
