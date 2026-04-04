@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>스마트시티 역량 인증제 - 학생 대시보드</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 
@@ -42,7 +43,17 @@
         .user-profile { display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;}
         .user-info p { margin: 0 0 6px 0; font-size: 14px; opacity: 0.9; font-weight: 600;}
         .user-info h2 { margin: 0 0 12px 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;}
+        
+        /* ★ 추가된 CSS: 티어 뱃지와 인스타 버튼 가로 정렬 */
+        .tier-and-insta-wrapper { display: flex; gap: 10px; align-items: center; margin-top: 5px; flex-wrap: wrap; }
         .badge-pill { background: linear-gradient(135deg, #f39c12, #d35400); display: inline-block; padding: 6px 18px; border-radius: 20px; font-size: 14px; font-weight: 900; box-shadow: 0 4px 10px rgba(211, 84, 0, 0.4); border: 1px solid rgba(255,255,255,0.3);}
+        
+        /* ★ 인스타 버튼 디자인 */
+        .btn-insta {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(220, 39, 67, 0.3); display: flex; align-items: center; gap: 6px; font-family: 'Pretendard'; border: 1px solid rgba(255,255,255,0.3);
+        }
+        .btn-insta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(220, 39, 67, 0.5); }
         
         /* ★ 게임 UI처럼 커지고 화려해진 레이더 차트 컨테이너 */
         .radar-chart-container { 
@@ -223,6 +234,34 @@
             .modal-content { border-radius: 20px; padding-bottom: 50px;} 
             .score-summary { flex-direction: column; }
         }
+
+        /* =========================================
+           📸 인스타 캡처용 숨김 도화지 (화면엔 절대 안 보임)
+        ========================================= */
+        #instaShareTemplate {
+            width: 1080px; height: 1080px; 
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            position: absolute; left: -9999px; top: -9999px; z-index: -1;
+            padding: 80px 60px; box-sizing: border-box; color: white; 
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            font-family: 'Pretendard', sans-serif;
+        }
+        .insta-school { font-size: 28px; color: #a9cce3; font-weight: bold; margin: 0 0 15px 0; text-align: center;}
+        .insta-name { font-size: 65px; font-weight: 900; margin: 0 0 25px 0; letter-spacing: -2px; text-align: center;}
+        .insta-tier { background: linear-gradient(135deg, #f39c12, #d35400); padding: 12px 35px; border-radius: 40px; font-size: 32px; font-weight: 900; box-shadow: 0 10px 20px rgba(0,0,0,0.3); display: inline-block; border: 2px solid rgba(255,255,255,0.3); }
+        .insta-body { display: flex; flex-direction: column; width: 100%; align-items: center; gap: 30px; margin-top: 20px; flex: 1;}
+        .insta-chart-area { width: 550px; height: 550px; position: relative; } /* 초대형 육각형 차트 영역 */
+        .insta-badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; padding: 0 40px; box-sizing: border-box; } /* 3x3 바둑판 뱃지 영역 */
+        .insta-badge-card { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 20px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .insta-badge-card img { width: 80px; height: 80px; margin-bottom: 12px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+        .insta-badge-card .b-title { font-size: 18px; font-weight: 900; margin-bottom: 5px; color: white; }
+        .insta-badge-card .b-score { font-size: 22px; font-weight: 900; color: #f1c40f; }
+        .insta-footer { font-size: 20px; color: rgba(255,255,255,0.5); font-weight: 900; letter-spacing: 4px; margin-top: 30px; text-align: center;}
+        
+        /* 📸 캡처 로딩 오버레이 */
+        .insta-loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: 'Pretendard', sans-serif;}
+        .insta-spinner { width: 60px; height: 60px; border: 6px solid rgba(255,255,255,0.3); border-top-color: #f1c40f; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -284,7 +323,12 @@
                         <div class="user-info">
                             <p id="classDisplay">학년 반 로딩중...</p>
                             <h2 id="userNameDisplay">학생</h2>
-                            <div class="badge-pill" id="tierDisplay">🌱 로딩중...</div>
+                            <div class="tier-and-insta-wrapper">
+                                <div class="badge-pill" id="tierDisplay">🌱 로딩중...</div>
+                                <button class="btn-insta" id="btnInstaShare" onclick="window.generateInstaShot()">
+                                    📸 인스타 인증샷 저장
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="radar-chart-container">
@@ -382,6 +426,28 @@
             </div>
         </div>
     </div> 
+
+    <div id="instaShareTemplate">
+        <div class="insta-header">
+            <p class="insta-school">인덕과학기술고등학교</p>
+            <h1 class="insta-name" id="instaStudentName">학년 반 이름</h1>
+            <div class="insta-tier" id="instaTier">🏆 CITY 인증 달성!</div>
+        </div>
+        <div class="insta-body">
+            <div class="insta-chart-area">
+                <canvas id="instaRadarChart"></canvas>
+            </div>
+            <div class="insta-badge-grid" id="instaBadgeGrid">
+                </div>
+        </div>
+        <div class="insta-footer">SMARTCITY COMPETENCY CERTIFICATION</div>
+    </div>
+
+    <div id="instaLoading" class="insta-loading-overlay">
+        <div class="insta-spinner"></div>
+        <h2 style="margin:0 0 10px 0;">인스타용 인증샷 생성 중...</h2>
+        <p style="margin:0; color:#ccc;">(1초 정도 걸립니다 🚀)</p>
+    </div>
 
     <div id="applyModal" class="modal-overlay" onclick="window.closeOutside(event, 'applyModal')">
         <div class="modal-content">
@@ -505,7 +571,6 @@
             }
         });
 
-        // ★ [복구 완료] 육각형 차트를 10점 단위로 쪼개어 아주 촘촘한 거미줄(10칸)로 만들었습니다!
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             if (window.myRadarChartInstance) {
@@ -562,7 +627,7 @@
                     layout: { padding: chartPadding },
                     scales: {
                         r: {
-                            // ★ 여기가 촘촘하게 만드는 핵심 마법입니다! (10% 단위로 10줄 생성)
+                            // ★ 메인 화면 차트도 10칸 촘촘하게 적용
                             min: 0,
                             max: 100,
                             angleLines: { color: 'rgba(255, 255, 255, 0.3)', lineWidth: 1.5 },
@@ -571,41 +636,25 @@
                             ticks: { display: false, stepSize: 10 }
                         }
                     },
-                    plugins: { 
-                        legend: { display: false }, 
-                        tooltip: { 
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)', 
-                            titleFont: { size: 12, family: 'Pretendard' }, 
-                            bodyFont: { size: 12, family: 'Pretendard', weight: 'bold' }, 
-                            displayColors: false, 
-                            callbacks: { 
-                                label: function(context) { 
-                                    return context.raw + '% 달성'; 
-                                } 
-                            } 
-                        } 
-                    }
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', titleFont: { size: 12, family: 'Pretendard' }, bodyFont: { size: 12, family: 'Pretendard', weight: 'bold' }, displayColors: false, callbacks: { label: function(context) { return context.raw + '% 달성'; } } } }
                 }
             });
         };
 
-        // 🛡️ [수정 완료] 데이터가 없어도 절대로 코드를 멈추지 않는(No Return) 불사조 로직
         window.loadStudentRealData = async function(dbInstance) {
             try {
                 let docSnap = null;
-
                 try {
                     docSnap = await getDoc(doc(dbInstance, "students", window.myAuthUid));
                 } catch(e) {
-                    console.warn("UID 조회 패스 (권한 없음)");
+                    console.warn("UID 조회 패스");
                 }
 
-                // UID로 못 찾았으면 학번으로 재시도 (실패하더라도 여기서 return으로 끝내버리지 않습니다!)
                 if (!docSnap || !docSnap.exists()) {
                     try {
                         docSnap = await getDoc(doc(dbInstance, "students", window.myStudentId));
                     } catch(e) {
-                        console.warn("학생 문서 권한 에러 방어 완료 (빈 장부로 화면을 계속 렌더링합니다.)");
+                        console.warn("학생 문서 권한 에러 방어");
                     }
                 }
 
@@ -613,7 +662,6 @@
                 let badges = 0;
                 let title = "🌱 성장 중"; 
 
-                // 기본값으로 먼저 깔끔하게 초기화합니다.
                 window.myScoreData = {};
                 window.myPassData = {};
 
@@ -629,8 +677,6 @@
                     if (yData.title) {
                         title = yData.title;
                     }
-                } else {
-                    console.warn("등록된 학생 점수 장부가 없어 0점으로 기본 화면을 구성합니다.");
                 }
 
                 document.getElementById('tierDisplay').innerText = title;
@@ -640,7 +686,6 @@
                     scoreBoxes[0].innerHTML = `${totalScore}<span>점</span>`;
                 }
 
-                // ★ 여기서 코드가 절대 멈추지 않아야 하얀 화면(벽돌) 에러가 발생하지 않습니다!
                 window.renderDashboardBadges();
                 window.drawRadarChart();
                 await window.loadRankingData(dbInstance).catch(() => {});
@@ -668,8 +713,7 @@
                 document.getElementById('expText').innerHTML = expMsg;
 
             } catch(e) {
-                console.error("데이터 로딩 중 치명적 에러 발생, 하지만 화면은 계속 유지합니다:", e);
-                // 최악의 경우 에러가 나더라도 UI는 그려야 합니다.
+                console.error("데이터 로딩 오류 방어 완료", e);
                 window.myScoreData = {};
                 window.myPassData = {};
                 window.renderDashboardBadges();
@@ -712,7 +756,6 @@
                 window.renderHallOfFame();
 
             } catch(e) {
-                console.log("랭킹 접근 권한이 없거나 랭킹 데이터가 비어있습니다. (정상 작동입니다.)");
                 const scoreBoxes = document.querySelectorAll('.score-box h3');
                 if(scoreBoxes.length > 1) {
                     scoreBoxes[1].innerHTML = `0명 중 <span class="rank-text">-위</span>`;
@@ -801,15 +844,9 @@
                         let height = img.height;
 
                         if (width > height) {
-                            if (width > MAX_WIDTH) { 
-                                height *= MAX_WIDTH / width; 
-                                width = MAX_WIDTH; 
-                            }
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                         } else {
-                            if (height > MAX_HEIGHT) { 
-                                width *= MAX_HEIGHT / height; 
-                                height = MAX_HEIGHT; 
-                            }
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
                         }
                         canvas.width = width;
                         canvas.height = height;
@@ -830,18 +867,9 @@
             const fileInput = document.getElementById('applyFileInput');
             const btn = document.getElementById('btnSubmitApply');
 
-            if(!areaSelect) {
-                alert("자격증 영역을 선택해주세요.");
-                return;
-            }
-            if(scoreText === "0") {
-                alert("체크된 항목이 없습니다. 달성한 항목을 체크해주세요.");
-                return;
-            }
-            if(fileInput.files.length === 0) {
-                alert("증빙 자료(사진/PDF)를 첨부해주세요.");
-                return;
-            }
+            if(!areaSelect) { alert("자격증 영역을 선택해주세요."); return; }
+            if(scoreText === "0") { alert("체크된 항목이 없습니다. 달성한 항목을 체크해주세요."); return; }
+            if(fileInput.files.length === 0) { alert("증빙 자료(사진/PDF)를 첨부해주세요."); return; }
 
             btn.innerText = "⏳ 압축 및 전송 중...";
             btn.disabled = true;
@@ -874,7 +902,6 @@
                     return;
                 }
 
-                // ★ 완벽하게 보안 규칙(Rules)과 일치하는 11가지 필수 데이터
                 const newApp = {
                     studentUid: String(window.myAuthUid),    
                     studentId: String(window.myStudentId),   
@@ -903,19 +930,9 @@
             }
         };
 
-        window.openApplyModal = function() { 
-            document.getElementById('applyModal').classList.add('active'); 
-            document.body.style.overflow = 'hidden'; 
-        };
-
-        window.closeApplyModal = function() { 
-            document.getElementById('applyModal').classList.remove('active'); 
-            document.body.style.overflow = 'auto'; 
-            document.getElementById('areaSelect').value = ""; 
-            document.getElementById('dynamicLogicSection').style.display = "none"; 
-            document.getElementById('applyFileInput').value = ""; 
-        };
-
+        window.openApplyModal = function() { document.getElementById('applyModal').classList.add('active'); document.body.style.overflow = 'hidden'; };
+        window.closeApplyModal = function() { document.getElementById('applyModal').classList.remove('active'); document.body.style.overflow = 'auto'; document.getElementById('areaSelect').value = ""; document.getElementById('dynamicLogicSection').style.display = "none"; document.getElementById('applyFileInput').value = ""; };
+        
         window.openRankModal = function() {
             document.getElementById('rankModalTitle').innerText = `🏆 ${window.CURRENT_GRADE}학년 명예의 전당 TOP 10`;
             const list = document.getElementById('rankModalList'); 
@@ -953,21 +970,11 @@
                     }
                 });
             }
-            document.getElementById('rankModal').classList.add('active'); 
-            document.body.style.overflow = 'hidden';
+            document.getElementById('rankModal').classList.add('active'); document.body.style.overflow = 'hidden';
         };
 
-        window.closeRankModal = function() { 
-            document.getElementById('rankModal').classList.remove('active'); 
-            document.body.style.overflow = 'auto'; 
-        };
-
-        window.closeOutside = function(event, id) { 
-            if(event.target.id === id) { 
-                document.getElementById(id).classList.remove('active'); 
-                document.body.style.overflow = 'auto'; 
-            } 
-        };
+        window.closeRankModal = function() { document.getElementById('rankModal').classList.remove('active'); document.body.style.overflow = 'auto'; };
+        window.closeOutside = function(event, id) { if(event.target.id === id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow = 'auto'; } };
     </script>
 
     <script>
@@ -1114,6 +1121,111 @@
                 document.getElementById('currentPoint').style.color = "#f1c40f"; 
             } else {
                 document.getElementById('currentPoint').style.color = "white";
+            }
+        };
+    </script>
+
+    <script>
+        window.instaChartInstance = null;
+
+        window.generateInstaShot = async function() {
+            const overlay = document.getElementById('instaLoading');
+            overlay.style.display = 'flex';
+
+            try {
+                // 1. 숨겨진 템플릿에 현재 학생 정보 채우기
+                let title = document.getElementById('tierDisplay').innerText;
+                document.getElementById('instaStudentName').innerText = `${window.CURRENT_GRADE}학년 ${window.myStudentId.substring(1,3)}반 ${window.myStudentName}`;
+                document.getElementById('instaTier').innerText = title;
+
+                // 2. 9대 뱃지를 3x3 그리드로 채우기
+                const badgeContainer = document.getElementById('instaBadgeGrid');
+                badgeContainer.innerHTML = '';
+                
+                AREAS.forEach(area => {
+                    const score = (window.myScoreData || {})[area] || 0;
+                    const passed = window.myPassData && window.myPassData[area] === true;
+                    const opacity = passed ? '1' : '0.4';
+                    const filter = passed ? 'none' : 'grayscale(100%)';
+                    
+                    badgeContainer.innerHTML += `
+                        <div class="insta-badge-card" style="opacity: ${opacity}">
+                            <img src="img/icon_${area.toLowerCase()}.png" style="filter: ${filter}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2942/2942784.png'">
+                            <div class="b-title">${AREA_KOR_NAMES[area]}</div>
+                            <div class="b-score">${score}점</div>
+                        </div>
+                    `;
+                });
+
+                // 3. 사진용 초대형 육각형 차트 (10칸 짜리) 렌더링하기
+                const ctx = document.getElementById('instaRadarChart').getContext('2d');
+                if (window.instaChartInstance) window.instaChartInstance.destroy();
+                
+                const max = CAPS[window.CURRENT_GRADE];
+                const scores = window.myScoreData || {};
+                let dataArr = [
+                    Math.min(100, Math.round((((scores['M']||0) + (scores['T']||0)) / (max['M'] + max['T'])) * 100)),
+                    Math.min(100, Math.round(((scores['S']||0) / max['S']) * 100)),
+                    Math.min(100, Math.round((((scores['C']||0) + (scores['R']||0)) / (max['C'] + max['R'])) * 100)),
+                    Math.min(100, Math.round(((scores['I']||0) / max['I']) * 100)),
+                    Math.min(100, Math.round(((scores['A']||0) / max['A']) * 100)),
+                    Math.min(100, Math.round((((scores['Tr']||0) + (scores['Y']||0)) / (max['Tr'] + max['Y'])) * 100))
+                ];
+                dataArr = dataArr.map(v => isNaN(v) ? 0 : v);
+
+                window.instaChartInstance = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
+                        datasets: [{
+                            data: dataArr, 
+                            backgroundColor: 'rgba(241, 196, 15, 0.5)', 
+                            borderColor: '#f1c40f', 
+                            borderWidth: 5, 
+                            pointRadius: 7
+                        }]
+                    },
+                    options: {
+                        animation: false,
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        layout: { padding: 40 },
+                        scales: { 
+                            r: { 
+                                min: 0, max: 100, 
+                                ticks: { display: false, stepSize: 10 }, 
+                                grid: { color: 'rgba(255, 255, 255, 0.3)', lineWidth: 2 }, 
+                                angleLines: { color: 'rgba(255, 255, 255, 0.4)', lineWidth: 2 }, 
+                                pointLabels: { color: '#fff', font: { size: 24, weight: 'bold', family: 'Pretendard' } } 
+                            } 
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                // ★ 차트 애니메이션과 폰트가 완벽히 로드될 시간을 줍니다 (0.6초)
+                await new Promise(r => setTimeout(r, 600));
+
+                // 4. 숨겨진 도화지를 사진으로 찰칵 찍어내기 (html2canvas)
+                const element = document.getElementById('instaShareTemplate');
+                const canvas = await html2canvas(element, { 
+                    scale: 1, 
+                    useCORS: true, 
+                    backgroundColor: null 
+                });
+                
+                // 5. 학생 스마트폰 갤러리로 다이렉트 다운로드!
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                const link = document.createElement('a');
+                link.download = `스마트시티_인증_${window.myStudentName}.jpg`;
+                link.href = dataUrl;
+                link.click();
+
+            } catch(e) {
+                console.error(e);
+                alert("이미지 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요!");
+            } finally {
+                overlay.style.display = 'none';
             }
         };
     </script>
