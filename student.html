@@ -249,6 +249,19 @@
         document.ontouchstart = resetTimer;
     </script>
 
+    <script>
+        // 🚨 실제 API 키를 입력하세요.
+        window.MY_GLOBAL_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
+  authDomain: "induk-smartcity.firebaseapp.com",
+  projectId: "induk-smartcity",
+  storageBucket: "induk-smartcity.firebasestorage.app",
+  messagingSenderId: "836222545739",
+  appId: "1:836222545739:web:d370e05c68300ce6e202ce",
+  measurementId: "G-3SL84TXVHD"
+        };
+    </script>
+
     <header class="header">
         <div class="header-left"><div class="header-icon">🏫</div><div class="header-title"><h1>스마트시티</h1><p>역량 인증제 평가시스템</p></div></div>
         <div class="header-right"><div>인덕과학기술고등학교<br>2026학년도</div><button class="btn-logout" id="btnLogout" onclick="sessionStorage.clear(); location.href='index.html';">로그아웃</button></div>
@@ -394,18 +407,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, deleteDoc, updateDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         
-        // 🚨 여기에 선생님의 실제 API 키를 넣어주세요! 🚨
-        const firebaseConfig = {
-  apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
-  authDomain: "induk-smartcity.firebaseapp.com",
-  projectId: "induk-smartcity",
-  storageBucket: "induk-smartcity.firebasestorage.app",
-  messagingSenderId: "836222545739",
-  appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"
-};
-
-        const app = initializeApp(firebaseConfig);
+        const app = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
         const db = getFirestore(app);
 
         window.CURRENT_GRADE = 1;
@@ -463,6 +465,7 @@
             });
         });
 
+        // 차트 렌더링 (골격 100% 유지)
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             if (window.myRadarChartInstance) window.myRadarChartInstance.destroy();
@@ -491,7 +494,6 @@
 
             const isMobile = window.innerWidth <= 850;
             const labelFontSize = isMobile ? 9 : 11; // 폰트 크기
-            // ★ PC 화면에서 글씨 잘림 방지를 위해 25로 증가!
             const chartPadding = isMobile ? 12 : 25;  
 
             window.myRadarChartInstance = new Chart(ctx, {
@@ -777,14 +779,18 @@
     <script>
         const BADGE_TOOLTIPS = {
             1: { 'S': '💡 ITQ 1과목 이상 또는 AI 자격증 취득 시 획득!', 'M': '💡 전공 B등급 2개 이상 또는 교외대회 입상 시 획득!', 'A': '💡 PAPS 전체 3등급 이내 또는 학교스포츠클럽 활동 시 획득!', 'R': '💡 한국사능력검정시험 6급 이상 취득 시 획득!', 'T': '💡 국가기술자격/민간자격증 또는 필기합격 시 획득!', 'C': '💡 직업기초능력평가 평균 3등급 이내 달성 시 획득!', 'I': '💡 영어 성취도 B 이상 또는 교내 영어대회 입상 시 획득!', 'Tr': '💡 1년간 무단 결석/지각/조퇴 없는 성실함 달성 시 획득!', 'Y': '💡 봉사활동 10시간 + 독서 2권 이상 달성 시 획득!' },
-            2: { 'S': '💡 ITQ 2과목 이상 또는 당해 AI 자격증 취득 시 획득!', 'M': '💡 전공 B 2개 이상 또는 대회 입상 시 획득!', 'A': '💡 PAPS 3등급 이내 또는 스포츠클럽 활동 시 획득!', 'R': '💡 한능검 3급 이상 취득 시 획득!', 'T': '💡 이전 자격증 보유 또는 당해 자격증/필기합격 시 획득!', 'C': '💡 NCS 평균 3등급 이내 달성 시 획득!', 'I': '💡 영어/일어 성취도 B 이상 또는 어학성적 보유 시 획득!', 'Tr': '💡 1년 정근 이상 시 획득!', 'Y': '💡 봉사 10H + 독서 2권 이상 시 획득!' },
-            3: { 'S': '💡 ITQ 2과목 이상 또는 추가 AI 자격증 취득 시 획득!', 'M': '💡 전공 A 4개 이상 또는 캡스톤/대회 입상 시 획득!', 'A': '💡 PAPS 3등급 이내 또는 스포츠클럽 활동 시 획득!', 'R': '💡 한능검 3급 이상 취득 시 획득!', 'T': '💡 누적 자격증 보유 또는 당해 자격증/필기합격 시 획득!', 'C': '💡 NCS 평균 3등급 이내 달성 시 획득!', 'I': '💡 공인어학성적 또는 2학년 등급 보유 시 획득!', 'Tr': '💡 1년 정근 이상 또는 3년 개근 시 획득!', 'Y': '💡 봉사 10H + 독서 2권 이상 시 획득!' }
+            2: { 'S': '💡 ITQ 1과목 이상 또는 당해 AI 자격증 취득 시 획득!', 'M': '💡 전공 A 2개 이상 또는 대회 입상 시 획득!', 'A': '💡 PAPS 3등급 이내 또는 스포츠클럽 활동 시 획득!', 'R': '💡 한능검 3급 이상 취득 시 획득!', 'T': '💡 이전 자격증 보유 또는 당해 자격증/필기합격 시 획득!', 'C': '💡 NCS 평균 3등급 이내 달성 시 획득!', 'I': '💡 영어/일어 성취도 B 이상 또는 어학성적 보유 시 획득!', 'Tr': '💡 1년 정근 이상 시 획득!', 'Y': '💡 봉사 10H + 독서 2권 이상 시 획득!' },
+            3: { 'S': '💡 ITQ 1과목 이상 또는 추가 AI 자격증 취득 시 획득!', 'M': '💡 전공 A 4개 이상 또는 캡스톤/대회 입상 시 획득!', 'A': '💡 PAPS 3등급 이내 또는 스포츠클럽 활동 시 획득!', 'R': '💡 한능검 2급 이상 취득 시 획득!', 'T': '💡 누적 자격증 보유 또는 당해 자격증/필기합격 시 획득!', 'C': '💡 NCS 평균 3등급 이내 달성 시 획득!', 'I': '💡 공인어학성적 또는 2학년 등급 보유 시 획득!', 'Tr': '💡 1년 정근 이상 또는 3년 개근 시 획득!', 'Y': '💡 봉사 10H + 독서 2권 이상 시 획득!' }
         };
 
         const AREAS = ['S', 'M', 'A', 'R', 'T', 'C', 'I', 'Tr', 'Y'];
         const AREA_KOR_NAMES = { 'S': '정보화', 'M': '전공성적', 'A': '예체능', 'R': '한국사', 'T': '전공자격', 'C': '직업기초', 'I': '외국어', 'Tr': '성실', 'Y': '인성' };
         
-        const CAPS = { 1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 2: { S:50, M:50, A:30, R:30, T:80, C:50, I:40, Tr:50, Y:30 }, 3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 } };
+        const CAPS = { 
+            1: { S:100, M:100, A:60, R:30, T:150, C:50, I:100, Tr:80, Y:50 }, 
+            2: { S:100, M:100, A:60, R:40, T:150, C:50, I:100, Tr:80, Y:50 }, 
+            3: { S:100, M:150, A:60, R:30, T:200, C:50, I:150, Tr:150, Y:50 } 
+        };
 
         window.renderDashboardBadges = function() {
             const badgeContainer = document.getElementById('badgeGridContainer');
@@ -900,10 +906,26 @@
 
         window.closeRankModal = function() { document.getElementById('rankModal').classList.remove('active'); document.body.style.overflow = 'auto'; };
 
+        // ★ 학생 본인이 신청하는 항목(S, R, T, I)도 교사용 엔진과 100% 동일하게 세팅 (그룹 유지)
         const EVAL_ITEMS_BY_GRADE = {
-            1: { 'S': [{ label: 'ITQ 2과목(40점)', score: 40, group: 'itq' }, { label: 'ITQ 1과목(20점)', score: 20, group: 'itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 'ai' }], 'R': [{ label: '한능검 3급(30점)', score: 30, group: 'his' }, { label: '한능검 4급(20점)', score: 20, group: 'his' }, { label: '한능검 5~6급(10점)', score: 10, group: 'his' }], 'T': [{ label: '기능사 자격증 취득(60점)', score: 60, group: 'tnow' }, { label: '민간자격증 취득(40점)', score: 40, group: 'tnow' }, { label: '국가/민간 필기합격(30점)', score: 30, group: 'tnow' }], 'I': [{ label: '영어 교과 성취도 A 이상(40점)', score: 40, group: 'i1' }, { label: '영어 교과 성취도 B 이상(30점)', score: 30, group: 'i1' }, { label: '교내 영어 관련 대회 입상(30점)', score: 30, group: 'i1' }] },
-            2: { 'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 'itq' }, { label: 'ITQ 2과목 합격(20점)', score: 20, group: 'itq' }, { label: '(당해연도) AI관련 자격증 취득(20점)', score: 20, group: 'ai' }], 'R': [{ label: '한능검 2급이상(30점)', score: 30, group: 'his' }, { label: '한능검 3급(20점)', score: 20, group: 'his' }], 'T': [{ label: '(당해연도) 기능사 1개 취득(60점)', score: 60, group: 'tnow' }, { label: '(당해연도) 민간 자격증 1개 취득(40점)', score: 40, group: 'tnow' }, { label: '(당해연도) 국가/민간 필기합격(30점)', score: 30, group: 'tnow' }, { label: '(이전학년) 기능사 1개 취득(20점)', score: 20, group: 'tprev' }, { label: '(이전학년) 민간 자격증 1개 취득(10점)', score: 10, group: 'tprev' }], 'I': [{ label: '토익500/토스NH/OPIc NH/JLPT N5/JPT250(40점)', score: 40, group: 'i1' }, { label: '영어/일어 교과 성취도 A(40점)', score: 40, group: 'i1' }, { label: '영어/일어 교과 성취도 B(30점)', score: 30, group: 'i1' }] },
-            3: { 'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 'itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 'itq' }, { label: 'ITQ 2과목 합격(20점)', score: 20, group: 'itq' }, { label: 'AI관련 (추가) 자격증 취득(20점)', score: 20, group: 'ai' }], 'R': [{ label: '한능검 1급(30점)', score: 30, group: 'his' }, { label: '한능검 2급(20점)', score: 20, group: 'his' }, { label: '한능검 3급(10점)', score: 10, group: 'his' }], 'T': [{ label: '(당해학년) 기능사 1개 취득(60점)', score: 60, group: 'tnow' }, { label: '(당해학년) 민간 자격증 1개 취득(40점)', score: 40, group: 'tnow' }, { label: '(당해학년) 국가/민간 필기합격(30점)', score: 30, group: 'tnow' }, { label: '(누적) 기능사 3개 보유(50점)', score: 50, group: 'tprev' }, { label: '(누적) 기능사 2개 보유(30점)', score: 30, group: 'tprev' }, { label: '(누적) 기능사 1개 보유(10점)', score: 10, group: 'tprev' }, { label: '(누적) 민간 자격증 3개 보유(30점)', score: 30, group: 'tprev' }, { label: '(누적) 민간 자격증 2개 보유(20점)', score: 20, group: 'tprev' }, { label: '(누적) 민간 자격증 1개 보유(10점)', score: 10, group: 'tprev' }], 'I': [{ label: '토익600/토스IL/OPIc IL/JLPT N4/JPT350(50점)', score: 50, group: 'i1' }, { label: '2학년 공인어학시험 등급 보유(20점)', score: 20, group: 'i1' }] }
+            1: {
+                'S': [{ label: 'ITQ 2과목(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목(20점)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'R': [{ label: '한능검 3급(30점)', score: 30, group: 'r_his' }, { label: '한능검 4급(20점)', score: 20, group: 'r_his' }, { label: '한능검 5~6급(10점)', score: 10, group: 'r_his' }],
+                'T': [{ label: '기능사 자격증 취득(60점)', score: 60, group: 't_func' }, { label: '민간자격증 취득(40점)', score: 40, group: 't_priv' }, { label: '국가/민간 필기합격(30점)', score: 30, group: 't_written' }],
+                'I': [{ label: '영어 교과 성취도 A 이상(40점)', score: 40, group: 'i_grade' }, { label: '영어 교과 성취도 B 이상(30점)', score: 30, group: 'i_grade' }, { label: '영어 관련 대회 입상(30점)', score: 30, group: 'i_contest' }]
+            },
+            2: {
+                'S': [{ label: 'ITQ 마스터(3종)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득) AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'R': [{ label: '한능검 1급(40점)', score: 40, group: 'r_his' }, { label: '한능검 2급(30점)', score: 30, group: 'r_his' }, { label: '한능검 3급(20점)', score: 20, group: 'r_his' }, { label: '한능검 4급(10점)', score: 10, group: 'r_his' }],
+                'T': [{ label: '(해당학년) 기능사 1개 취득(60점)', score: 60, group: 't_func_now' }, { label: '(해당학년) 민간 자격증 1개 취득(40점)', score: 40, group: 't_priv_now' }, { label: '(해당학년) 국가/민간 필기합격(20점)', score: 20, group: 't_written_now' }, { label: '(이전학년) 기능사 1개 보유(10점)', score: 10, group: 't_func_prev' }, { label: '(이전학년) 민간 자격증 1개 보유(5점)', score: 5, group: 't_priv_prev' }],
+                'I': [{ label: '영어/일어 교과 성취도 A(40점)', score: 40, group: 'i_grade' }, { label: '영어/일어 교과 성취도 B(30점)', score: 30, group: 'i_grade' }, { label: '토익 500점 등 공인어학시험(40점)', score: 40, group: 'i_cert_eng' }, { label: '일본어 JLPT N5 등 공인어학시험(40점)', score: 40, group: 'i_cert_jp' }]
+            },
+            3: {
+                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득) AI관련 (추가) 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'R': [{ label: '한능검 1급(30점)', score: 30, group: 'r_his' }, { label: '한능검 2급(20점)', score: 20, group: 'r_his' }, { label: '한능검 3급(10점)', score: 10, group: 'r_his' }],
+                'T': [{ label: '(해당학년) 기능사 1개 취득(60점)', score: 60, group: 't_now_func' }, { label: '(해당학년) 민간 자격증 1개 취득(40점)', score: 40, group: 't_now_priv' }, { label: '(해당학년) 국가/민간 필기합격(10점)', score: 10, group: 't_now_written' }, { label: '(누적) 기능사 3개 보유(60점)', score: 60, group: 't_prev_func' }, { label: '(누적) 기능사 2개 보유(30점)', score: 30, group: 't_prev_func' }, { label: '(누적) 기능사 1개 보유(10점)', score: 10, group: 't_prev_func' }, { label: '(누적) 민간 자격증 3개 보유(30점)', score: 30, group: 't_prev_priv' }, { label: '(누적) 민간 자격증 2개 보유(20점)', score: 20, group: 't_prev_priv' }, { label: '(누적) 민간 자격증 1개 보유(5점)', score: 5, group: 't_prev_priv' }],
+                'I': [{ label: '토익 600점 / JLPT N4 등 (50점)', score: 50, group: 'i_cert' }, { label: '2학년 공인어학시험 등급 보유(10점)', score: 10, group: 'i_prev' }]
+            }
         };
 
         window.renderStudentCheckboxes = function() {
@@ -912,17 +934,21 @@
             const items = EVAL_ITEMS_BY_GRADE[window.CURRENT_GRADE][currentSelectedArea];
             let html = '';
             items.forEach((item, idx) => {
-                html += `<label class="check-label" id="sLabel-${idx}"><span>${item.label}</span><span class="check-score">+${item.score}점</span><input type="checkbox" value="${item.score}" data-group="${item.group}" data-index="${idx}" onchange="window.handleStudentCheck(this)"></label>`;
+                html += `<label class="check-label" id="sLabel-${idx}"><span>${item.label}</span><span class="check-score">+${item.score}점</span><input type="checkbox" value="${item.score}" data-area="${currentSelectedArea}" data-group="${item.group}" data-index="${idx}" onchange="window.handleStudentCheck(this)"></label>`;
             });
             document.getElementById('checkboxContainer').innerHTML = html;
             document.getElementById('currentPoint').innerText = "0";
             document.getElementById('dynamicLogicSection').style.display = "block";
         };
 
+        // ★ 학생이 직접 체크할 때도 만점 캡 및 그룹핑(라디오버튼화) 적용 완료!
         window.handleStudentCheck = function(checkbox) {
             if (checkbox.checked && checkbox.dataset.group) {
                 document.querySelectorAll(`#checkboxContainer input[data-group="${checkbox.dataset.group}"]`).forEach(other => {
-                    if (other !== checkbox) { other.checked = false; document.getElementById(`sLabel-${other.dataset.index}`).classList.remove('selected'); }
+                    if (other !== checkbox) { 
+                        other.checked = false; 
+                        document.getElementById(`sLabel-${other.dataset.index}`).classList.remove('selected'); 
+                    }
                 });
             }
             const lbl = document.getElementById(`sLabel-${checkbox.dataset.index}`);
@@ -930,7 +956,10 @@
             
             let total = 0; document.querySelectorAll('#checkboxContainer input:checked').forEach(box => { total += Number(box.value); });
             let currentSelectedArea = document.getElementById('areaSelect').value;
+            
+            // 만점 상한선을 넘지 못하게 자름
             let finalScore = Math.min(total, CAPS[window.CURRENT_GRADE][currentSelectedArea]);
+            
             document.getElementById('currentPoint').innerText = finalScore;
             if(finalScore > 0) document.getElementById('currentPoint').style.color = "#f1c40f"; else document.getElementById('currentPoint').style.color = "white";
         };
