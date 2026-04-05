@@ -47,7 +47,6 @@
         
         .score-summary-horizontal { display: flex; flex-direction: row; gap: 15px; width: 100%; position: relative; z-index: 2; margin-top: 10px;}
         
-        /* 총점 '290'과 현재순위 '1' 폰트 대칭 완벽 통일 유지 */
         .score-box { 
             flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); 
             padding: 12px 15px; 
@@ -55,7 +54,7 @@
             box-sizing: border-box; text-align: center; transition: 0.2s;
         }
         .score-box p { margin: 0 0 8px 0; font-size: 15px; font-weight: 800; opacity: 0.9;} 
-        .score-box h3 { margin: 0; font-size: 40px; font-weight: 900; letter-spacing: -1px; } 
+        .score-box h3 { margin: 0; font-size: 40px; font-weight: 900; letter-spacing: -1px; display: flex; align-items: baseline; justify-content: center;} 
         .score-box h3 span { font-size: 18px; opacity: 0.9; font-weight: 700; margin-left: 5px; vertical-align: baseline;} 
         .score-box h3 span#displayTotalScore { font-size: 40px; font-weight: 900; margin-left: 0; opacity: 1; vertical-align: baseline;}
         .rank-text { color: #f1c40f; }
@@ -70,7 +69,6 @@
         .exp-bar-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shine 2s infinite; }
         @keyframes shine { 100% { left: 200%; } }
 
-        /* ★ [핵심 해결] 오른쪽 상자들을 위로 맞추기 위해 Grid 설정 수정 */
         .content-grid {
             display: grid;
             grid-template-columns: 7fr 3fr; 
@@ -89,7 +87,6 @@
         .btn-apply-inline { background: var(--text-dark); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;}
         .btn-apply-inline:hover { transform: translateY(-2px); background: var(--primary-blue); }
 
-        /* ★ [핵심 해결] 왼쪽 흰 상자만 오른쪽 높이만큼 고무줄처럼 늘림! */
         .box-badges { 
             grid-column: 1 / 2; 
             grid-row: 1 / 4; 
@@ -208,7 +205,7 @@
         .check-label.selected .check-score { color: var(--primary-blue); border-color: #a9cce3;}
         .calc-result { background: var(--dark-blue); color: white; padding: 15px; border-radius: 12px; text-align: center; font-size: 15px; margin-bottom: 20px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
         .calc-result span { color: #f1c40f; font-size: 20px; font-weight: 900; margin-left: 5px;}
-        .modal-submit-btn { width: 100%; padding: 16px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3); }
+        .modal-submit-btn { width: 100%; padding: 16px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: margin-top: 10px; box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3); }
         .modal-submit-btn:disabled { background: #bdc3c7; cursor: not-allowed; box-shadow: none; }
 
         @media (max-width: 850px) {
@@ -266,15 +263,16 @@
             .modal-overlay { align-items: center; }
             .modal-content { border-radius: 20px; padding-bottom: 50px;} 
             
-            /* ★ [역량 분포도 PC 크기 확대] 모바일은 두고 PC 화면에서만 육각형 꽉 차게 키움 */
+            /* ★ [해결] 삐져나온 노란색 원광 효과를 가두고, 크기를 살짝 조절해 예쁘게 맞춥니다. */
+            .box-radar { overflow: hidden; } /* 카드를 넘어가는 빛 번짐 차단 */
             .box-radar .radar-chart-container {
-                max-width: 350px;
-                height: 350px;
-                padding: 16px;
+                max-width: 330px;
+                height: 330px;
+                padding: 14px;
             }
             .box-radar .radar-chart-container > div {
-                width: 310px !important;
-                height: 310px !important;
+                width: 290px !important;
+                height: 290px !important;
             }
         }
     </style>
