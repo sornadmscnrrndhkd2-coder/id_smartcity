@@ -211,7 +211,6 @@
         .modal-submit-btn { width: 100%; padding: 16px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3); }
         .modal-submit-btn:disabled { background: #bdc3c7; cursor: not-allowed; box-shadow: none; }
 
-        /* 모바일 뷰 유지! */
         @media (max-width: 850px) {
             body { overflow-x: hidden; } 
             .header { padding: 10px 15px; flex-direction: row; justify-content: space-between; align-items: center; }
@@ -266,6 +265,17 @@
         @media (min-width: 850px) {
             .modal-overlay { align-items: center; }
             .modal-content { border-radius: 20px; padding-bottom: 50px;} 
+            
+            /* ★ [역량 분포도 PC 크기 확대] 모바일은 두고 PC 화면에서만 육각형 꽉 차게 키움 */
+            .box-radar .radar-chart-container {
+                max-width: 350px;
+                height: 350px;
+                padding: 16px;
+            }
+            .box-radar .radar-chart-container > div {
+                width: 310px !important;
+                height: 310px !important;
+            }
         }
     </style>
 </head>
@@ -301,7 +311,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"  
+  measurementId: "G-3SL84TXVHD"    
         };
     </script>
 
