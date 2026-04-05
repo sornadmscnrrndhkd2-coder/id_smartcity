@@ -93,14 +93,6 @@
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; overflow: visible; }
         .badge-card { border: 1.5px solid #edf0f2; border-radius: 16px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; background: #fff; position: relative; box-sizing: border-box; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; overflow: visible; }
         .badge-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(59, 113, 202, 0.18); border-color: var(--primary-blue); z-index: 10;}
-        .badge-icon-wrapper { width: 70px; height: 70px; margin-bottom: 12px; position: relative; display: flex; justify-content: center; align-items: center; }
-        .badge-icon-wrapper img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12));}
-        .check-mark { position: absolute; top: -4px; right: -4px; background: var(--accent-orange); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; display: flex; justify-content: center; align-items: center; border: 2px solid white; font-weight: bold; z-index: 5;}
-        .badge-card.inactive { opacity: 0.55; background: #f9fafb; border-color:#f1f2f6;}
-        .badge-card.inactive .badge-icon-wrapper img { filter: grayscale(100%) opacity(0.7); }
-        .badge-letter { font-size: 11px; color: var(--primary-blue); font-weight: 900; margin-bottom: 4px; }
-        .badge-name { font-size: 14px; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px;}
-        .badge-score { background: #eef2fb; color: var(--primary-blue); font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
         
         .badge-tooltip {
             position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(10px);
@@ -113,6 +105,15 @@
         }
         .badge-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: rgba(26, 37, 47, 0.98); }
         .badge-card:hover .badge-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
+        .badge-icon-wrapper { width: 70px; height: 70px; margin-bottom: 12px; position: relative; display: flex; justify-content: center; align-items: center; }
+        .badge-icon-wrapper img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12));}
+        .check-mark { position: absolute; top: -4px; right: -4px; background: var(--accent-orange); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; display: flex; justify-content: center; align-items: center; border: 2px solid white; font-weight: bold; z-index: 5;}
+        .badge-card.inactive { opacity: 0.55; background: #f9fafb; border-color:#f1f2f6;}
+        .badge-card.inactive .badge-icon-wrapper img { filter: grayscale(100%) opacity(0.7); }
+        .badge-letter { font-size: 11px; color: var(--primary-blue); font-weight: 900; margin-bottom: 4px; }
+        .badge-name { font-size: 14px; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px;}
+        .badge-score { background: #eef2fb; color: var(--primary-blue); font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
 
         .radar-chart-container { 
             width: 100%; max-width: 280px; height: 280px; margin: 0 auto;
@@ -205,6 +206,7 @@
             .badge-pill { padding: 6px 12px; font-size: 13px; margin: 0; }
 
             .score-summary-horizontal { width: 100%; justify-content: center; gap: 10px;}
+            
             .score-box { padding: 12px; }
             .score-box p { font-size: 14px !important; margin-bottom: 4px; }
             .score-box h3 { font-size: 30px !important; }
@@ -312,7 +314,7 @@
                 </div>
                 <div class="score-box rank-clickable" onclick="window.openRankModal()">
                     <p>🥈 현재 순위</p>
-                    <h3 class="rank-display">계산중...</h3>
+                    <h3 class="rank-display">계산중...<span class="rank-text"></span></h3>
                 </div>
             </div>
             
@@ -590,14 +592,52 @@
                         r: {
                             min: 0,
                             max: 100,
-                            angleLines: { display: true, color: 'rgba(0, 0, 0, 0.1)', lineWidth: 1.5 },
-                            grid: { display: true, color: 'rgba(0, 0, 0, 0.1)', lineWidth: 1 },
-                            pointLabels: { display: true, color: '#1a252f', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } },
+                            angleLines: { color: 'rgba(0,0,0,0.1)', lineWidth: 1.5 },
+                            grid: { color: 'rgba(0,0,0,0.1)', lineWidth: 1 },
+                            pointLabels: { color: '#1a252f', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } },
                             ticks: { display: false, stepSize: 10 }
                         }
                     },
                     plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', titleFont: { size: 12, family: 'Pretendard' }, bodyFont: { size: 12, family: 'Pretendard', weight: 'bold' }, displayColors: false, callbacks: { label: function(context) { return context.raw + '% 달성'; } } } }
                 }
+            });
+        };
+
+        // ★ [해결] renderHallOfFame 함수를 명확하게 선언하여 에러를 원천 차단합니다.
+        window.renderHallOfFame = function() {
+            const hofTitle = document.getElementById('hofTitle');
+            if (hofTitle) hofTitle.innerHTML = `🏆 ${window.CURRENT_GRADE}학년 명예의 전당`;
+
+            const hofList = document.getElementById('hofList');
+            if (!hofList) return;
+
+            hofList.innerHTML = '';
+
+            const top3 = (window.sameGradeStudents || []).slice(0, 3);
+
+            const medals = ['https://cdn-icons-png.flaticon.com/512/2583/2583344.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583319.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'];
+            const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
+
+            if (top3.length === 0) {
+                hofList.innerHTML = '<div style="text-align:center; padding:20px; font-size:13px; color:var(--text-gray);">랭킹 데이터가 없습니다.</div>';
+                return;
+            }
+
+            top3.forEach((student, index) => {
+                hofList.innerHTML += `
+                    <div class="rank-card ${rankClasses[index]}">
+                        <div class="rank-info">
+                            <div class="rare-medal">
+                                <img src="${medals[index]}" alt="메달">
+                            </div>
+                            <div class="rank-details">
+                                <h4>${student.name}</h4>
+                                <p>(${student.classStr})</p>
+                            </div>
+                        </div>
+                        <div class="rank-score">${student.score}점</div>
+                    </div>
+                `;
             });
         };
 
@@ -686,7 +726,6 @@
             }
         };
 
-        // ★ [버그 해결] 학번을 완벽하게 찾아 랭킹 화면에 덮어쓰도록 수정 완료!
         window.loadRankingData = async function(dbInstance) {
             try {
                 const qSnap = await getDocs(collection(dbInstance, "publicRanking"));
@@ -716,16 +755,18 @@
                 let myRank = window.sameGradeStudents.findIndex(s => s.id === String(window.myStudentId)) + 1;
                 if(myRank === 0) myRank = "-";
 
-                // 선생님의 뼈대 클래스를 정확하게 타겟팅!
-                const rankBoxH3 = document.querySelector('.rank-clickable h3.rank-display');
+                const rankBoxH3 = document.querySelector('.rank-display');
                 if(rankBoxH3) {
                     rankBoxH3.innerHTML = `${myRank}<span class="rank-text">위</span>`;
                 }
 
-                window.renderHallOfFame();
+                // ★ [해결] 렌더링 함수가 존재하는지 안전하게 체크 후 실행합니다.
+                if (typeof window.renderHallOfFame === "function") {
+                    window.renderHallOfFame();
+                }
 
             } catch(e) {
-                const rankBoxH3 = document.querySelector('.rank-clickable h3.rank-display');
+                const rankBoxH3 = document.querySelector('.rank-display');
                 if(rankBoxH3) {
                     rankBoxH3.innerHTML = `-<span class="rank-text">위</span>`;
                 }
