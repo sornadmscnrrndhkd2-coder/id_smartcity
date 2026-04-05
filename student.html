@@ -68,10 +68,11 @@
         .exp-bar-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shine 2s infinite; }
         @keyframes shine { 100% { left: 200%; } }
 
+        /* ★ [해결 2] 3번째 줄(역량 분포도)을 남는 공간만큼 고무줄처럼 쫙 늘려주는 1fr 속성! */
         .content-grid {
             display: grid;
             grid-template-columns: 7fr 3fr; 
-            grid-template-rows: auto auto auto;
+            grid-template-rows: auto auto 1fr; 
             gap: 20px;
             width: 100%;
         }
@@ -88,11 +89,14 @@
         .box-badges { grid-column: 1 / 2; grid-row: 1 / 4; }
         .box-ranking { grid-column: 2 / 3; grid-row: 1 / 2; }
         .box-apps { grid-column: 2 / 3; grid-row: 2 / 3; }    
-        .box-radar { grid-column: 2 / 3; grid-row: 3 / 4; display: flex; flex-direction: column;} 
+        /* ★ 늘어난 상자 안에서 육각형 차트가 가운데 예쁘게 오도록 center 추가 */
+        .box-radar { grid-column: 2 / 3; grid-row: 3 / 4; display: flex; flex-direction: column; justify-content: center; } 
 
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; overflow: visible; }
         .badge-card { border: 1.5px solid #edf0f2; border-radius: 16px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; background: #fff; position: relative; box-sizing: border-box; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; overflow: visible; }
-        .badge-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(59, 113, 202, 0.18); border-color: var(--primary-blue); z-index: 10;}
+        
+        /* ★ [해결 1] 마우스 올렸을 때 파란 정보창(90)보다 무조건 위로 올라오도록 95 부여 */
+        .badge-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(59, 113, 202, 0.18); border-color: var(--primary-blue); z-index: 95; position: relative; }
         
         .badge-tooltip {
             position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(10px);
@@ -206,7 +210,6 @@
             .badge-pill { padding: 6px 12px; font-size: 13px; margin: 0; }
 
             .score-summary-horizontal { width: 100%; justify-content: center; gap: 10px;}
-            
             .score-box { padding: 12px; }
             .score-box p { font-size: 14px !important; margin-bottom: 4px; }
             .score-box h3 { font-size: 30px !important; }
@@ -273,7 +276,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"
+  measurementId: "G-3SL84TXVHD"  
         };
     </script>
 
@@ -476,7 +479,7 @@
         window.myStudentName = "";
         window.myScoreData = {};
         window.myPassData = {};
-        window.myCheckedItems = {}; 
+        window.myCheckedItems = {}; // DB 체크 항목 저장용 변수 유지
         window.sameGradeStudents = [];
         window.myRadarChartInstance = null; 
 
@@ -603,7 +606,6 @@
             });
         };
 
-        // ★ [해결] renderHallOfFame 함수를 명확하게 선언하여 에러를 원천 차단합니다.
         window.renderHallOfFame = function() {
             const hofTitle = document.getElementById('hofTitle');
             if (hofTitle) hofTitle.innerHTML = `🏆 ${window.CURRENT_GRADE}학년 명예의 전당`;
@@ -760,7 +762,6 @@
                     rankBoxH3.innerHTML = `${myRank}<span class="rank-text">위</span>`;
                 }
 
-                // ★ [해결] 렌더링 함수가 존재하는지 안전하게 체크 후 실행합니다.
                 if (typeof window.renderHallOfFame === "function") {
                     window.renderHallOfFame();
                 }
