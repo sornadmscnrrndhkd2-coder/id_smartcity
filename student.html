@@ -68,11 +68,11 @@
         .exp-bar-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shine 2s infinite; }
         @keyframes shine { 100% { left: 200%; } }
 
-        /* ★ [해결 2] 3번째 줄(역량 분포도)을 남는 공간만큼 고무줄처럼 쫙 늘려주는 1fr 속성! */
+        /* ★ [핵심 해결] 1층, 2층은 내용물만큼만(max-content), 3층(레이더)이 남은 공간을 꽉 채우도록 설정 */
         .content-grid {
             display: grid;
             grid-template-columns: 7fr 3fr; 
-            grid-template-rows: auto auto 1fr; 
+            grid-template-rows: max-content max-content 1fr; 
             gap: 20px;
             width: 100%;
         }
@@ -86,17 +86,15 @@
         .btn-apply-inline { background: var(--text-dark); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;}
         .btn-apply-inline:hover { transform: translateY(-2px); background: var(--primary-blue); }
 
+        /* ★ [핵심 해결] 명예의 전당과 앱 상자는 위로 찰싹 달라붙고(start), 레이더는 중앙정렬 유지 */
         .box-badges { grid-column: 1 / 2; grid-row: 1 / 4; }
-        .box-ranking { grid-column: 2 / 3; grid-row: 1 / 2; }
-        .box-apps { grid-column: 2 / 3; grid-row: 2 / 3; }    
-        /* ★ 늘어난 상자 안에서 육각형 차트가 가운데 예쁘게 오도록 center 추가 */
+        .box-ranking { grid-column: 2 / 3; grid-row: 1 / 2; align-self: start; }
+        .box-apps { grid-column: 2 / 3; grid-row: 2 / 3; align-self: start; }    
         .box-radar { grid-column: 2 / 3; grid-row: 3 / 4; display: flex; flex-direction: column; justify-content: center; } 
 
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; overflow: visible; }
         .badge-card { border: 1.5px solid #edf0f2; border-radius: 16px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; background: #fff; position: relative; box-sizing: border-box; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; overflow: visible; }
-        
-        /* ★ [해결 1] 마우스 올렸을 때 파란 정보창(90)보다 무조건 위로 올라오도록 95 부여 */
-        .badge-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(59, 113, 202, 0.18); border-color: var(--primary-blue); z-index: 95; position: relative; }
+        .badge-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(59, 113, 202, 0.18); border-color: var(--primary-blue); z-index: 10;}
         
         .badge-tooltip {
             position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(10px);
@@ -276,7 +274,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"  
+  measurementId: "G-3SL84TXVHD"
         };
     </script>
 
@@ -479,7 +477,7 @@
         window.myStudentName = "";
         window.myScoreData = {};
         window.myPassData = {};
-        window.myCheckedItems = {}; // DB 체크 항목 저장용 변수 유지
+        window.myCheckedItems = {}; 
         window.sameGradeStudents = [];
         window.myRadarChartInstance = null; 
 
