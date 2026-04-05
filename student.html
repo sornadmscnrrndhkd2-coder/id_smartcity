@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>스마트시티 역량 인증제 - 학생 대시보드</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 
@@ -16,73 +15,68 @@
 
         body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: var(--bg-light); color: var(--text-dark); scroll-behavior: smooth; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
 
-        /* ★ 헤더 복원 및 sticky 고정 */
-        .header { background-color: #fff; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100;}
-        .header-left { display: flex; align-items: center; gap: 10px; }
-        .header-icon { width: 32px; height: 32px; background: var(--primary-blue); border-radius: 8px; display: flex; justify-content: center; align-items: center; color: white; font-size: 16px; box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3);}
-        .header-title h1 { margin: 0; font-size: 17px; color: var(--text-dark); font-weight: 900;}
-        .header-title p { margin: 2px 0 0 0; font-size: 11px; color: var(--text-gray); font-weight: 600;}
-        .header-right { text-align: right; font-size: 11px; color: #555; font-weight: bold; display: flex; align-items: center; gap: 20px;}
-        .btn-logout { background: white; border: 1px solid #dfe6e9; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #555; cursor: pointer; transition: 0.3s;}
+        /* =========================================
+           ✨ [분석 반영 1] 헤더 (사진 4 레이아웃)
+        ========================================= */
+        .header { background-color: #fff; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; box-sizing: border-box; }
+        .header-left { display: flex; align-items: baseline; gap: 6px; }
+        .title-main { font-size: 18px; color: #000; font-weight: 900;} /* 스마트시티 */
+        .title-sub { font-size: 12px; color: var(--text-gray); font-weight: 600;} /* 평가시스템 */
+        .header-right { text-align: right; font-size: 11px; color: var(--text-gray); font-weight: bold; display: flex; align-items: center; gap: 15px;}
+        .btn-logout { background: white; border: 1px solid #dfe6e9; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; color: var(--text-gray); cursor: pointer; transition: 0.3s;}
+        .btn-logout:hover { background: #f8f9fa; border-color: #bdc3c7;}
 
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px 100px 20px; box-sizing: border-box; }
+        .container { max-width: 1200px; margin: 15px auto; padding: 0 20px 100px 20px; box-sizing: border-box; }
 
-        /* ★ 학생 정보 배너 고정 및 육각형 제외 */
+        /* =========================================
+           ✨ [분석 반영 2, 3, 4] 히어로 배너 (정보창 절반 축소 + 가운데 긴 배치)
+        ========================================= */
         .hero-banner { 
             background: linear-gradient(135deg, #447fe5, var(--dark-blue)); 
-            border-radius: 20px; padding: 25px 35px; color: white; 
-            display: flex; flex-direction: column; 
-            box-shadow: 0 10px 25px rgba(59, 113, 202, 0.25); margin-bottom: 20px; position: sticky; top: 60px; z-index: 90; width: 100%; box-sizing: border-box; 
+            border-radius: 16px; padding: 15px 25px; color: white; 
+            display: flex; flex-direction: column; align-items: center; /* 정보창 전체 가운데 정렬 */
+            box-shadow: 0 8px 20px rgba(59, 113, 202, 0.2); margin-bottom: 15px; position: sticky; top: 55px; z-index: 90; width: 100%; box-sizing: border-box; 
+            transition: padding 0.3s;
         }
         
-        .hero-top { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 30px; }
+        .user-profile-centered { text-align: center; margin-bottom: 15px; }
+        #classDisplay { margin: 0 0 4px 0; font-size: 13px; opacity: 0.9; font-weight: 600;}
+        #userNameDisplay { margin: 0 0 10px 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px;}
+        .badge-pill { background: linear-gradient(135deg, #f39c12, #d35400); display: inline-block; padding: 5px 16px; border-radius: 20px; font-size: 13px; font-weight: 900; box-shadow: 0 4px 10px rgba(211, 84, 0, 0.3); border: 1px solid rgba(255,255,255,0.2);}
         
-        .user-profile-section { display: flex; align-items: center; gap: 40px; flex: 1; }
-        .user-profile { display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;}
-        .user-info p { margin: 0 0 6px 0; font-size: 14px; opacity: 0.9; font-weight: 600;}
-        .user-info h2 { margin: 0 0 12px 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;}
-        .badge-pill { background: linear-gradient(135deg, #f39c12, #d35400); display: inline-block; padding: 6px 18px; border-radius: 20px; font-size: 14px; font-weight: 900; box-shadow: 0 4px 10px rgba(211, 84, 0, 0.4); border: 1px solid rgba(255,255,255,0.3);}
-        
-        /* ★ 인스타 공유 버튼 독립 및 줄바꿈 배치 */
-        .btn-insta {
-            background: white; color: #e1306c; border: 1px solid #e1306c; 
-            padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 900; 
-            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px; font-family: 'Pretendard';
-            margin-top: 10px; width: fit-content;
+        /* [분석 반영 2] 총점/순위 가운데 배치 & 옆으로 길게 (사진 2 디자인) */
+        .score-summary-centered { display: flex; flex-direction: row; gap: 12px; justify-content: center; width: 100%; max-width: 500px;}
+        .score-box-ref2 { 
+            flex: 1; background: #fff; border: 2px solid orange; padding: 10px 15px; 
+            border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            box-sizing: border-box; text-align: center; transition: 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
         }
-        .btn-insta:hover { background: #fff0f5; }
+        .score-box-ref2 p { margin: 0 0 5px 0; font-size: 12px; font-weight: bold; color: var(--text-dark); opacity: 0.8;}
+        .score-box-ref2 h3 { margin: 0; font-size: 22px; font-weight: 900; color: orange; letter-spacing: -0.5px;} /* 주황색 숫자 */
+        .score-box-ref2 h3 span { font-size: 13px; opacity: 0.8; font-weight: 600; margin-left: 3px;}
         
-        .score-summary { display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 2; flex-shrink: 0;}
-        
-        .score-box { 
-            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); padding: 15px 10px; 
-            border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            box-sizing: border-box; min-width: 140px; text-align: center; transition: 0.2s;
-        }
-        .score-box p { margin: 0 0 6px 0; font-size: 13px; font-weight: bold; opacity: 0.9;}
-        .score-box h3 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;}
-        .score-box h3 span { font-size: 13px; opacity: 0.8; font-weight: 600; margin-left: 3px;}
-        .rank-text { color: #f1c40f; }
+        .rank-clickable { cursor: pointer; }
+        .rank-clickable:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255,165,0,0.15); }
 
-        .rank-clickable { cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .rank-clickable:hover { transform: translateY(-3px); background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
-        .rank-clickable p::after { content: ' 👆'; font-size: 14px; } 
+        /* 경험치 바 디자인 유지 (크기 소폭 압축) */
+        .hero-bottom { width: 100%; max-width: 500px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 10px; }
+        .exp-text-container { display:flex; justify-content:space-between; font-size:12px; font-weight:bold; margin-bottom:6px; align-items: flex-end; }
+        .exp-bar-container { width: 100%; background: rgba(0,0,0,0.25); border-radius: 10px; height: 10px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        .exp-bar-fill { background: linear-gradient(90deg, #f1c40f, #e67e22); height: 100%; width: 0%; border-radius: 10px; transition: width 1.5s cubic-bezier(0.1, 0.8, 0.2, 1); }
 
-        .hero-bottom { width: 100%; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px; }
-        .exp-text-container { display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:8px; align-items: flex-end; }
-        .exp-bar-container { width: 100%; background: rgba(0,0,0,0.25); border-radius: 10px; height: 12px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
-        .exp-bar-fill { background: linear-gradient(90deg, #f1c40f, #e67e22); height: 100%; width: 0%; border-radius: 10px; transition: width 1.5s cubic-bezier(0.1, 0.8, 0.2, 1); position: relative; }
-        
-        /* ★ 전체 레이아웃 CSS Grid 적용 */
+        /* =========================================
+           📐 [혁신적 레이아웃] PC/모바일 그리드 제어
+        ========================================= */
         .content-grid {
             display: grid;
             grid-template-columns: 7fr 3fr; /* 좌 7, 우 3 비율 */
-            grid-template-rows: auto auto auto;
+            grid-template-rows: auto;
             gap: 20px;
             width: 100%;
         }
 
-        .panel-bg { background: white; border-radius: 16px; padding: 25px 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); border: 1px solid #edf0f2; box-sizing: border-box; width: 100%; overflow: visible; }
+        .panel-bg { background: white; border-radius: 16px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); border: 1px solid #edf0f2; box-sizing: border-box; width: 100%; overflow: visible; }
         
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .section-title { font-size: 17px; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 8px; }
@@ -91,7 +85,7 @@
         .box-badges { grid-column: 1 / 2; grid-row: 1 / 4; } /* 뱃지는 왼쪽 꽉 채움 */
         .box-ranking { grid-column: 2 / 3; grid-row: 1 / 2; } /* 랭킹은 오른쪽 1층 */
         .box-apps { grid-column: 2 / 3; grid-row: 2 / 3; }    /* 신청내역은 오른쪽 2층 */
-        .box-radar { grid-column: 2 / 3; grid-row: 3 / 4; display: flex; flex-direction: column;} /* ★ 육각형은 오른쪽 3층(신청내역 밑) 딱 맞게! */
+        .box-radar { grid-column: 2 / 3; grid-row: 3 / 4; display: flex; flex-direction: column; min-height: 250px;} /* ★ 육각형 차트 (정보창에서 이동) */
 
         /* 3x3 배지 그리드 */
         .btn-apply-inline { background: var(--text-dark); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px; }
@@ -111,15 +105,17 @@
         .badge-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: rgba(26, 37, 47, 0.98); }
         .badge-card:hover .badge-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 
-        /* 우측 패널들 (육각형, 랭킹, 신청내역) */
-        .radar-wrapper { width: 100%; max-width: 320px; margin: 0 auto; flex: 1; min-height: 250px; display: flex; justify-content: center; align-items: center; position: relative;}
+        /* 육각형 차트 전용 (사진 1 레이아웃 적용) */
+        .radar-panel-bg { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; padding: 15px; box-sizing: border-box;}
+        #myRadarChart { width: 100% !important; height: 100% !important; max-width: 280px; max-height: 280px; }
         
+        /* 랭킹/신청내역 리스트 */
         .ranking-list { display: flex; flex-direction: column; gap: 10px; width: 100%;}
-        .rank-card { display: flex; align-items: center; padding: 12px 15px; border-radius: 12px; color: white; justify-content: space-between; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); box-sizing: border-box; width: 100%; overflow: hidden; white-space: nowrap;}
+        .rank-card { display: flex; align-items: center; padding: 12px 15px; border-radius: 12px; color: white; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.08); box-sizing: border-box; width: 100%; overflow: hidden;}
         .rank-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
         .rare-medal { width: 32px; height: 32px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
         .rare-medal img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-        .rank-details { display: flex; align-items: baseline; gap: 6px; overflow: hidden; text-overflow: ellipsis;}
+        .rank-details { display: flex; align-items: baseline; gap: 6px; }
         .rank-details h4 { margin: 0; font-size: 14px; font-weight: 900; }
         .rank-details p { margin: 0; font-size: 11px; opacity: 0.9; font-weight: 500;}
         .rank-score { font-size: 16px; font-weight: 900; flex-shrink: 0;}
@@ -149,7 +145,7 @@
         .info-links-container { margin-top: 20px; width: 100%; }
         .links-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
         .link-card { background: white; border-radius: 12px; padding: 15px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid #edf0f2; text-align: center; cursor: pointer; text-decoration: none; color: inherit; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center;}
-        .link-icon-text { font-size: 14px; font-weight: 800; color: var(--text-dark); margin-bottom: 5px; word-break: keep-all;}
+        .link-icon-text { font-size: 14px; font-weight: 800; color: var(--text-dark); margin-bottom: 5px;}
         .link-desc { font-size: 11px; color: var(--text-gray); word-break: keep-all;}
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; justify-content: center; align-items: flex-end; backdrop-filter: blur(3px); }
@@ -164,83 +160,44 @@
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; font-size: 13px; font-weight: bold; color: var(--primary-blue); margin-bottom: 8px;}
         .form-select, .form-input { width: 100%; padding: 14px; border: 2px solid #e0e6ed; border-radius: 12px; font-size: 15px; font-weight: bold; font-family: 'Pretendard', sans-serif; box-sizing: border-box; color: var(--text-dark); background: white; }
-        .form-select:focus, .form-input:focus { border-color: var(--primary-blue); outline: none;}
         .checkbox-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; background: white; padding: 15px; border-radius: 12px; border: 1px solid #edf0f2;}
-        .check-label { display: flex; justify-content: space-between; align-items: center; background: #fdfefe; border: 2px solid #ecf0f1; padding: 14px 15px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--text-gray);}
+        .check-label { display: flex; justify-content: space-between; align-items: center; background: #fdfefe; border: 2px solid #ecf0f1; padding: 14px 15px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s;}
         .check-label input { display: none; }
         .check-label.selected { border-color: var(--primary-blue); background: #ebf5fb; color: var(--primary-blue); }
         .check-score { font-size: 12px; color: var(--text-gray); background: #fff; padding: 4px 8px; border-radius: 10px; border: 1px solid #eee; font-weight: 900;}
-        .check-label.selected .check-score { color: var(--primary-blue); border-color: #a9cce3;}
+        
         .calc-result { background: var(--dark-blue); color: white; padding: 15px; border-radius: 12px; text-align: center; font-size: 15px; margin-bottom: 20px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
         .calc-result span { color: #f1c40f; font-size: 20px; font-weight: 900; margin-left: 5px;}
         .modal-submit-btn { width: 100%; padding: 16px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3); }
-        .modal-submit-btn:disabled { background: #bdc3c7; cursor: not-allowed; box-shadow: none; }
 
-        /* ★ 모바일 반응형 완벽 제어: 배지 ➡️ 육각형 ➡️ 명예의 전당 ➡️ 신청내역 */
+        /* =========================================
+           📐 [분석 반영 4] 모바일 반응형 완벽 제어
+        ========================================= */
         @media (max-width: 850px) {
             .header { padding: 10px 15px; flex-direction: column; gap: 10px;}
             .header-left, .header-right { justify-content: center;}
             .container { margin: 10px auto; padding: 0 10px 100px 10px; width: 100%;} 
-            .hero-banner { padding: 15px 20px; border-radius: 16px; margin-bottom: 12px; text-align: center; top: 120px; /* 헤더가 두줄이 되므로 조정 */}
-            .hero-top { flex-direction: column; gap: 20px; }
-            .score-summary { width: 100%; justify-content: center; }
-            .score-box { flex: 1; padding: 10px;}
             
-            /* CSS Grid 모바일 일렬 배치 완벽 구현 */
+            /* [분석 반영 4] 정보창 절반 축소 및 고정 해제 (3x3 접근성 확보) */
+            .hero-banner { padding: 10px; border-radius: 12px; margin-bottom: 10px; text-align: center; position: relative; top: 0; }
+            #userNameDisplay { font-size: 20px; margin-bottom: 8px;}
+            .score-summary-centered { max-width: 100%; }
+            .score-box-ref2 { padding: 8px; border-radius: 8px; }
+            .score-box-ref2 h3 { font-size: 18px; }
+            .hero-bottom { max-width: 100%; margin-top: 10px; }
+            
+            /* 그리드 일렬 배치 */
             .content-grid { grid-template-columns: 1fr; grid-template-rows: auto; gap: 15px;}
             .box-badges { grid-column: 1; grid-row: 1; }
-            .box-radar  { grid-column: 1; grid-row: 2; } /* 육각형이 뱃지 바로 아래로! */
-            .box-ranking{ grid-column: 1; grid-row: 3; }
-            .box-apps   { grid-column: 1; grid-row: 4; }
+            .box-ranking{ grid-column: 1; grid-row: 2; }
+            .box-apps   { grid-column: 1; grid-row: 3; }
+            .box-radar  { grid-column: 1; grid-row: 4; display: block; min-height: 250px;} /* 육각형 아래 배치 */
 
             .badge-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; } 
             .badge-card { padding: 12px 5px; border-radius: 12px; }
             .badge-icon-wrapper { width: 55px; height: 55px; margin-bottom: 8px; }
-            .badge-tooltip { min-width: 120px; font-size: 10px; padding: 8px 12px;}
             .links-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
         }
-        @media (min-width: 850px) {
-            .modal-overlay { align-items: center; }
-            .modal-content { border-radius: 20px; padding-bottom: 50px;} 
-        }
-
-        /* =========================================
-           📸 인스타 캡처용 숨김 도화지 (4:5 황금비율, 좌우 정렬, 뱃지 메인 포커스)
-        ========================================= */
-        #instaShareTemplate {
-            width: 1080px; height: 1350px; /* 인스타 4:5 세로형 비율 */
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            position: absolute; left: -9999px; top: -9999px; z-index: -1;
-            padding: 70px 50px; box-sizing: border-box; color: white; 
-            display: flex; flex-direction: column;
-            font-family: 'Pretendard', sans-serif;
-        }
-        
-        /* 헤더: 학교/이름 왼쪽, 티어 오른쪽 찢어서 배치 */
-        .insta-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 30px; border-bottom: 2px solid rgba(255,255,255,0.2); }
-        .insta-name-box { text-align: left; }
-        .insta-school { font-size: 24px; color: #a9cce3; font-weight: bold; margin: 0 0 10px 0;}
-        .insta-name { font-size: 55px; font-weight: 900; margin: 0; letter-spacing: -1px;}
-        .insta-tier-box { text-align: right; }
-        .insta-tier { background: linear-gradient(135deg, #f39c12, #d35400); padding: 15px 40px; border-radius: 40px; font-size: 32px; font-weight: 900; box-shadow: 0 10px 20px rgba(0,0,0,0.3); display: inline-block; border: 2px solid rgba(255,255,255,0.3); }
-        
-        /* 뱃지가 메인! 중앙을 꽉 채우는 3x3 바둑판 뱃지 영역 */
-        .insta-badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; width: 100%; margin-bottom: 40px; } 
-        .insta-badge-card { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 30px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .insta-badge-card img { width: 90px; height: 90px; margin-bottom: 15px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
-        .insta-badge-card .b-title { font-size: 22px; font-weight: 900; margin-bottom: 10px; color: white; }
-        .insta-badge-card .b-score { font-size: 26px; font-weight: 900; color: #f1c40f; }
-        
-        /* 하단: 육각형 차트가 들어갈 자리 (뱃지를 받쳐주는 역할) */
-        .insta-radar-and-score { display: flex; justify-content: center; align-items: center; flex: 1; }
-        .insta-chart-area { width: 400px; height: 400px; position: relative; } 
-        
-        .insta-footer { font-size: 20px; color: rgba(255,255,255,0.4); font-weight: 900; letter-spacing: 4px; margin-top: 30px; text-align: center;}
-        
-        /* 📸 캡처 진행중 로딩 화면 */
-        .insta-loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: 'Pretendard', sans-serif;}
-        .insta-spinner { width: 60px; height: 60px; border: 6px solid rgba(255,255,255,0.3); border-top-color: #f1c40f; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -281,10 +238,8 @@
 
     <header class="header">
         <div class="header-left">
-            <div class="header-icon">🏫</div>
-            <div class="header-title">
-                <h1>스마트시티 역량 인증제 평가시스템</h1>
-            </div>
+            <span class="title-main">스마트시티</span>
+            <span class="title-sub">역량 인증제 평가시스템</span>
         </div>
         <div class="header-right">
             <span>인덕과학기술고등학교 2026학년도</span>
@@ -293,29 +248,21 @@
     </header>
 
     <div class="container">
-        <div class="hero-banner">
-            <div class="hero-top">
-                <div class="user-profile-section">
-                    <div class="user-profile">
-                        <div class="user-info">
-                            <p id="classDisplay">학년 반 로딩중...</p>
-                            <h2 id="userNameDisplay">학생</h2>
-                            <div class="badge-pill" id="tierDisplay">🌱 로딩중...</div>
-                            <button class="btn-insta" id="btnInstaShare" onclick="window.generateInstaShot()">
-                                📸 인스타 캡처
-                            </button>
-                        </div>
-                    </div>
+        <div class="hero-banner sticky">
+            <div class="user-profile-centered">
+                <p id="classDisplay">학년 반 로딩중...</p>
+                <h2 id="userNameDisplay">학생</h2>
+                <div class="badge-pill" id="tierDisplay">🌱 로딩중...</div>
+            </div>
+            
+            <div class="score-summary-centered">
+                <div class="score-box-ref2">
+                    <p>✨ 총점</p>
+                    <h3><span id="displayTotalScore">0</span><span>점</span></h3>
                 </div>
-                <div class="score-summary">
-                    <div class="score-box">
-                        <p>✨ 총점</p>
-                        <h3><span id="displayTotalScore">0</span><span>점</span></h3>
-                    </div>
-                    <div class="score-box rank-clickable" onclick="window.openRankModal()">
-                        <p>🥈 현재 순위</p>
-                        <h3>계산중...<span class="rank-text"></span></h3>
-                    </div>
+                <div class="score-box-ref2 rank-clickable" onclick="window.openRankModal()">
+                    <p>🥈 현재 순위</p>
+                    <h3>계산중...</h3>
                 </div>
             </div>
             
@@ -360,14 +307,14 @@
                 <div class="section-header" style="margin-bottom: 10px;">
                     <h3 class="section-title">📊 나의 역량 분포도</h3>
                 </div>
-                <div class="radar-wrapper">
+                <div class="radar-panel-bg">
                     <canvas id="myRadarChart"></canvas>
                 </div>
             </div>
 
         </div>
 
-        <div class="panel-bg info-links-container" style="margin-top: 20px;">
+        <div class="panel-bg info-links-container">
             <h3 class="section-title">🔗 스마트시티 역량 인증 필수 사이트</h3>
             <div class="links-grid">
                 <a href="https://license.kpc.or.kr/" target="_blank" class="link-card">
@@ -405,35 +352,6 @@
             </div>
         </div>
     </div> 
-
-    <div id="instaShareTemplate">
-        <div class="insta-header">
-            <div class="insta-name-box">
-                <p class="insta-school">인덕과학기술고등학교</p>
-                <h1 class="insta-name" id="instaStudentName">학년 반 이름</h1>
-            </div>
-            <div class="insta-tier-box">
-                <div class="insta-tier" id="instaTier">🏆 CITY 인증 달성!</div>
-            </div>
-        </div>
-        
-        <div class="insta-badge-grid" id="instaBadgeGrid">
-            </div>
-
-        <div class="insta-radar-and-score">
-            <div class="insta-chart-area">
-                <canvas id="instaRadarChart"></canvas>
-            </div>
-        </div>
-        
-        <div class="insta-footer">SMARTCITY COMPETENCY CERTIFICATION</div>
-    </div>
-
-    <div id="instaLoading" class="insta-loading-overlay">
-        <div class="insta-spinner"></div>
-        <h2 style="margin:0 0 10px 0;">인스타용 인증샷 캡처 중... 📸</h2>
-        <p style="margin:0; color:#ccc;">(1초 정도 걸립니다 🚀)</p>
-    </div>
 
     <div id="applyModal" class="modal-overlay" onclick="window.closeOutside(event, 'applyModal')">
         <div class="modal-content">
@@ -547,7 +465,7 @@
                 await window.loadMyApplications(db); 
 
                 window.addEventListener('resize', () => {
-                    if(window.myScoreData) {
+                    if(window.myRadarChartInstance) {
                         window.drawRadarChart();
                     }
                 });
@@ -557,7 +475,7 @@
             }
         });
 
-        // ★ 메인 화면 육각형 차트 (10칸 촘촘한 거미줄 적용!)
+        // ★ 메인 화면 육각형 차트 (정보창 아래 배치용 옵션 조정)
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             if (window.myRadarChartInstance) {
@@ -586,10 +504,7 @@
             ];
             dataArr = dataArr.map(val => isNaN(val) ? 0 : val);
 
-            const isMobile = window.innerWidth <= 850;
-            const labelFontSize = isMobile ? 10 : 12; 
-            const chartPadding = isMobile ? 15 : 25;  
-
+            // 차트 스타일링 (레이아웃 패딩 제거, 크기 최적화)
             window.myRadarChartInstance = new Chart(ctx, {
                 type: 'radar',
                 data: {
@@ -597,33 +512,32 @@
                     datasets: [{
                         label: '영역별 달성률(%)',
                         data: dataArr,
-                        backgroundColor: 'rgba(241, 196, 15, 0.5)', 
-                        borderColor: '#f1c40f',     
-                        pointBackgroundColor: '#e67e22',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: '#f1c40f',
-                        borderWidth: 2.5,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        backgroundColor: 'rgba(241, 196, 15, 0.4)', 
+                        borderColor: '#e67e22',     
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#e67e22',
+                        borderWidth: 2,
+                        pointRadius: 3,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: chartPadding },
+                    layout: { padding: 0 }, // 패딩 제거
                     scales: {
                         r: {
-                            // ★ 10점 단위로 촘촘한 10칸 거미줄 
                             min: 0,
                             max: 100,
-                            angleLines: { color: 'rgba(59, 113, 202, 0.1)', lineWidth: 1.5 },
-                            grid: { color: 'rgba(59, 113, 202, 0.15)', lineWidth: 1 },
-                            pointLabels: { color: '#1a252f', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } },
-                            ticks: { display: false, stepSize: 10 }
+                            ticks: { display: false, stepSize: 20 },
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            pointLabels: { color: var(--text-dark), font: { size: 10, family: 'Pretendard', weight: '600' } }
                         }
                     },
-                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', titleFont: { size: 12, family: 'Pretendard' }, bodyFont: { size: 12, family: 'Pretendard', weight: 'bold' }, displayColors: false, callbacks: { label: function(context) { return context.raw + '% 달성'; } } } }
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleFont: { size: 12 }, bodyFont: { size: 12 }, displayColors: false, callbacks: { label: (context) => context.raw + '% 달성' } }
+                    }
                 }
             });
         };
@@ -669,10 +583,7 @@
 
                 document.getElementById('tierDisplay').innerText = title;
 
-                const scoreBoxes = document.querySelectorAll('.score-box h3');
-                if(scoreBoxes.length > 0) {
-                    document.getElementById('displayTotalScore').innerText = totalScore;
-                }
+                document.getElementById('displayTotalScore').innerText = totalScore;
 
                 window.renderDashboardBadges();
                 window.drawRadarChart();
@@ -736,18 +647,12 @@
                 let myRank = window.sameGradeStudents.findIndex(s => s.id === window.myStudentId) + 1;
                 if(myRank === 0) myRank = "-";
 
-                const scoreBoxes = document.querySelectorAll('.score-box h3');
-                if(scoreBoxes.length > 1) {
-                    scoreBoxes[1].innerHTML = `${window.sameGradeStudents.length}명 중 <span class="rank-text">${myRank}위</span>`;
-                }
+                document.querySelector('.rank-clickable h3').innerText = `${myRank} 위`;
 
                 window.renderHallOfFame();
 
             } catch(e) {
-                const scoreBoxes = document.querySelectorAll('.score-box h3');
-                if(scoreBoxes.length > 1) {
-                    scoreBoxes[1].innerHTML = `0명 중 <span class="rank-text">-위</span>`;
-                }
+                document.querySelector('.rank-clickable h3').innerText = `- 위`;
                 document.getElementById('hofList').innerHTML = '<div style="text-align:center; padding:20px; font-size:13px; color:var(--text-gray);">랭킹 데이터가 없습니다.</div>';
             }
         };
@@ -872,7 +777,7 @@
                     fileType = "image";
                 } else if (file.type === 'application/pdf') {
                     if (file.size > 700 * 1024) {
-                        alert("🚨 [용량 초과 안내]\nPDF 파일은 700KB 이하만 업로드 가능합니다.\n\n💡 해결 방법:\n해당 화면을 '사진(캡처)'으로 찍어서 올려주세요!\n사진은 아무리 커도 시스템이 알아서 무제한 압축해 줍니다.");
+                        alert("🚨 [용량 초과 안내]\nPDF 파일은 700KB 이하만 업로드 가능합니다.");
                         btn.innerText = "해당 점수로 제출하기";
                         btn.disabled = false;
                         return;
@@ -906,7 +811,7 @@
 
                 await addDoc(collection(db, "applications"), newApp);
 
-                alert(`✅ ${scoreText}점 신청이 완료되었습니다!\n(사진이 최적화되어 전송되었습니다)`);
+                alert(`✅ ${scoreText}점 신청이 완료되었습니다!`);
                 window.closeApplyModal();
                 window.loadMyApplications(db); 
 
@@ -922,14 +827,14 @@
         window.closeApplyModal = function() { document.getElementById('applyModal').classList.remove('active'); document.body.style.overflow = 'auto'; document.getElementById('areaSelect').value = ""; document.getElementById('dynamicLogicSection').style.display = "none"; document.getElementById('applyFileInput').value = ""; };
         
         window.openRankModal = function() {
-            document.getElementById('rankModalTitle').innerText = `🏆 ${window.CURRENT_GRADE}학년 명예의 전당 TOP 10`;
+            document.getElementById('rankModalTitle').innerText = `🏆TOP 10 명예의 전당 (${window.CURRENT_GRADE}학년)`;
             const list = document.getElementById('rankModalList'); 
             list.innerHTML = '';
             
             const top10 = (window.sameGradeStudents || []).slice(0,10);
             
             if(top10.length === 0) { 
-                list.innerHTML = '<div style="text-align:center; padding:40px; font-weight:bold; color:var(--text-gray);">등록된 랭킹 데이터가 없습니다.</div>'; 
+                list.innerHTML = '<div style="text-align:center; padding:40px; font-weight:bold; color:var(--text-gray);">랭킹 데이터가 없습니다.</div>'; 
             } else {
                 top10.forEach((s, i) => {
                     if(i < 3) {
@@ -1109,112 +1014,6 @@
                 document.getElementById('currentPoint').style.color = "#f1c40f"; 
             } else {
                 document.getElementById('currentPoint').style.color = "white";
-            }
-        };
-    </script>
-
-    <script>
-        window.instaChartInstance = null;
-
-        window.generateInstaShot = async function() {
-            const overlay = document.getElementById('instaLoading');
-            overlay.style.display = 'flex'; // 로딩 화면 표시
-
-            try {
-                // 1. 숨겨진 템플릿에 현재 학생 정보 입력 (좌/우 분리)
-                let title = document.getElementById('tierDisplay').innerText;
-                document.getElementById('instaStudentName').innerText = `${window.CURRENT_GRADE}학년 ${window.myStudentId.substring(1,3)}반 ${window.myStudentName}`;
-                document.getElementById('instaTier').innerText = title;
-
-                // 2. 9대 뱃지를 중앙 3x3 그리드로 채우기 (크고 화려하게!)
-                const badgeContainer = document.getElementById('instaBadgeGrid');
-                badgeContainer.innerHTML = '';
-                
-                AREAS.forEach(area => {
-                    const score = (window.myScoreData || {})[area] || 0;
-                    const passed = window.myPassData && window.myPassData[area] === true;
-                    // 통과 여부에 따라 투명도와 흑백 처리
-                    const opacity = passed ? '1' : '0.4';
-                    const filter = passed ? 'none' : 'grayscale(100%)';
-                    
-                    badgeContainer.innerHTML += `
-                        <div class="insta-badge-card" style="opacity: ${opacity}">
-                            <img src="img/icon_${area.toLowerCase()}.png" style="filter: ${filter}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2942/2942784.png'">
-                            <div class="b-title">${AREA_KOR_NAMES[area]}</div>
-                            <div class="b-score">${score}점</div>
-                        </div>
-                    `;
-                });
-
-                // 3. 하단 육각형 차트 렌더링 (서포트용)
-                const ctx = document.getElementById('instaRadarChart').getContext('2d');
-                if (window.instaChartInstance) window.instaChartInstance.destroy();
-                
-                const max = CAPS[window.CURRENT_GRADE];
-                const scores = window.myScoreData || {};
-                let dataArr = [
-                    Math.min(100, Math.round((((scores['M']||0) + (scores['T']||0)) / (max['M'] + max['T'])) * 100)),
-                    Math.min(100, Math.round(((scores['S']||0) / max['S']) * 100)),
-                    Math.min(100, Math.round((((scores['C']||0) + (scores['R']||0)) / (max['C'] + max['R'])) * 100)),
-                    Math.min(100, Math.round(((scores['I']||0) / max['I']) * 100)),
-                    Math.min(100, Math.round(((scores['A']||0) / max['A']) * 100)),
-                    Math.min(100, Math.round((((scores['Tr']||0) + (scores['Y']||0)) / (max['Tr'] + max['Y'])) * 100))
-                ];
-                dataArr = dataArr.map(v => isNaN(v) ? 0 : v);
-
-                window.instaChartInstance = new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
-                        datasets: [{
-                            data: dataArr, 
-                            backgroundColor: 'rgba(241, 196, 15, 0.5)', 
-                            borderColor: '#f1c40f', 
-                            borderWidth: 4, 
-                            pointRadius: 6
-                        }]
-                    },
-                    options: {
-                        animation: false, // 캡처를 위해 렌더링 즉시 완료
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        layout: { padding: 40 }, // 라벨 공간
-                        scales: { 
-                            r: { 
-                                min: 0, max: 100, 
-                                ticks: { display: false, stepSize: 10 }, // ★ 10점 단위 거미줄!
-                                grid: { color: 'rgba(255, 255, 255, 0.3)', lineWidth: 2 }, 
-                                angleLines: { color: 'rgba(255, 255, 255, 0.4)', lineWidth: 2 }, 
-                                pointLabels: { color: '#fff', font: { size: 18, weight: 'bold', family: 'Pretendard' } } 
-                            } 
-                        },
-                        plugins: { legend: { display: false } }
-                    }
-                });
-
-                // ★ 폰트와 캔버스가 완벽하게 그려질 때까지 0.8초 대기
-                await new Promise(r => setTimeout(r, 800));
-
-                // 4. html2canvas로 1080x1350(4:5 세로비율) 영역 찰칵! 캡처
-                const element = document.getElementById('instaShareTemplate');
-                const canvas = await html2canvas(element, { 
-                    scale: 1, 
-                    useCORS: true, 
-                    backgroundColor: null 
-                });
-                
-                // 5. 캡처된 사진을 학생 폰에 다운로드
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                const link = document.createElement('a');
-                link.download = `스마트시티_인증_${window.myStudentName}.jpg`;
-                link.href = dataUrl;
-                link.click();
-
-            } catch(e) {
-                console.error(e);
-                alert("이미지 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요!");
-            } finally {
-                overlay.style.display = 'none'; // 로딩 오버레이 끄기
             }
         };
     </script>
