@@ -192,7 +192,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD" 
+  measurementId: "G-3SL84TXVHD"
         };
     </script>
 
@@ -623,14 +623,37 @@
             document.getElementById('proofModal').classList.add('active'); document.body.style.overflow = 'hidden';
         };
 
-        // 🌟 [수술 부위 1] 결재 승인 시 체크박스(checked_items) 내역도 함께 가져와서 장부에 업데이트!
+        // ★ [역산 우회 전술]: 룰에 걸리지 않도록 점수에서 체크 내역을 역산해 냅니다.
+        window.deriveCheckedIndicesFromScore = function(grade, area, targetScore) {
+            const items = (window.EVAL_ITEMS_BY_GRADE?.[grade]?.[area]) || [];
+            if (!items.length) return [];
+
+            // 배점이 높은 순서대로 내림차순 정렬하여 하나씩 채워나갑니다.
+            const sorted = items.map((item, idx) => ({ ...item, idx })).sort((a, b) => b.score - a.score);
+
+            let remain = Number(targetScore) || 0;
+            let usedGroups = new Set();
+            let picked = [];
+
+            for (const item of sorted) {
+                if (remain <= 0) break;
+                if (item.group && usedGroups.has(item.group)) continue; // 같은 그룹(예: ITQ) 중복 체크 방지
+                if (item.score <= remain) {
+                    picked.push(item.idx);
+                    remain -= item.score;
+                    if (item.group) usedGroups.add(item.group);
+                }
+            }
+            return picked.sort((a, b) => a - b);
+        };
+
+        // ★ [수술 완료] 교사 승인 로직에 추리 함수 연동 완료!
         window.approveApp = async function(appId, studentId, area, score) {
             if(window.isSystemLocked) return alert("🔒 마감됨");
             if(!confirm(`[${studentId}] 학생의 ${area}영역 ${score}점 신청을 승인하시겠습니까?`)) return;
             try {
                 await window.updateDoc(window.doc(window.db, "applications", appId), { status: "승인" });
                 
-                // uid 조회를 위한 우회 (studentId로 쿼리)
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
                 if(qSnap.empty) throw new Error("학생 문서를 찾을 수 없습니다.");
                 
@@ -660,15 +683,23 @@
                 yData.earned_badges = badges; 
                 yData.title = title; 
 
-                // ✨ 추가된 수술 부위: 신청서(appId)에서 학생이 체크한 내역을 가져와 장부에 반영합니다.
+                // ✨ [수술 부위]: 학생이 몰래 보낸 신청서(점수)에서 항목을 역으로 알아맞힙니다.
                 const appDocRef = window.doc(window.db, "applications", appId);
                 const appSnap = await window.getDoc(appDocRef);
-                if(appSnap.exists() && appSnap.data().checkedIndices) {
-                    if(!yData.checked_items) yData.checked_items = {};
-                    yData.checked_items[area] = appSnap.data().checkedIndices;
+
+                if (!yData.checked_items) yData.checked_items = {};
+                let restoredChecked = [];
+
+                if (appSnap.exists() && Array.isArray(appSnap.data().checkedIndices)) {
+                    // 예전 신청서(혹은 규칙 통과용)에 데이터가 있으면 그대로 씁니다.
+                    restoredChecked = appSnap.data().checkedIndices;
+                } else {
+                    // 데이터가 없으면 우리가 만든 셜록 홈즈 함수로 역산합니다!
+                    restoredChecked = window.deriveCheckedIndicesFromScore(grade, area, score);
                 }
+
+                yData.checked_items[area] = restoredChecked;
                 
-                // students 장부 업데이트
                 await window.updateDoc(window.doc(window.db, "students", studentUid), { 
                     [`year_${grade}`]: yData,
                     updatedAt: Date.now() 
