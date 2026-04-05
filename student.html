@@ -15,93 +15,88 @@
 
         body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: var(--bg-light); color: var(--text-dark); scroll-behavior: smooth; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
 
-        /* ★ [피드백 1] 헤더 완벽 복구 및 폰트 디테일 반영 */
+        /* ★ 헤더 복원 및 폰트 디테일 반영 */
         .header { background-color: #fff; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100;}
         .header-left { display: flex; align-items: center; gap: 10px; }
         .header-icon { width: 32px; height: 32px; background: var(--primary-blue); border-radius: 8px; display: flex; justify-content: center; align-items: center; color: white; font-size: 16px; box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3);}
         .header-title { display: flex; align-items: baseline; gap: 8px; }
-        .header-title h1 { margin: 0; font-size: 20px; color: #1a252f; font-weight: 900;} /* 스마트시티: 크고 검게 */
-        .header-title p { margin: 0; font-size: 13px; color: var(--text-gray); font-weight: 600;} /* 역량 인증제: 작고 회색 */
+        .header-title h1 { margin: 0; font-size: 20px; color: #1a252f; font-weight: 900;} 
+        .header-title p { margin: 0; font-size: 13px; color: var(--text-gray); font-weight: 600;} 
         .header-right { text-align: right; font-size: 12px; color: #555; font-weight: bold; display: flex; align-items: center; gap: 20px;}
         .btn-logout { background: white; border: 1px solid #dfe6e9; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #555; cursor: pointer; transition: 0.3s;}
 
         .container { max-width: 1200px; margin: 20px auto; padding: 0 20px 100px 20px; box-sizing: border-box; }
 
-        /* ★ [피드백 2] 파란색 정보창(Hero Banner) 원본 유지 */
         .hero-banner { 
             background: linear-gradient(135deg, #447fe5, var(--dark-blue)); 
             border-radius: 20px; padding: 25px 35px; color: white; 
             display: flex; flex-direction: column; 
-            box-shadow: 0 10px 25px rgba(59, 113, 202, 0.25); margin-bottom: 20px; position: relative; width: 100%; box-sizing: border-box; 
-            transition: all 0.3s ease; /* 고정 시 부드러운 전환 */
+            box-shadow: 0 10px 25px rgba(59, 113, 202, 0.25); margin-bottom: 20px; position: sticky; top: 60px; z-index: 90; width: 100%; box-sizing: border-box; 
         }
         
-        /* ★ [피드백 해결 1] 컴퓨터 화면: 이름 좌측, 뱃지 완전히 우측 끝으로 배치 (Image 0 해결) */
-        .hero-top { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; margin-bottom: 20px; }
+        .hero-top { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 30px; margin-bottom: 20px; }
         
-        .user-profile-section { display: flex; align-items: center; width: 100%; justify-content: space-between;} /* 내부 요소를 끝과 끝으로 배치 */
-
+        .user-profile-section { display: flex; align-items: center; gap: 40px; flex: 1; }
         .user-profile { display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;}
-        .user-info p { margin: 0 0 4px 0; font-size: 14px; opacity: 0.9; font-weight: 600;} /* 학년반 정보 마진 축소 */
-        .user-info h2 { margin: 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px; white-space: nowrap; margin-right: 15px;} /* 이름 오른쪽 약간 띄움 */
+        .user-info p { margin: 0 0 6px 0; font-size: 14px; opacity: 0.9; font-weight: 600;}
+        .user-info h2 { margin: 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;}
         
-        .tier-badge-wrapper { text-align: right; flex-shrink: 0; } /* 뱃지가 찌그러지지 않게 함 */
-        .badge-pill { background: linear-gradient(135deg, #f39c12, #d35400); display: inline-block; padding: 10px 24px; border-radius: 30px; font-size: 18px; font-weight: 900; box-shadow: 0 4px 10px rgba(211, 84, 0, 0.4); border: 2px solid rgba(255,255,255,0.3); white-space: nowrap;}
+        .tier-badge-wrapper { text-align: right; }
+        .badge-pill { background: linear-gradient(135deg, #f39c12, #d35400); display: inline-block; padding: 10px 24px; border-radius: 30px; font-size: 18px; font-weight: 900; box-shadow: 0 4px 10px rgba(211, 84, 0, 0.4); border: 2px solid rgba(255,255,255,0.3);}
         
-        /* ★ [피드백 해결 4] 컴퓨터/모바일 공통: 총점/순위 박스 크기 대폭 줄임 */
-        .score-summary-horizontal { display: flex; flex-direction: row; gap: 15px; width: 100%; position: relative; z-index: 2; margin-top: 10px;}
+        /* 파란 배경 안쪽에 총점/순위 가로로 나란히 배치 */
+        .score-summary-horizontal { display: flex; flex-direction: row; gap: 15px; width: 100%; position: relative; z-index: 2; }
         .score-box { 
-            flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); 
-            padding: 8px 15px; /* ★ [해결 4] 내부 여백 줄임 (기존 15x20) */
-            border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); padding: 15px 20px; 
+            border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
             box-sizing: border-box; text-align: center; transition: 0.2s;
         }
-        .score-box p { margin: 0 0 3px 0; font-size: 12px; font-weight: bold; opacity: 0.9;} /* 제목 마진 줄임 */
-        .score-box h3 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.5px;} /* 숫자 크기 약간 조정 */
-        .score-box h3 span { font-size: 11px; opacity: 0.8; font-weight: 600; margin-left: 2px;} /* '점' 크기 줄임 */
+        .score-box p { margin: 0 0 6px 0; font-size: 13px; font-weight: bold; opacity: 0.9;}
+        /* ★ 과제 2 해결: 총점/순위 숫자 폰트 크기 대폭 확대 (24px -> 32px) */
+        .score-box h3 { margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.5px;}
+        .score-box h3 span { font-size: 16px; opacity: 0.8; font-weight: 600; margin-left: 4px;}
         .rank-text { color: #f1c40f; }
 
         .rank-clickable { cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .rank-clickable:hover { transform: translateY(-3px); background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
-        /* .rank-clickable p::after { content: ' 👆'; font-size: 14px; }  */ /* 클릭 아이콘 제거 (세련되게) */
+        .rank-clickable p::after { content: ' 👆'; font-size: 14px; } 
 
-        /* ★ [피드백 2-2] 빛나는 경험치바 원상 복구 (파란창 안쪽 하단) */
-        .hero-bottom { width: 100%; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 12px; } /* 상단 여백 줄임 */
-        .exp-text-container { display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:6px; align-items: flex-end; }
+        .hero-bottom { width: 100%; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px; }
+        .exp-text-container { display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-bottom:8px; align-items: flex-end; }
         .exp-bar-container { width: 100%; background: rgba(0,0,0,0.25); border-radius: 10px; height: 12px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
         .exp-bar-fill { background: linear-gradient(90deg, #f1c40f, #e67e22); height: 100%; width: 0%; border-radius: 10px; transition: width 1.5s cubic-bezier(0.1, 0.8, 0.2, 1); position: relative; }
         .exp-bar-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shine 2s infinite; }
         @keyframes shine { 100% { left: 200%; } }
 
-        /* 하단 레이아웃 원본 골격 유지 */
-        .content-grid { display: flex; gap: 20px; box-sizing: border-box; width: 100%;}
-        .left-panel { flex: 7; }
-        .right-panel { flex: 3; align-self: flex-start; max-width: 100%; display: flex; flex-direction: column; gap: 20px;}
-        
+        /* ★ 하단 레이아웃 CSS Grid 적용 (골격 유지의 마법) */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 7fr 3fr; 
+            grid-template-rows: auto auto auto;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* ★ 과제 1 해결의 핵심: 내부 패널들을 그리드 아이템으로 승격 */
+        .left-panel, .right-panel { display: contents; }
+
         .panel-bg { background: white; border-radius: 16px; padding: 25px 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); border: 1px solid #edf0f2; box-sizing: border-box; width: 100%; overflow: visible; }
         
-        /* ★ [피드백] 뱃지 & 인증신청 버튼 줄바꿈 절대 방지 */
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: nowrap; gap: 10px;}
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: nowrap; }
         .section-title { font-size: 17px; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 8px; white-space: nowrap;}
+
+        /* 구역별 Grid 할당 (PC 화면 기준) */
+        .box-badges { grid-column: 1 / 2; grid-row: 1 / 4; } /* 뱃지는 왼쪽 꽉 채움 */
+        .box-ranking { grid-column: 2 / 3; grid-row: 1 / 2; } /* 랭킹은 오른쪽 1층 */
+        .box-apps { grid-column: 2 / 3; grid-row: 2 / 3; }    /* 신청내역은 오른쪽 2층 */
+        .box-radar { grid-column: 2 / 3; grid-row: 3 / 4; display: flex; flex-direction: column;} /* ★ 육각형은 오른쪽 3층(신청내역 밑) 딱 맞게! */
+
         .btn-apply-inline { background: var(--text-dark); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;}
         .btn-apply-inline:hover { transform: translateY(-2px); background: var(--primary-blue); }
 
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; overflow: visible; }
         .badge-card { border: 1.5px solid #edf0f2; border-radius: 16px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; background: #fff; position: relative; box-sizing: border-box; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; overflow: visible; }
         .badge-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(59, 113, 202, 0.18); border-color: var(--primary-blue); z-index: 10;}
-        
-        .badge-tooltip {
-            position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(10px);
-            background: rgba(26, 37, 47, 0.98); color: white; padding: 10px 16px;
-            border-radius: 8px; font-size: 12px; white-space: normal;
-            font-weight: 600; opacity: 0; visibility: hidden; 
-            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-            pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.25); z-index: 50;
-            text-align: center; line-height: 1.5; min-width: 160px; max-width: 220px;
-        }
-        .badge-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: rgba(26, 37, 47, 0.98); }
-        .badge-card:hover .badge-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-
         .badge-icon-wrapper { width: 70px; height: 70px; margin-bottom: 12px; position: relative; display: flex; justify-content: center; align-items: center; }
         .badge-icon-wrapper img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12));}
         .check-mark { position: absolute; top: -4px; right: -4px; background: var(--accent-orange); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; display: flex; justify-content: center; align-items: center; border: 2px solid white; font-weight: bold; z-index: 5;}
@@ -110,17 +105,12 @@
         .badge-letter { font-size: 11px; color: var(--primary-blue); font-weight: 900; margin-bottom: 4px; }
         .badge-name { font-size: 14px; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px;}
         .badge-score { background: #eef2fb; color: var(--primary-blue); font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
+        .badge-tooltip { position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(10px); background: rgba(26, 37, 47, 0.98); color: white; padding: 10px 16px; border-radius: 8px; font-size: 12px; white-space: normal; font-weight: 600; opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.25); z-index: 50; text-align: center; line-height: 1.5; min-width: 160px; max-width: 220px; }
+        .badge-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: rgba(26, 37, 47, 0.98); }
+        .badge-card:hover .badge-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 
-        /* ★ [피드백 3] 우측 하단 육각형 차트 디자인 (PC/Mobile 공통) - 색상 진하게 수정됨 */
-        .radar-chart-container { 
-            width: 100%; max-width: 280px; height: 280px; margin: 0 auto;
-            position: relative; z-index: 2; flex-shrink: 0; 
-            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 60%, transparent 100%); 
-            border-radius: 50%; padding: 15px; 
-            box-shadow: 0 0 25px rgba(241, 196, 15, 0.3), inset 0 0 20px rgba(241, 196, 15, 0.2);
-            border: 2px solid rgba(241, 196, 15, 0.4);
-        }
-
+        .radar-wrapper { width: 100%; max-width: 320px; margin: 0 auto; flex: 1; min-height: 250px; display: flex; justify-content: center; align-items: center; position: relative;}
+        
         .ranking-list { display: flex; flex-direction: column; gap: 10px; width: 100%;}
         .rank-card { display: flex; align-items: center; padding: 12px 15px; border-radius: 12px; color: white; justify-content: space-between; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); box-sizing: border-box; width: 100%; overflow: hidden; white-space: nowrap;}
         .rank-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
@@ -184,79 +174,51 @@
         .modal-submit-btn:disabled { background: #bdc3c7; cursor: not-allowed; box-shadow: none; }
 
         /* =========================================
-           📐 모바일 반응형 완벽 해결 (골격 유지 및 피드백 반영)
+           📐 [과제 1, 2, 3] 모바일 반응형 완벽 제어
         ========================================= */
         @media (max-width: 850px) {
-            body { overflow-x: hidden; } /* 가로 삐져나감 방지 핵심 */
+            body { overflow-x: hidden; } /* 모바일 삐져나감 방지 */
 
-            /* ★ [피드백 해결 2] 모바일에서 파란 박스(Hero) 상단 고정 */
-            .header { 
-                padding: 8px 15px; height: 60px; /* 헤더 높이 고정 */
-                position: sticky; top: 0; z-index: 101; /* 가장 위에 고정 */
-            }
-            .header-left { gap: 8px; }
+            /* ★ 과제 3 해결: 학교명과 로그아웃 버튼 모바일에서도 상단 유지 및 글씨 크기 조정 */
+            .header { padding: 10px 15px; flex-direction: row; justify-content: space-between; align-items: center; }
             .header-title h1 { font-size: 16px; }
-            .header-right { display: none; } /* 학교명/로그아웃은 모바일에서 숨김 (세련되게) */
+            .header-title p { font-size: 10px; }
+            .header-right { display: flex; align-items: center; gap: 8px; }
+            .header-right span { font-size: 10px; display: inline-block; } /* 강제 숨김 해제 */
+            .btn-logout { padding: 4px 8px; font-size: 11px; }
 
             .container { margin: 10px auto; padding: 0 10px 100px 10px; width: 100%;} 
             
-            /* ★ [해결 2] 헤더 아래에 고정 (Sticky) */
-            .hero-banner { 
-                padding: 15px; border-radius: 12px; margin-bottom: 15px; 
-                position: sticky; top: 60px; /* ★ 하얀 헤더(60px) 바로 아래에 고정 */
-                z-index: 100; /* 콘텐츠보다는 위에 위치 */
-                box-shadow: 0 6px 20px rgba(0,0,0,0.15); /* 고정 시 시인성 확보 */
-            }
-            .hero-top { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 5px;}
+            .hero-banner { padding: 15px 20px; border-radius: 16px; margin-bottom: 15px; text-align: left; top: 60px; /* 헤더 높이 조정 */}
+            .hero-top { flex-direction: row; align-items: center; gap: 10px; margin-bottom: 15px; }
             
-            /* ★ [피드백 해결 1] 모바일: 이름과 뱃지가 너무 붙지 않게 조정 (Image 1 해결) */
-            .user-profile-section { flex-direction: row; justify-content: space-between; align-items: center;}
-            .user-profile { align-items: flex-start; text-align: left; }
-            .user-info p { font-size: 11px; margin-bottom: 2px;}
-            .user-info h2 { font-size: 20px; margin: 0; margin-right: 10px;} /* 이름 오른쪽 여백 */
+            .user-profile-section { flex-direction: row; justify-content: space-between; align-items: center; width: 100%;}
+            .user-info p { font-size: 12px; margin-bottom: 4px;}
+            .user-info h2 { font-size: 22px; margin: 0;}
+            .badge-pill { padding: 6px 12px; font-size: 13px; margin: 0; }
+
+            .score-summary-horizontal { width: 100%; justify-content: center; gap: 10px;}
             
-            .tier-badge-wrapper { text-align: right; margin-top: 0; }
-            .badge-pill { padding: 6px 12px; font-size: 12px;}
+            /* ★ 과제 2 해결: 모바일 총점 박스 폰트 크기 확대 */
+            .score-box { padding: 10px; }
+            .score-box h3 { font-size: 26px !important; }
+            .score-box h3 span { font-size: 14px !important; }
 
-            /* ★ [피드백 해결 4] 모바일 총점/순위 박스 더 축소 */
-            .score-summary-horizontal { gap: 8px; margin-top: 5px;}
-            .score-box { padding: 5px 10px; border-radius: 8px; }
-            .score-box h3 { font-size: 16px; }
-            .score-box h3 span { font-size: 10px; }
-
-            .hero-bottom { margin-top: 10px; padding-top: 8px; }
-            .exp-text-container { font-size: 11px; margin-bottom: 4px;}
-
-            /* ★ [피드백 해결 3] 모바일 Grid 순서 변경: 배지 -> 육각형 (Image 1 해결) */
-            .content-grid { 
-                display: grid; /* Grid 골격 유지 */
-                grid-template-columns: 1fr; 
-                gap: 15px;
-                margin-top: 15px;
-            }
-            .box-badges { order: 1; } /* ★ [해결 3] SMARTCITY 9대 역량 배지 1등 배치 */
-            .box-radar  { order: 2; } /* ★ [해결 3] 나의 역량 분포도(육각형) 2등 배치 */
-            .box-ranking{ order: 3; } /* 명예의 전당 3등 */
-            .box-apps   { order: 4; } /* 인증 신청 내역 4등 */
-
-            .panel-bg { padding: 15px; border-radius: 12px;}
-            .section-header { margin-bottom: 15px; flex-wrap: nowrap; gap: 5px;}
-            .section-title { font-size: 15px; gap: 6px;}
-            .btn-apply-inline { padding: 8px 12px; font-size: 11px; }
-
-            .radar-chart-container { width: 220px; height: 220px; padding: 10px; margin: 0 auto;}
+            /* ★ 과제 1 해결: CSS Grid 패널 순서 강제 변경 (뱃지 -> 육각형 -> 랭킹 -> 신청) */
+            .content-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; }
+            .left-panel, .right-panel { display: contents; } 
             
+            .box-badges { order: 1; }
+            .box-radar  { order: 2; width: 100%; box-sizing: border-box;} /* 뱃지 바로 아래로! */
+            .box-ranking{ order: 3; width: 100%; box-sizing: border-box;}
+            .box-apps   { order: 4; width: 100%; box-sizing: border-box;}
+
             .badge-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; } 
-            .badge-card { padding: 10px 5px; border-radius: 10px; }
-            .badge-icon-wrapper { width: 50px; height: 50px; margin-bottom: 6px; }
-            .badge-letter { font-size: 9px; }
-            .badge-name { font-size: 11px; margin-bottom: 4px; }
-            .badge-score { font-size: 8px; padding: 3px 8px;}
-            .badge-tooltip { display: none !important; } /* 모바일에서는 툴팁 숨김 (클릭 방해) */
-
+            .badge-card { padding: 12px 5px; border-radius: 12px; }
+            .badge-icon-wrapper { width: 55px; height: 55px; margin-bottom: 8px; }
+            .badge-tooltip { min-width: 120px; font-size: 10px; padding: 8px 12px;}
             .links-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
         }
-        
         @media (min-width: 850px) {
             .modal-overlay { align-items: center; }
             .modal-content { border-radius: 20px; padding-bottom: 50px;} 
@@ -287,7 +249,7 @@
     </script>
 
     <script>
-        // 🚨 실제 API 키를 입력하세요. (골격 유지)
+        // 🚨 실제 API 키를 입력하세요.
         window.MY_GLOBAL_FIREBASE_CONFIG = {
             apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
   authDomain: "induk-smartcity.firebaseapp.com",
@@ -308,7 +270,7 @@
             </div>
         </div>
         <div class="header-right">
-            <span>인덕과학기술고등학교 2026학년도</span>
+            <span>인덕과학기술고등학교</span>
             <button class="btn-logout" id="btnLogout" onclick="sessionStorage.clear(); location.href='index.html';">로그아웃</button>
         </div>
     </header>
@@ -336,7 +298,7 @@
                 </div>
                 <div class="score-box rank-clickable" onclick="window.openRankModal()">
                     <p>🥈 현재 순위</p>
-                    <h3>계산중...<span class="rank-text"></span></h3>
+                    <h3 class="rank-display">계산중...<span class="rank-text"></span></h3>
                 </div>
             </div>
             
@@ -384,8 +346,10 @@
                     <div class="section-header" style="margin-bottom: 10px;">
                         <h3 class="section-title">📊 나의 역량 분포도</h3>
                     </div>
-                    <div class="radar-chart-container" style="margin: 0 auto;">
-                        <canvas id="myRadarChart"></canvas>
+                    <div class="radar-chart-container" style="margin: 0 auto; width: 100%; display: flex; justify-content: center; align-items: center;">
+                        <div style="width: 250px; height: 250px; position: relative;">
+                            <canvas id="myRadarChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -553,7 +517,6 @@
             }
         });
 
-        // ★ [버그 해결 2] 하얀 배경에서도 완벽하게 보이는 진한 색 육각형 차트 (피드백 반영됨)
         window.drawRadarChart = function() {
             const ctx = document.getElementById('myRadarChart').getContext('2d');
             if (window.myRadarChartInstance) {
@@ -583,8 +546,8 @@
             dataArr = dataArr.map(val => isNaN(val) ? 0 : val);
 
             const isMobile = window.innerWidth <= 850;
-            const labelFontSize = isMobile ? 11 : 12; /* 모바일 글씨 약간 키움 */
-            const chartPadding = isMobile ? 10 : 25;  /* 모바일 여백 줄임 */
+            const labelFontSize = isMobile ? 10 : 12; 
+            const chartPadding = isMobile ? 15 : 25;  
 
             window.myRadarChartInstance = new Chart(ctx, {
                 type: 'radar',
@@ -593,15 +556,15 @@
                     datasets: [{
                         label: '영역별 달성률(%)',
                         data: dataArr,
-                        backgroundColor: 'rgba(241, 196, 15, 0.6)', /* 배경 진하게 */
-                        borderColor: '#f1c40f',     /* 테두리 노란색 */
-                        pointBackgroundColor: '#e67e22', /* 포인트 주황색 */
+                        backgroundColor: 'rgba(241, 196, 15, 0.5)', 
+                        borderColor: '#f1c40f',     
+                        pointBackgroundColor: '#e67e22',
                         pointBorderColor: '#fff',
                         pointHoverBackgroundColor: '#fff',
                         pointHoverBorderColor: '#f1c40f',
                         borderWidth: 2.5,
-                        pointRadius: isMobile ? 3 : 4,
-                        pointHoverRadius: isMobile ? 5 : 6
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
@@ -612,10 +575,9 @@
                         r: {
                             min: 0,
                             max: 100,
-                            // ★ 흰색 배경에 맞춰 어두운 선과 글씨로 수정 완료! (피드백 반영)
-                            angleLines: { color: 'rgba(0, 0, 0, 0.15)', lineWidth: 1.2 }, /* 선 좀더 진하게 */
-                            grid: { color: 'rgba(0, 0, 0, 0.1)', lineWidth: 1 },
-                            pointLabels: { color: '#1a252f', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } }, /* 글씨 검게 */
+                            angleLines: { color: 'rgba(0,0,0,0.1)', lineWidth: 1.5 },
+                            grid: { color: 'rgba(0,0,0,0.1)', lineWidth: 1 },
+                            pointLabels: { color: '#1a252f', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } },
                             ticks: { display: false, stepSize: 10 }
                         }
                     },
@@ -623,8 +585,6 @@
                 }
             });
         };
-
-        // 데이터 로딩 및 기타 렌더링 함수는 골격 유지
 
         window.loadStudentRealData = async function(dbInstance) {
             try {
@@ -704,7 +664,6 @@
             }
         };
 
-        // ★ [버그 해결 1] "계산중..." 글자를 지우고 완벽하게 숫자와 '위'로 덮어쓰기! (골격 유지)
         window.loadRankingData = async function(dbInstance) {
             try {
                 const qSnap = await getDocs(query(collection(dbInstance, "publicRanking"), where("current_grade", "==", window.CURRENT_GRADE)));
@@ -731,8 +690,7 @@
                 let myRank = window.sameGradeStudents.findIndex(s => s.id === window.myStudentId) + 1;
                 if(myRank === 0) myRank = "-";
 
-                // 바로 이 부분입니다! h3 태그 전체 내용(계산중...)을 밀어내고 순위 숫자로 갈아끼웁니다. (피드백 해결)
-                const rankBoxH3 = document.querySelector('.rank-clickable h3');
+                const rankBoxH3 = document.querySelector('.rank-display');
                 if(rankBoxH3) {
                     rankBoxH3.innerHTML = `${myRank}<span class="rank-text">위</span>`;
                 }
@@ -740,7 +698,7 @@
                 window.renderHallOfFame();
 
             } catch(e) {
-                const rankBoxH3 = document.querySelector('.rank-clickable h3');
+                const rankBoxH3 = document.querySelector('.rank-display');
                 if(rankBoxH3) {
                     rankBoxH3.innerHTML = `-<span class="rank-text">위</span>`;
                 }
@@ -813,8 +771,6 @@
             }
         };
 
-        // 이미지 압축 및 제출 로직 (골격 유지)
-
         async function compressImage(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -870,7 +826,7 @@
                     fileType = "image";
                 } else if (file.type === 'application/pdf') {
                     if (file.size > 700 * 1024) {
-                        alert("🚨 [용량 초과 안내]\nPDF 파일은 700KB 이하만 업로드 가능합니다.\n\n💡 해결 방법:\n해당 화면을 '사진(캡처)'으로 찍어서 올려주세요!\n사진은 아무리 커도 시스템이 알아서 무제한 압축해 줍니다.");
+                        alert("🚨 [용량 초과 안내]\nPDF 파일은 700KB 이하만 업로드 가능합니다.");
                         btn.innerText = "해당 점수로 제출하기";
                         btn.disabled = false;
                         return;
@@ -919,9 +875,8 @@
         window.openApplyModal = function() { document.getElementById('applyModal').classList.add('active'); document.body.style.overflow = 'hidden'; };
         window.closeApplyModal = function() { document.getElementById('applyModal').classList.remove('active'); document.body.style.overflow = 'auto'; document.getElementById('areaSelect').value = ""; document.getElementById('dynamicLogicSection').style.display = "none"; document.getElementById('applyFileInput').value = ""; };
         
-        // 명예의 전당 (골격 유지)
         window.openRankModal = function() {
-            document.getElementById('rankModalTitle').innerText = `🏆TOP 10 명예의 전당 (${window.CURRENT_GRADE}학년)`;
+            document.getElementById('rankModalTitle').innerText = `🏆 ${window.CURRENT_GRADE}학년 명예의 전당 TOP 10`;
             const list = document.getElementById('rankModalList'); 
             list.innerHTML = '';
             
