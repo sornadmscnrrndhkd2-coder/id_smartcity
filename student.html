@@ -15,11 +15,11 @@
 
         body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: var(--bg-light); color: var(--text-dark); scroll-behavior: smooth; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
 
-        /* ★ 헤더 복원 및 폰트 디테일 반영 */
+        /* ★ [과제 1 해결] 헤더 텍스트 줄바꿈 (세로 배열로 변경) */
         .header { background-color: #fff; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100;}
         .header-left { display: flex; align-items: center; gap: 10px; }
         .header-icon { width: 32px; height: 32px; background: var(--primary-blue); border-radius: 8px; display: flex; justify-content: center; align-items: center; color: white; font-size: 16px; box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3);}
-        .header-title { display: flex; align-items: baseline; gap: 8px; }
+        .header-title { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; } /* 가로에서 세로로 변경 */
         .header-title h1 { margin: 0; font-size: 20px; color: #1a252f; font-weight: 900;} 
         .header-title p { margin: 0; font-size: 13px; color: var(--text-gray); font-weight: 600;} 
         .header-right { text-align: right; font-size: 12px; color: #555; font-weight: bold; display: flex; align-items: center; gap: 20px;}
@@ -31,12 +31,11 @@
             background: linear-gradient(135deg, #447fe5, var(--dark-blue)); 
             border-radius: 20px; padding: 25px 35px; color: white; 
             display: flex; flex-direction: column; 
-            box-shadow: 0 10px 25px rgba(59, 113, 202, 0.25); margin-bottom: 20px; position: sticky; top: 60px; z-index: 90; width: 100%; box-sizing: border-box; 
+            box-shadow: 0 10px 25px rgba(59, 113, 202, 0.25); margin-bottom: 20px; position: relative; width: 100%; box-sizing: border-box; 
         }
         
         .hero-top { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 30px; margin-bottom: 20px; }
         
-        .user-profile-section { display: flex; align-items: center; gap: 40px; flex: 1; }
         .user-profile { display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;}
         .user-info p { margin: 0 0 6px 0; font-size: 14px; opacity: 0.9; font-weight: 600;}
         .user-info h2 { margin: 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;}
@@ -44,7 +43,6 @@
         .tier-badge-wrapper { text-align: right; }
         .badge-pill { background: linear-gradient(135deg, #f39c12, #d35400); display: inline-block; padding: 10px 24px; border-radius: 30px; font-size: 18px; font-weight: 900; box-shadow: 0 4px 10px rgba(211, 84, 0, 0.4); border: 2px solid rgba(255,255,255,0.3);}
         
-        /* 파란 배경 안쪽에 총점/순위 가로로 나란히 배치 */
         .score-summary-horizontal { display: flex; flex-direction: row; gap: 15px; width: 100%; position: relative; z-index: 2; }
         .score-box { 
             flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); padding: 15px 20px; 
@@ -52,9 +50,8 @@
             box-sizing: border-box; text-align: center; transition: 0.2s;
         }
         .score-box p { margin: 0 0 6px 0; font-size: 13px; font-weight: bold; opacity: 0.9;}
-        /* ★ 과제 2 해결: 총점/순위 숫자 폰트 크기 대폭 확대 (24px -> 32px) */
-        .score-box h3 { margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -0.5px;}
-        .score-box h3 span { font-size: 16px; opacity: 0.8; font-weight: 600; margin-left: 4px;}
+        .score-box h3 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px;}
+        .score-box h3 span { font-size: 13px; opacity: 0.8; font-weight: 600; margin-left: 3px;}
         .rank-text { color: #f1c40f; }
 
         .rank-clickable { cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -68,35 +65,34 @@
         .exp-bar-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shine 2s infinite; }
         @keyframes shine { 100% { left: 200%; } }
 
-        /* ★ 하단 레이아웃 CSS Grid 적용 (골격 유지의 마법) */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 7fr 3fr; 
-            grid-template-rows: auto auto auto;
-            gap: 20px;
-            width: 100%;
-        }
-
-        /* ★ 과제 1 해결의 핵심: 내부 패널들을 그리드 아이템으로 승격 */
-        .left-panel, .right-panel { display: contents; }
-
+        .content-grid { display: flex; gap: 20px; box-sizing: border-box; width: 100%;}
+        .left-panel { flex: 7; }
+        .right-panel { flex: 3; align-self: flex-start; max-width: 100%; display: flex; flex-direction: column; gap: 20px;}
+        
         .panel-bg { background: white; border-radius: 16px; padding: 25px 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); border: 1px solid #edf0f2; box-sizing: border-box; width: 100%; overflow: visible; }
         
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: nowrap; }
         .section-title { font-size: 17px; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 8px; white-space: nowrap;}
-
-        /* 구역별 Grid 할당 (PC 화면 기준) */
-        .box-badges { grid-column: 1 / 2; grid-row: 1 / 4; } /* 뱃지는 왼쪽 꽉 채움 */
-        .box-ranking { grid-column: 2 / 3; grid-row: 1 / 2; } /* 랭킹은 오른쪽 1층 */
-        .box-apps { grid-column: 2 / 3; grid-row: 2 / 3; }    /* 신청내역은 오른쪽 2층 */
-        .box-radar { grid-column: 2 / 3; grid-row: 3 / 4; display: flex; flex-direction: column;} /* ★ 육각형은 오른쪽 3층(신청내역 밑) 딱 맞게! */
-
         .btn-apply-inline { background: var(--text-dark); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;}
         .btn-apply-inline:hover { transform: translateY(-2px); background: var(--primary-blue); }
 
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; overflow: visible; }
         .badge-card { border: 1.5px solid #edf0f2; border-radius: 16px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; background: #fff; position: relative; box-sizing: border-box; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; overflow: visible; }
         .badge-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(59, 113, 202, 0.18); border-color: var(--primary-blue); z-index: 10;}
+        
+        /* ★ [과제 3 해결을 위한 툴팁 넓이 확장] */
+        .badge-tooltip {
+            position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(10px);
+            background: rgba(26, 37, 47, 0.98); color: white; padding: 14px 18px; /* 여백 증가 */
+            border-radius: 12px; font-size: 12px; white-space: normal;
+            font-weight: 600; opacity: 0; visibility: hidden; 
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.25); z-index: 50;
+            text-align: center; line-height: 1.5; min-width: 240px; max-width: 280px; /* 넓이 대폭 확장 */
+        }
+        .badge-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: rgba(26, 37, 47, 0.98); }
+        .badge-card:hover .badge-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
         .badge-icon-wrapper { width: 70px; height: 70px; margin-bottom: 12px; position: relative; display: flex; justify-content: center; align-items: center; }
         .badge-icon-wrapper img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12));}
         .check-mark { position: absolute; top: -4px; right: -4px; background: var(--accent-orange); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; display: flex; justify-content: center; align-items: center; border: 2px solid white; font-weight: bold; z-index: 5;}
@@ -105,12 +101,17 @@
         .badge-letter { font-size: 11px; color: var(--primary-blue); font-weight: 900; margin-bottom: 4px; }
         .badge-name { font-size: 14px; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px;}
         .badge-score { background: #eef2fb; color: var(--primary-blue); font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
-        .badge-tooltip { position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(10px); background: rgba(26, 37, 47, 0.98); color: white; padding: 10px 16px; border-radius: 8px; font-size: 12px; white-space: normal; font-weight: 600; opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.25); z-index: 50; text-align: center; line-height: 1.5; min-width: 160px; max-width: 220px; }
-        .badge-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: rgba(26, 37, 47, 0.98); }
-        .badge-card:hover .badge-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 
-        .radar-wrapper { width: 100%; max-width: 320px; margin: 0 auto; flex: 1; min-height: 250px; display: flex; justify-content: center; align-items: center; position: relative;}
-        
+        /* ★ [과제 2 해결] 육각형 뒤 노란색 둥근 테두리 및 빛 번짐 완벽 복구! */
+        .radar-chart-container { 
+            width: 100%; max-width: 280px; height: 280px; margin: 0 auto;
+            position: relative; z-index: 2; flex-shrink: 0; 
+            background: radial-gradient(circle, rgba(241, 196, 15, 0.15) 0%, transparent 70%); /* 노란색 원형 그라데이션 */
+            border-radius: 50%; padding: 15px; 
+            box-shadow: 0 0 30px rgba(241, 196, 15, 0.4), inset 0 0 20px rgba(241, 196, 15, 0.2); /* 노란색 빛 번짐 그림자 */
+            border: 2px solid rgba(241, 196, 15, 0.6); /* 진한 노란색 실선 테두리 */
+        }
+
         .ranking-list { display: flex; flex-direction: column; gap: 10px; width: 100%;}
         .rank-card { display: flex; align-items: center; padding: 12px 15px; border-radius: 12px; color: white; justify-content: space-between; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.08); box-sizing: border-box; width: 100%; overflow: hidden; white-space: nowrap;}
         .rank-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
@@ -173,50 +174,27 @@
         .modal-submit-btn { width: 100%; padding: 16px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3); }
         .modal-submit-btn:disabled { background: #bdc3c7; cursor: not-allowed; box-shadow: none; }
 
-        /* =========================================
-           📐 [과제 1, 2, 3] 모바일 반응형 완벽 제어
-        ========================================= */
         @media (max-width: 850px) {
-            body { overflow-x: hidden; } /* 모바일 삐져나감 방지 */
-
-            /* ★ 과제 3 해결: 학교명과 로그아웃 버튼 모바일에서도 상단 유지 및 글씨 크기 조정 */
-            .header { padding: 10px 15px; flex-direction: row; justify-content: space-between; align-items: center; }
-            .header-title h1 { font-size: 16px; }
-            .header-title p { font-size: 10px; }
-            .header-right { display: flex; align-items: center; gap: 8px; }
-            .header-right span { font-size: 10px; display: inline-block; } /* 강제 숨김 해제 */
-            .btn-logout { padding: 4px 8px; font-size: 11px; }
-
+            .header { padding: 10px 15px; flex-direction: column; gap: 10px;}
+            .header-left, .header-right { justify-content: center;}
             .container { margin: 10px auto; padding: 0 10px 100px 10px; width: 100%;} 
+            .hero-banner { padding: 15px 20px; border-radius: 16px; margin-bottom: 12px; text-align: left; top: 120px; }
+            .hero-top { flex-direction: column; gap: 20px; }
+            .score-summary-horizontal { width: 100%; justify-content: center; }
+            .score-box { flex: 1; padding: 10px;}
             
-            .hero-banner { padding: 15px 20px; border-radius: 16px; margin-bottom: 15px; text-align: left; top: 60px; /* 헤더 높이 조정 */}
-            .hero-top { flex-direction: row; align-items: center; gap: 10px; margin-bottom: 15px; }
-            
-            .user-profile-section { flex-direction: row; justify-content: space-between; align-items: center; width: 100%;}
-            .user-info p { font-size: 12px; margin-bottom: 4px;}
-            .user-info h2 { font-size: 22px; margin: 0;}
-            .badge-pill { padding: 6px 12px; font-size: 13px; margin: 0; }
+            .content-grid { grid-template-columns: 1fr; grid-template-rows: auto; gap: 15px;}
+            .box-badges { grid-column: 1; grid-row: 1; }
+            .box-radar  { grid-column: 1; grid-row: 2; }
+            .box-ranking{ grid-column: 1; grid-row: 3; }
+            .box-apps   { grid-column: 1; grid-row: 4; }
 
-            .score-summary-horizontal { width: 100%; justify-content: center; gap: 10px;}
-            
-            /* ★ 과제 2 해결: 모바일 총점 박스 폰트 크기 확대 */
-            .score-box { padding: 10px; }
-            .score-box h3 { font-size: 26px !important; }
-            .score-box h3 span { font-size: 14px !important; }
-
-            /* ★ 과제 1 해결: CSS Grid 패널 순서 강제 변경 (뱃지 -> 육각형 -> 랭킹 -> 신청) */
-            .content-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; }
-            .left-panel, .right-panel { display: contents; } 
-            
-            .box-badges { order: 1; }
-            .box-radar  { order: 2; width: 100%; box-sizing: border-box;} /* 뱃지 바로 아래로! */
-            .box-ranking{ order: 3; width: 100%; box-sizing: border-box;}
-            .box-apps   { order: 4; width: 100%; box-sizing: border-box;}
-
-            .badge-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; } 
+            .badge-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; } 
             .badge-card { padding: 12px 5px; border-radius: 12px; }
             .badge-icon-wrapper { width: 55px; height: 55px; margin-bottom: 8px; }
-            .badge-tooltip { min-width: 120px; font-size: 10px; padding: 8px 12px;}
+            
+            /* 모바일에서도 툴팁 볼 수 있게 넓이만 약간 조절 */
+            .badge-tooltip { min-width: 200px; font-size: 11px; padding: 10px 14px;}
             .links-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
         }
         @media (min-width: 850px) {
@@ -270,7 +248,7 @@
             </div>
         </div>
         <div class="header-right">
-            <span>인덕과학기술고등학교</span>
+            <span>인덕과학기술고등학교 2026학년도</span>
             <button class="btn-logout" id="btnLogout" onclick="sessionStorage.clear(); location.href='index.html';">로그아웃</button>
         </div>
     </header>
@@ -298,7 +276,7 @@
                 </div>
                 <div class="score-box rank-clickable" onclick="window.openRankModal()">
                     <p>🥈 현재 순위</p>
-                    <h3 class="rank-display">계산중...<span class="rank-text"></span></h3>
+                    <h3>계산중...<span class="rank-text"></span></h3>
                 </div>
             </div>
             
@@ -346,10 +324,8 @@
                     <div class="section-header" style="margin-bottom: 10px;">
                         <h3 class="section-title">📊 나의 역량 분포도</h3>
                     </div>
-                    <div class="radar-chart-container" style="margin: 0 auto; width: 100%; display: flex; justify-content: center; align-items: center;">
-                        <div style="width: 250px; height: 250px; position: relative;">
-                            <canvas id="myRadarChart"></canvas>
-                        </div>
+                    <div class="radar-chart-container" style="margin: 0 auto;">
+                        <canvas id="myRadarChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -460,6 +436,7 @@
         window.myStudentName = "";
         window.myScoreData = {};
         window.myPassData = {};
+        window.myCheckedItems = {}; // ★ [과제 3 해결을 위한 변수 추가] DB에서 불러온 체크 항목 저장용
         window.sameGradeStudents = [];
         window.myRadarChartInstance = null; 
 
@@ -575,9 +552,9 @@
                         r: {
                             min: 0,
                             max: 100,
-                            angleLines: { color: 'rgba(0,0,0,0.1)', lineWidth: 1.5 },
-                            grid: { color: 'rgba(0,0,0,0.1)', lineWidth: 1 },
-                            pointLabels: { color: '#1a252f', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } },
+                            angleLines: { display: true, color: 'rgba(0, 0, 0, 0.1)', lineWidth: 1.5 },
+                            grid: { display: true, color: 'rgba(0, 0, 0, 0.1)', lineWidth: 1 },
+                            pointLabels: { display: true, color: '#1a252f', font: { size: labelFontSize, family: 'Pretendard', weight: '900' } },
                             ticks: { display: false, stepSize: 10 }
                         }
                     },
@@ -610,6 +587,7 @@
 
                 window.myScoreData = {};
                 window.myPassData = {};
+                window.myCheckedItems = {}; // 초기화
 
                 if (docSnap && docSnap.exists()) {
                     const data = docSnap.data();
@@ -617,6 +595,9 @@
                     
                     window.myScoreData = yData.scores || {};
                     window.myPassData = yData.pass || {};
+                    // ★ [과제 3] DB에서 학생의 실제 체크 내역을 불러와 저장합니다!
+                    window.myCheckedItems = yData.checked_items || {}; 
+                    
                     totalScore = yData.total_score || 0;
                     badges = yData.earned_badges || 0;
                     
@@ -626,7 +607,11 @@
                 }
 
                 document.getElementById('tierDisplay').innerText = title;
-                document.getElementById('displayTotalScore').innerText = totalScore;
+
+                const scoreBoxes = document.querySelectorAll('.score-box h3 span:first-child');
+                if(scoreBoxes.length > 0) {
+                    scoreBoxes[0].innerText = totalScore;
+                }
 
                 window.renderDashboardBadges();
                 window.drawRadarChart();
@@ -690,17 +675,17 @@
                 let myRank = window.sameGradeStudents.findIndex(s => s.id === window.myStudentId) + 1;
                 if(myRank === 0) myRank = "-";
 
-                const rankBoxH3 = document.querySelector('.rank-display');
-                if(rankBoxH3) {
-                    rankBoxH3.innerHTML = `${myRank}<span class="rank-text">위</span>`;
+                const rankTextSpans = document.querySelectorAll('.score-box h3');
+                if(rankTextSpans.length > 1) {
+                    rankTextSpans[1].innerHTML = `${myRank}<span class="rank-text">위</span>`;
                 }
 
                 window.renderHallOfFame();
 
             } catch(e) {
-                const rankBoxH3 = document.querySelector('.rank-display');
-                if(rankBoxH3) {
-                    rankBoxH3.innerHTML = `-<span class="rank-text">위</span>`;
+                const rankTextSpans = document.querySelectorAll('.score-box h3');
+                if(rankTextSpans.length > 1) {
+                    rankTextSpans[1].innerHTML = `-<span class="rank-text">위</span>`;
                 }
                 document.getElementById('hofList').innerHTML = '<div style="text-align:center; padding:20px; font-size:13px; color:var(--text-gray);">랭킹 데이터가 없습니다.</div>';
             }
@@ -929,63 +914,6 @@
         const AREAS = ['S', 'M', 'A', 'R', 'T', 'C', 'I', 'Tr', 'Y'];
         const AREA_KOR_NAMES = { 'S': '정보화', 'M': '전공성적', 'A': '예체능', 'R': '한국사', 'T': '전공자격', 'C': '직업기초', 'I': '외국어', 'Tr': '성실', 'Y': '인성' };
         
-        const CAPS = { 
-            1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 
-            2: { S:50, M:50, A:30, R:40, T:80, C:50, I:40, Tr:50, Y:30 }, 
-            3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 } 
-        };
-
-        window.renderDashboardBadges = function() {
-            const container = document.getElementById('badgeGridContainer'); 
-            container.innerHTML = '';
-            
-            AREAS.forEach(area => {
-                const passed = window.myPassData && window.myPassData[area] === true;
-                const score = (window.myScoreData || {})[area] || 0;
-                const tooltipText = BADGE_TOOLTIPS[window.CURRENT_GRADE][area];
-                
-                container.innerHTML += `
-                    <div class="badge-card ${passed ? 'active' : 'inactive'}">
-                        <div class="badge-icon-wrapper">
-                            <img src="img/icon_${area.toLowerCase()}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2942/2942784.png'">
-                            ${passed ? '<div class="check-mark">✔</div>' : ''}
-                        </div>
-                        <div class="badge-letter">[${area}]</div>
-                        <div class="badge-name">${AREA_KOR_NAMES[area]}</div>
-                        <div class="badge-score">${score}점</div>
-                        <div class="badge-tooltip">${tooltipText}</div>
-                    </div>
-                `;
-            });
-        };
-
-        window.renderHallOfFame = function() {
-            const list = document.getElementById('hofList'); 
-            list.innerHTML = '';
-            
-            const top3 = (window.sameGradeStudents || []).slice(0,3);
-            
-            if(top3.length === 0) {
-                list.innerHTML = '<div style="text-align:center; padding:20px; font-size:13px; color:var(--text-gray);">랭킹 데이터가 없습니다.</div>';
-                return;
-            }
-            
-            top3.forEach((s, i) => {
-                const medal = ['https://cdn-icons-png.flaticon.com/512/2583/2583344.png','https://cdn-icons-png.flaticon.com/512/2583/2583319.png','https://cdn-icons-png.flaticon.com/512/2583/2583434.png'][i];
-                list.innerHTML += `
-                    <div class="rank-card rank-${i+1}">
-                        <div class="rank-info">
-                            <div class="rare-medal"><img src="${medal}"></div>
-                            <div class="rank-details">
-                                <h4>${s.name}</h4><p>(${s.classStr})</p>
-                            </div>
-                        </div>
-                        <div class="rank-score">${s.score}점</div>
-                    </div>
-                `;
-            });
-        };
-
         const EVAL_ITEMS_BY_GRADE = {
             1: {
                 'S': [{ label: 'ITQ 2과목(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목(20점)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
@@ -1005,6 +933,68 @@
                 'T': [{ label: '(해당학년) 기능사 1개 취득(60점)', score: 60, group: 't_now_func' }, { label: '(해당학년) 민간 자격증 1개 취득(40점)', score: 40, group: 't_now_priv' }, { label: '(해당학년) 국가/민간 필기합격(10점)', score: 10, group: 't_now_written' }, { label: '(누적) 기능사 3개 보유(60점)', score: 60, group: 't_prev_func' }, { label: '(누적) 기능사 2개 보유(30점)', score: 30, group: 't_prev_func' }, { label: '(누적) 기능사 1개 보유(10점)', score: 10, group: 't_prev_func' }, { label: '(누적) 민간 자격증 3개 보유(30점)', score: 30, group: 't_prev_priv' }, { label: '(누적) 민간 자격증 2개 보유(20점)', score: 20, group: 't_prev_priv' }, { label: '(누적) 민간 자격증 1개 보유(5점)', score: 5, group: 't_prev_priv' }],
                 'I': [{ label: '토익 600점 / JLPT N4 등 (50점)', score: 50, group: 'i_cert' }, { label: '2학년 공인어학시험 등급 보유(10점)', score: 10, group: 'i_prev' }]
             }
+        };
+
+        const CAPS = { 
+            1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 
+            2: { S:50, M:50, A:30, R:40, T:80, C:50, I:40, Tr:50, Y:30 }, 
+            3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 } 
+        };
+
+        // ★ [과제 3 해결] 배지를 그릴 때 DB의 체크 항목을 툴팁에 함께 꽂아넣습니다!
+        window.renderDashboardBadges = function() {
+            const container = document.getElementById('badgeGridContainer'); 
+            container.innerHTML = '';
+            
+            AREAS.forEach(area => {
+                const passed = window.myPassData && window.myPassData[area] === true;
+                const score = (window.myScoreData || {})[area] || 0;
+                let tooltipText = BADGE_TOOLTIPS[window.CURRENT_GRADE][area];
+                
+                // ★ 학생이 실제로 달성한 항목 내역 추출 시작
+                let earnedText = "";
+                if (window.myCheckedItems && window.myCheckedItems[area]) {
+                    const itemsList = EVAL_ITEMS_BY_GRADE[window.CURRENT_GRADE][area] || [];
+                    let earnedLabels = [];
+                    const areaChecks = window.myCheckedItems[area];
+                    
+                    // DB에 기록된 인덱스 번호를 기준으로 어떤 항목인지 찾기
+                    for (let key in areaChecks) {
+                        if (areaChecks[key] === 1 || areaChecks[key] === true || String(areaChecks[key]) === "1") {
+                            let idx = parseInt(key);
+                            if (itemsList[idx]) {
+                                earnedLabels.push("✅ " + itemsList[idx].label);
+                            }
+                        }
+                    }
+                    
+                    if (earnedLabels.length > 0) {
+                        earnedText = "<div style='margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.2); text-align:left; font-size:12px;'><span style='color:#f1c40f; font-weight:900;'>[나의 획득 내역]</span><br>" + earnedLabels.join("<br>") + "</div>";
+                    } else {
+                        earnedText = "<div style='margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.2); text-align:left; font-size:11px; color:#aaa;'>[획득 내역 없음]</div>";
+                    }
+                } else {
+                    earnedText = "<div style='margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.2); text-align:left; font-size:11px; color:#aaa;'>[획득 내역 없음]</div>";
+                }
+                
+                // 최종 툴팁 디자인 조립: 현재 점수 + 기준 + 획득 내역
+                const finalTooltip = `<div style="font-size:14px; margin-bottom:6px; color:#fff;"><b>현재 점수: <span style="color:#f1c40f">${score}점</span></b></div>` + 
+                                     `<div style="text-align:left; color:#ddd; font-size:11px; margin-bottom:8px;">${tooltipText}</div>` + 
+                                     earnedText;
+
+                container.innerHTML += `
+                    <div class="badge-card ${passed ? 'active' : 'inactive'}">
+                        <div class="badge-icon-wrapper">
+                            <img src="img/icon_${area.toLowerCase()}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2942/2942784.png'">
+                            ${passed ? '<div class="check-mark">✔</div>' : ''}
+                        </div>
+                        <div class="badge-letter">[${area}]</div>
+                        <div class="badge-name">${AREA_KOR_NAMES[area]}</div>
+                        <div class="badge-score">${score}점</div>
+                        <div class="badge-tooltip">${finalTooltip}</div>
+                    </div>
+                `;
+            });
         };
 
         window.renderStudentCheckboxes = function() {
