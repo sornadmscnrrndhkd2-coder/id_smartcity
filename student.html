@@ -47,7 +47,7 @@
         
         .score-summary-horizontal { display: flex; flex-direction: row; gap: 15px; width: 100%; position: relative; z-index: 2; margin-top: 10px;}
         
-        /* ★ [해결 2] 총점과 현재 순위의 폰트 크기를 대칭으로 완벽하게 통일! */
+        /* ★ [해결 1] 총점 '290'과 현재순위 '1' 폰트 완벽 대칭 통일! */
         .score-box { 
             flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); 
             padding: 12px 15px; 
@@ -55,9 +55,11 @@
             box-sizing: border-box; text-align: center; transition: 0.2s;
         }
         .score-box p { margin: 0 0 8px 0; font-size: 15px; font-weight: 800; opacity: 0.9;} 
-        .score-box h3 { margin: 0; font-size: 40px; font-weight: 900; letter-spacing: -1px; display: flex; align-items: baseline;} 
+        .score-box h3 { margin: 0; font-size: 40px; font-weight: 900; letter-spacing: -1px; display: flex; align-items: baseline; justify-content: center;} 
         .score-box h3 span { font-size: 18px; opacity: 0.9; font-weight: 700; margin-left: 5px;} 
-        .rank-text { color: #f1c40f; } /* '위' 글자 색상 유지 */
+        /* 290을 감싼 span만 예외적으로 40px로 키워 "1"과 밸런스를 맞춥니다 */
+        .score-box h3 span#displayTotalScore { font-size: 40px; font-weight: 900; letter-spacing: -1px; margin-left: 0; opacity: 1; }
+        .rank-text { color: #f1c40f; }
 
         .rank-clickable { cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .rank-clickable:hover { transform: translateY(-3px); background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); }
@@ -69,22 +71,17 @@
         .exp-bar-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shine 2s infinite; }
         @keyframes shine { 100% { left: 200%; } }
 
+        /* ★ [해결 2] 1층, 2층은 내용물만큼, 3층은 남은 공간 모두 흡수 */
         .content-grid {
             display: grid;
-            grid-template-columns: 7fr 3fr;
+            grid-template-columns: 7fr 3fr; 
+            grid-template-rows: max-content max-content 1fr;
             gap: 20px;
             width: 100%;
-            align-items: stretch; 
         }
 
-        .left-panel { display: block; }
-        
-        .right-panel { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; 
-            height: 100%; 
-        }
+        /* 선생님의 원본 마법코드 복구 완료! */
+        .left-panel, .right-panel { display: contents; }
 
         .panel-bg { background: white; border-radius: 16px; padding: 25px 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); border: 1px solid #edf0f2; box-sizing: border-box; width: 100%; overflow: visible; }
         
@@ -93,18 +90,13 @@
         .btn-apply-inline { background: var(--text-dark); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;}
         .btn-apply-inline:hover { transform: translateY(-2px); background: var(--primary-blue); }
 
-        /* ★ [해결 1] 왼쪽 9대 뱃지 상자를 세로로 꽉 차게 늘려 밑단을 완벽 일치시킴! */
-        .box-badges { width: 100%; height: 100%; }
-        .box-ranking { width: 100%; flex-shrink: 0; } 
-        .box-apps { width: 100%; flex-shrink: 0; } 
-        
-        .box-radar { 
-            width: 100%; 
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-        } 
+        /* ★ [해결 2] 왼쪽 하얀 껍데기를 100% 쫙 늘려 밑단을 완벽하게 수평으로 맞춥니다! */
+        .box-badges { grid-column: 1 / 2; grid-row: 1 / 4; }
+        .box-badges .panel-bg { height: 100%; display: flex; flex-direction: column; } 
+
+        .box-ranking { grid-column: 2 / 3; grid-row: 1 / 2; align-self: start; }
+        .box-apps { grid-column: 2 / 3; grid-row: 2 / 3; align-self: start; }    
+        .box-radar { grid-column: 2 / 3; grid-row: 3 / 4; display: flex; flex-direction: column; justify-content: center; height: 100%; } 
 
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; overflow: visible; }
         .badge-card { border: 1.5px solid #edf0f2; border-radius: 16px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; background: #fff; position: relative; box-sizing: border-box; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; overflow: visible; }
@@ -228,11 +220,13 @@
             .score-box p { font-size: 14px !important; margin-bottom: 4px; }
             .score-box h3 { font-size: 30px !important; display: flex; align-items: baseline; justify-content: center;}
             .score-box h3 span { font-size: 15px !important; }
+            .score-box h3 span#displayTotalScore { font-size: 30px !important; margin-left: 0; }
 
             .content-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; }
             .left-panel, .right-panel { display: contents; } 
             
             .box-badges { order: 1; }
+            .box-badges .panel-bg { height: auto; display: block; } /* 모바일에서는 다시 오토로 풉니다 */
             .box-radar  { order: 2; width: 100%; box-sizing: border-box;} 
             .box-ranking{ order: 3; width: 100%; box-sizing: border-box;}
             .box-apps   { order: 4; width: 100%; box-sizing: border-box;}
@@ -290,7 +284,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"  
+  measurementId: "G-3SL84TXVHD"
         };
     </script>
 
