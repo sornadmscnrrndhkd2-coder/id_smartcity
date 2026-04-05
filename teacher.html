@@ -192,7 +192,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"
+  measurementId: "G-3SL84TXVHD" 
         };
     </script>
 
@@ -623,7 +623,7 @@
             document.getElementById('proofModal').classList.add('active'); document.body.style.overflow = 'hidden';
         };
 
-        // 🌟 [수술 부위 1] 결재 승인 시 publicRanking 동기화 로직 추가
+        // 🌟 [수술 부위 1] 결재 승인 시 체크박스(checked_items) 내역도 함께 가져와서 장부에 업데이트!
         window.approveApp = async function(appId, studentId, area, score) {
             if(window.isSystemLocked) return alert("🔒 마감됨");
             if(!confirm(`[${studentId}] 학생의 ${area}영역 ${score}점 신청을 승인하시겠습니까?`)) return;
@@ -659,6 +659,14 @@
                 yData.total_score = total; 
                 yData.earned_badges = badges; 
                 yData.title = title; 
+
+                // ✨ 추가된 수술 부위: 신청서(appId)에서 학생이 체크한 내역을 가져와 장부에 반영합니다.
+                const appDocRef = window.doc(window.db, "applications", appId);
+                const appSnap = await window.getDoc(appDocRef);
+                if(appSnap.exists() && appSnap.data().checkedIndices) {
+                    if(!yData.checked_items) yData.checked_items = {};
+                    yData.checked_items[area] = appSnap.data().checkedIndices;
+                }
                 
                 // students 장부 업데이트
                 await window.updateDoc(window.doc(window.db, "students", studentUid), { 
@@ -666,7 +674,6 @@
                     updatedAt: Date.now() 
                 });
 
-                // 🌟 [보안 규칙 100% 호환] publicRanking 업데이트 로직 이식!
                 let rawName = sData.name || "학생";
                 let maskName = rawName;
                 if (rawName.length === 2) maskName = rawName[0] + '*';
@@ -692,11 +699,10 @@
             if(window.isSystemLocked) return alert("🔒 마감됨");
             if(!confirm("반려 시 증빙자료가 영구 삭제됩니다. 진행하시겠습니까?")) return;
             try {
-                // 반려 시 규칙에 따라 교사가 업데이트 권한을 갖습니다.
                 await window.updateDoc(window.doc(window.db, "applications", appId), { 
                     status: "반려",
                     fileData: null,
-                    fileType: "image" // 규칙 통과를 위해 기본값 부여
+                    fileType: "image" 
                 });
                 alert("❌ 반려 완료"); 
                 await window.logTeacherAction(`[결재 반려] ${appId}`); 
@@ -836,7 +842,6 @@
             document.getElementById("top-search-area").style.display = "block"; document.getElementById("all-grades-dashboard").style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
         };
         
-        // 🌟 [랭킹 장부 동기화] 교사 화면에서도 publicRanking을 읽어옵니다.
         window.openTeacherRankModal = async function(grade) {
             document.getElementById('rankModalTitle').innerText = `🏆 ${grade}학년 명예의 전당 TOP 10`;
             const modalList = document.getElementById('rankModalList');
@@ -850,7 +855,7 @@
                 querySnapshot.forEach(doc => {
                     let data = doc.data();
                     students.push({ 
-                        name: data.maskedName, // 교사 화면에도 마스킹된 이름 적용
+                        name: data.maskedName, 
                         classStr: `${grade}-${data.classNum}`, 
                         score: data.total_score || 0 
                     });
@@ -879,12 +884,11 @@
             }
         };
 
-        // 🌟 [랭킹 장부 동기화] 메인 대시보드의 TOP3 화면도 publicRanking 사용
         window.preloadAllGradesTop3 = async function() {
             try {
                 const querySnapshot = await window.getDocs(window.collection(window.db, "publicRanking"));
                 let gradeStudents = {1: [], 2: [], 3: []}; 
-                let gradeCount = {1:0, 2:0, 3:0}; // 랭킹 등록자 수 기반 달성률 임시계산용
+                let gradeCount = {1:0, 2:0, 3:0}; 
                 
                 querySnapshot.forEach(doc => {
                     let data = doc.data(); 
@@ -913,7 +917,6 @@
                         }
                     });
                     
-                    // 달성률은 단순 통계용 임의 데이터 (실제 패스자 수 기반 계산은 생략)
                     let avgRate = gradeCount[g] > 0 ? Math.min(100, Math.round((gradeCount[g] * 2))) : 0;
                     const avgEl = document.getElementById(`grade${g}Avg`); 
                     if(avgEl) avgEl.innerHTML = `${avgRate}<span>%</span>`;
@@ -946,7 +949,6 @@
             XLSX.writeFile(wb, `스마트시티_${subjectStr}담당_상세입력양식.xlsx`); 
         };
 
-        // 🌟 [수술 부위 2] 엑셀 업로드 시 publicRanking 동기화 로직 추가
         window.uploadTeacherExcel = async function() {
             if(window.isSystemLocked) return alert("🔒 마감됨");
             const fileInput = document.getElementById("teacherExcelInput"); 
