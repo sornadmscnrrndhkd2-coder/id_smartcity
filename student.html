@@ -47,16 +47,15 @@
         
         .score-summary-horizontal { display: flex; flex-direction: row; gap: 15px; width: 100%; position: relative; z-index: 2; margin-top: 10px;}
         
-        /* ★ [과제 3 해결] 박스 안의 폰트 크기를 시원하게 대폭 확대! */
         .score-box { 
             flex: 1; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); 
             padding: 12px 15px; 
             border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
             box-sizing: border-box; text-align: center; transition: 0.2s;
         }
-        .score-box p { margin: 0 0 8px 0; font-size: 15px; font-weight: 800; opacity: 0.9;} /* 제목 폰트 키움 */
-        .score-box h3 { margin: 0; font-size: 40px; font-weight: 900; letter-spacing: -1px;} /* 숫자 폰트 대폭 키움 (24->40) */
-        .score-box h3 span { font-size: 18px; opacity: 0.9; font-weight: 700; margin-left: 5px;} /* 단위 폰트 키움 */
+        .score-box p { margin: 0 0 8px 0; font-size: 15px; font-weight: 800; opacity: 0.9;} 
+        .score-box h3 { margin: 0; font-size: 40px; font-weight: 900; letter-spacing: -1px;} 
+        .score-box h3 span { font-size: 18px; opacity: 0.9; font-weight: 700; margin-left: 5px;} 
         .rank-text { color: #f1c40f; }
 
         .rank-clickable { cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -94,6 +93,14 @@
         .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; overflow: visible; }
         .badge-card { border: 1.5px solid #edf0f2; border-radius: 16px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; background: #fff; position: relative; box-sizing: border-box; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; overflow: visible; }
         .badge-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(59, 113, 202, 0.18); border-color: var(--primary-blue); z-index: 10;}
+        .badge-icon-wrapper { width: 70px; height: 70px; margin-bottom: 12px; position: relative; display: flex; justify-content: center; align-items: center; }
+        .badge-icon-wrapper img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12));}
+        .check-mark { position: absolute; top: -4px; right: -4px; background: var(--accent-orange); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; display: flex; justify-content: center; align-items: center; border: 2px solid white; font-weight: bold; z-index: 5;}
+        .badge-card.inactive { opacity: 0.55; background: #f9fafb; border-color:#f1f2f6;}
+        .badge-card.inactive .badge-icon-wrapper img { filter: grayscale(100%) opacity(0.7); }
+        .badge-letter { font-size: 11px; color: var(--primary-blue); font-weight: 900; margin-bottom: 4px; }
+        .badge-name { font-size: 14px; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px;}
+        .badge-score { background: #eef2fb; color: var(--primary-blue); font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
         
         .badge-tooltip {
             position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(10px);
@@ -106,15 +113,6 @@
         }
         .badge-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: rgba(26, 37, 47, 0.98); }
         .badge-card:hover .badge-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-
-        .badge-icon-wrapper { width: 70px; height: 70px; margin-bottom: 12px; position: relative; display: flex; justify-content: center; align-items: center; }
-        .badge-icon-wrapper img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12));}
-        .check-mark { position: absolute; top: -4px; right: -4px; background: var(--accent-orange); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; display: flex; justify-content: center; align-items: center; border: 2px solid white; font-weight: bold; z-index: 5;}
-        .badge-card.inactive { opacity: 0.55; background: #f9fafb; border-color:#f1f2f6;}
-        .badge-card.inactive .badge-icon-wrapper img { filter: grayscale(100%) opacity(0.7); }
-        .badge-letter { font-size: 11px; color: var(--primary-blue); font-weight: 900; margin-bottom: 4px; }
-        .badge-name { font-size: 14px; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px;}
-        .badge-score { background: #eef2fb; color: var(--primary-blue); font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
 
         .radar-chart-container { 
             width: 100%; max-width: 280px; height: 280px; margin: 0 auto;
@@ -207,8 +205,6 @@
             .badge-pill { padding: 6px 12px; font-size: 13px; margin: 0; }
 
             .score-summary-horizontal { width: 100%; justify-content: center; gap: 10px;}
-            
-            /* ★ [과제 3 해결] 모바일 총점 박스 폰트 크기 확대 반영 */
             .score-box { padding: 12px; }
             .score-box p { font-size: 14px !important; margin-bottom: 4px; }
             .score-box h3 { font-size: 30px !important; }
@@ -316,7 +312,7 @@
                 </div>
                 <div class="score-box rank-clickable" onclick="window.openRankModal()">
                     <p>🥈 현재 순위</p>
-                    <h3 class="rank-display">계산중...<span class="rank-text"></span></h3>
+                    <h3 class="rank-display">계산중...</h3>
                 </div>
             </div>
             
@@ -478,7 +474,7 @@
         window.myStudentName = "";
         window.myScoreData = {};
         window.myPassData = {};
-        window.myCheckedItems = {}; // DB 체크 항목 저장용 변수 유지
+        window.myCheckedItems = {}; 
         window.sameGradeStudents = [];
         window.myRadarChartInstance = null; 
 
@@ -629,7 +625,7 @@
 
                 window.myScoreData = {};
                 window.myPassData = {};
-                window.myCheckedItems = {}; // 초기화
+                window.myCheckedItems = {}; 
 
                 if (docSnap && docSnap.exists()) {
                     const data = docSnap.data();
@@ -690,17 +686,15 @@
             }
         };
 
-        // ★ [과제 2 해결] 안전하게 모든 학생을 가져와 문자열로 필터링하여 순위를 정확하게 계산!
+        // ★ [버그 해결] 학번을 완벽하게 찾아 랭킹 화면에 덮어쓰도록 수정 완료!
         window.loadRankingData = async function(dbInstance) {
             try {
-                // where 조건을 제거하여 타입(숫자/문자) 에러를 방지하고 모든 랭킹을 가져옵니다.
                 const qSnap = await getDocs(collection(dbInstance, "publicRanking"));
                 window.sameGradeStudents = [];
                 
                 qSnap.forEach(d => {
                     let s = d.data();
                     
-                    // 자바스크립트에서 안전하게 같은 학년만 문자열 비교로 필터링
                     if (String(s.current_grade) === String(window.CURRENT_GRADE)) {
                         let displayName = s.maskedName || "알수없음";
                         
@@ -722,7 +716,8 @@
                 let myRank = window.sameGradeStudents.findIndex(s => s.id === String(window.myStudentId)) + 1;
                 if(myRank === 0) myRank = "-";
 
-                const rankBoxH3 = document.querySelector('.rank-display');
+                // 선생님의 뼈대 클래스를 정확하게 타겟팅!
+                const rankBoxH3 = document.querySelector('.rank-clickable h3.rank-display');
                 if(rankBoxH3) {
                     rankBoxH3.innerHTML = `${myRank}<span class="rank-text">위</span>`;
                 }
@@ -730,7 +725,7 @@
                 window.renderHallOfFame();
 
             } catch(e) {
-                const rankBoxH3 = document.querySelector('.rank-display');
+                const rankBoxH3 = document.querySelector('.rank-clickable h3.rank-display');
                 if(rankBoxH3) {
                     rankBoxH3.innerHTML = `-<span class="rank-text">위</span>`;
                 }
@@ -882,12 +877,7 @@
                 'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득) AI관련 (추가) 자격증 취득(20점)', score: 20, group: 's_ai' }],
                 'R': [{ label: '한능검 1급(30점)', score: 30, group: 'r_his' }, { label: '한능검 2급(20점)', score: 20, group: 'r_his' }, { label: '한능검 3급(10점)', score: 10, group: 'r_his' }],
                 'T': [{ label: '(해당학년) 기능사 1개 취득(60점)', score: 60, group: 't_now_func' }, { label: '(해당학년) 민간 자격증 1개 취득(40점)', score: 40, group: 't_now_priv' }, { label: '(해당학년) 국가/민간 필기합격(10점)', score: 10, group: 't_now_written' }, { label: '(누적) 기능사 3개 보유(60점)', score: 60, group: 't_prev_func' }, { label: '(누적) 기능사 2개 보유(30점)', score: 30, group: 't_prev_func' }, { label: '(누적) 기능사 1개 보유(10점)', score: 10, group: 't_prev_func' }, { label: '(누적) 민간 자격증 3개 보유(30점)', score: 30, group: 't_prev_priv' }, { label: '(누적) 민간 자격증 2개 보유(20점)', score: 20, group: 't_prev_priv' }, { label: '(누적) 민간 자격증 1개 보유(5점)', score: 5, group: 't_prev_priv' }],
-                'I': [{ label: '토익 600점 / JLPT N4 등 (50점)', score: 50, group: 'i_cert' }, { label: '2학년 공인어학시험 등급 보유(10점)', score: 10, group: 'i_prev' }],
-                'M': [{ label: '전공 A 6개(60점)', score: 60 }, { label: '전공 A 4개(40점)', score: 40 }, { label: '캡스톤 디자인 작품 전시 및 발표(40점)', score: 40 }, { label: '전공 관련 교외대회 입상(30점)', score: 30 }],
-                'A': [{ label: 'PAPS 전체 1등급(30점)', score: 30 }, { label: 'PAPS 전체 2등급(20점)', score: 20 }, { label: 'PAPS 전체 3등급(10점)', score: 10 }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20 }, { label: '학교스포츠클럽 성실 참여(10점)', score: 10 }],
-                'C': [{ label: '평균 1등급(50점)', score: 50 }, { label: '평균 2등급(40점)', score: 40 }, { label: '평균 3등급(30점)', score: 30 }],
-                'Tr': [{ label: '3년 개근(60점)', score: 60 }, { label: '2년 개근(40점)', score: 40 }, { label: '1년 개근(20점)', score: 20 }, { label: '3년 정근(30점)', score: 30 }, { label: '2년 정근(20점)', score: 20 }, { label: '1년 정근(10점)', score: 10 }],
-                'Y': [{ label: '교내외 봉사 20시간(30점)', score: 30 }, { label: '교내외 봉사 15시간(20점)', score: 20 }, { label: '교내외 봉사 10시간(10점)', score: 10 }, { label: '독서 3권(20점)', score: 20 }, { label: '독서 2권(10점)', score: 10 }]
+                'I': [{ label: '토익 600점 / JLPT N4 등 (50점)', score: 50, group: 'i_cert' }, { label: '2학년 공인어학시험 등급 보유(10점)', score: 10, group: 'i_prev' }]
             }
         };
 
@@ -897,7 +887,6 @@
             3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 } 
         };
 
-        // ★ [과제 1 해결] DB의 배열 값(인덱스)을 읽어서 실제 획득한 세부 내역으로 변환 후 툴팁에 표시
         window.renderDashboardBadges = function() {
             const container = document.getElementById('badgeGridContainer'); 
             container.innerHTML = '';
@@ -913,10 +902,8 @@
                     let earnedLabels = [];
                     const areaChecks = window.myCheckedItems[area];
                     
-                    // ★ 파이어베이스 DB의 Value를 가져오도록 완벽하게 수정! (key가 아니라 value가 인덱스)
                     for (let key in areaChecks) {
                         let val = areaChecks[key];
-                        // 값(val) 자체가 인덱스이므로 이를 정수로 변환하여 리스트에서 찾음
                         let idx = parseInt(val);
                         
                         if (!isNaN(idx) && itemsList[idx]) {
