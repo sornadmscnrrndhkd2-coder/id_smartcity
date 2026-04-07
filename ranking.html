@@ -3,187 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏆 스마트시티 실시간 명예의 전당</title>
+    <title>스마트시티 명예의 전당 (TV 송출용 LIVE)</title>
     <style>
         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+        :root {
+            --primary-blue: #3b71ca;
+            --dark-blue: #1a252f;
+            --bg-main: #f0f4f8;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--dark-blue);
+            /* TV 송출을 위해 화면에 꽉 차게 설정 */
+            height: 100vh; overflow: hidden; 
+            display: flex; flex-direction: column;
+        }
+
+        /* 상단 전광판 헤더 */
+        .tv-header {
+            background: linear-gradient(135deg, var(--dark-blue), #2c3e50);
+            color: white; padding: 20px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative; z-index: 10;
+        }
+        .header-logo { display: flex; align-items: center; gap: 20px; }
+        .header-icon { width: 50px; height: 50px; background: white; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 30px; }
+        .header-text h1 { margin: 0; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);}
+        .header-text p { margin: 5px 0 0 0; font-size: 16px; color: #bdc3c7; font-weight: bold;}
         
-        body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: #f4f6f9; color: #2c3e50; }
+        .header-time { text-align: right; }
+        .live-badge { display: inline-block; background: #e74c3c; color: white; padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: 900; margin-bottom: 5px; animation: blink 1.5s infinite;}
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .clock { font-size: 24px; font-weight: 900; font-family: monospace;}
+
+        /* 3기둥(학년별) 레이아웃 */
+        .ranking-container {
+            display: flex; flex: 1; gap: 30px; padding: 30px 50px;
+            box-sizing: border-box;
+        }
+
+        .grade-column {
+            flex: 1; background: white; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; overflow: hidden;
+            border: 2px solid #edf0f2;
+        }
+
+        .grade-title {
+            text-align: center; padding: 25px 0; background: #fff;
+            border-bottom: 2px solid #f1f2f6; position: relative;
+        }
+        .grade-title h2 { margin: 0; font-size: 28px; font-weight: 900; color: var(--dark-blue);}
         
-        /* 헤더 & LIVE 시계 디자인 */
-        .header { position: relative; background-color: #1a252f; color: white; padding: 25px 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 1px; }
-        .header p { margin: 8px 0 0 0; color: #f1c40f; font-weight: bold; font-size: 15px; }
+        /* 학년별 포인트 컬러 */
+        .col-1 .grade-title h2 { color: #27ae60; }
+        .col-2 .grade-title h2 { color: var(--primary-blue); }
+        .col-3 .grade-title h2 { color: #8e44ad; }
+
+        .ranking-list { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 10px;}
+
+        /* TOP 1, 2, 3 랭킹 카드 */
+        .top-card {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 20px; border-radius: 16px; color: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); margin-bottom: 5px;
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+        .top-1 { background: linear-gradient(135deg, #f1c40f, #f39c12); transform: scale(1.02); }
+        .top-2 { background: linear-gradient(135deg, #bdc3c7, #95a5a6); color: #2c3e50;}
+        .top-3 { background: linear-gradient(135deg, #e67e22, #d35400); }
+
+        .rank-info { display: flex; align-items: center; gap: 15px; }
+        .medal-img { width: 40px; height: 40px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
         
-        .live-badge { position: absolute; top: 25px; right: 30px; text-align: right; font-weight: 900; color: #e74c3c; font-size: 20px; letter-spacing: 1px;}
-        .pulse { display: inline-block; animation: blink 1.5s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .student-detail { display: flex; flex-direction: column; }
+        .student-detail h4 { margin: 0 0 2px 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;}
+        .student-detail p { margin: 0; font-size: 13px; opacity: 0.9; font-weight: 600;}
         
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        .ranking-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; } 
-        
-        .grade-panel { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border: 1px solid #edf0f2;}
-        .grade-panel h2 { margin: 0 0 20px 0; text-align: center; color: #1a252f; font-size: 22px; font-weight: 900; padding-bottom: 15px; border-bottom: 2px solid #f4f6f9;}
-        
-        .rank-card { display: flex; align-items: center; padding: 15px 20px; border-radius: 15px; color: white; justify-content: space-between; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.3s;}
-        .rank-card:hover { transform: translateY(-3px); }
-        .rank-info { display: flex; align-items: center; gap: 15px; flex: 1; }
-        .medal { font-size: 30px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-        
-        .rank-details h4 { margin: 0; font-size: 18px; font-weight: 900; }
-        .rank-details p { margin: 3px 0 0 0; font-size: 13px; opacity: 0.9; font-weight: 600;}
-        .rank-score { font-size: 22px; font-weight: 900; }
-        
-        .rank-1 { background: linear-gradient(135deg, #f1c40f, #f39c12); }
-        .rank-2 { background: linear-gradient(135deg, #bdc3c7, #95a5a6); }
-        .rank-3 { background: linear-gradient(135deg, #e67e22, #d35400); }
-        
-        .normal-rank { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: #f8f9fa; border-radius: 12px; border: 1px solid #edf0f2; margin-bottom: 10px;}
+        .score-display { text-align: right; }
+        .score-display h3 { margin: 0; font-size: 26px; font-weight: 900;}
+
+        /* 4등 ~ 10등 리스트 */
+        .normal-rank {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 15px; background: #f8f9fa; border-radius: 12px;
+            border: 1px solid #edf0f2;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        .normal-rank:nth-child(even) { background: #fff; }
+
         .normal-info { display: flex; align-items: center; gap: 15px; }
         .rank-num { font-size: 18px; font-weight: 900; color: #7f8c8d; width: 30px; text-align: center;}
-        .normal-name { font-size: 16px; font-weight: 900; color: #2c3e50;}
-        .normal-class { font-size: 13px; color: #7f8c8d; font-weight: bold; margin-left: 8px;}
-        .normal-score { font-size: 18px; font-weight: 900; color: #3b71ca;}
+        .normal-name { font-size: 18px; font-weight: 900; color: var(--dark-blue);}
+        .normal-class { font-size: 12px; color: var(--text-gray); font-weight: bold; margin-left: 5px;}
         
-        .loading { text-align: center; padding: 50px; font-size: 20px; font-weight: bold; color: #7f8c8d; }
+        .normal-score { font-size: 18px; font-weight: 900; color: var(--primary-blue);}
 
-        /* 모바일 화면에서는 시계를 가운데로 내림 */
-        @media (max-width: 768px) {
-            .live-badge { position: static; text-align: center; margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 15px; }
-            .live-badge div { margin-top: 0 !important; font-size: 18px !important; }
-        }
+        /* 로딩 텍스트 애니메이션 */
+        .loading-msg { text-align: center; padding: 50px; font-size: 18px; color: var(--text-gray); font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body>
-    <header class="header">
-        <h1>🏆 스마트시티 역량 인증 명예의 전당</h1>
-        <p>실시간 순위 집계 중 (1분마다 자동 갱신)</p>
-        
-        <div class="live-badge">
-            <span class="pulse">🔴</span> LIVE
-            <div id="currentTime" style="font-size: 14px; color: #bdc3c7; margin-top: 5px; font-weight: bold;">00:00:00</div>
-        </div>
-    </header>
-
-    <div class="container">
-        <div id="loading" class="loading">⏳ 실시간 데이터를 불러오는 중입니다...</div>
-        <div class="ranking-grid" id="rankingGrid" style="display: none;">
-            <div class="grade-panel" id="panel-1">
-                <h2>🌱 1학년 TOP 5</h2>
-                <div class="rank-list"></div>
-            </div>
-            <div class="grade-panel" id="panel-2">
-                <h2>👑 2학년 TOP 5</h2>
-                <div class="rank-list"></div>
-            </div>
-            <div class="grade-panel" id="panel-3">
-                <h2>💎 3학년 TOP 5</h2>
-                <div class="rank-list"></div>
-            </div>
-        </div>
-    </div>
 
     <script>
-        function updateClock() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('currentTime').innerText = `${hours}:${minutes}:${seconds}`;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-    </script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        // 🚨 여기에 선생님의 실제 Firebase API 키 정보를 덮어쓰세요! 🚨
-        const firebaseConfig = {
-  apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
+        // 🚨 실제 API 키를 입력하세요.
+        window.MY_GLOBAL_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
   authDomain: "induk-smartcity.firebaseapp.com",
   projectId: "induk-smartcity",
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
   measurementId: "G-3SL84TXVHD"
-};
+        };
+    </script>
 
-        const app = initializeApp(firebaseConfig);
+    <header class="tv-header">
+        <div class="header-logo">
+            <div class="header-icon">🏫</div>
+            <div class="header-text">
+                <h1>스마트시티 9대 역량 명예의 전당</h1>
+                <p>인덕과학기술고등학교 실시간 랭킹 현황</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-time">
+                <div class="live-badge">🔴 LIVE UPDATE</div>
+                <div class="clock" id="liveClock">0000.00.00 00:00:00</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="ranking-container">
+        
+        <div class="grade-column col-1">
+            <div class="grade-title">
+                <h2>🌱 1학년 TOP 10 (스타터)</h2>
+            </div>
+            <div class="ranking-list" id="list-grade-1">
+                <div class="loading-msg">시스템 연결 중... 📡</div>
+            </div>
+        </div>
+
+        <div class="grade-column col-2">
+            <div class="grade-title">
+                <h2>👑 2학년 TOP 10 (빌더)</h2>
+            </div>
+            <div class="ranking-list" id="list-grade-2">
+                <div class="loading-msg">시스템 연결 중... 📡</div>
+            </div>
+        </div>
+
+        <div class="grade-column col-3">
+            <div class="grade-title">
+                <h2>💎 3학년 TOP 10 (프로)</h2>
+            </div>
+            <div class="ranking-list" id="list-grade-3">
+                <div class="loading-msg">시스템 연결 중... 📡</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // 1. 파이어베이스 초기화 (로그인 모듈 아예 삭제!)
+        const app = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
         const db = getFirestore(app);
 
-        const medals = ['🥇', '🥈', '🥉'];
-        const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
+        const medals = [
+            'https://cdn-icons-png.flaticon.com/512/2583/2583344.png',
+            'https://cdn-icons-png.flaticon.com/512/2583/2583319.png',
+            'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'
+        ];
 
-        async function loadLiveRankings() {
-            try {
-                const querySnapshot = await getDocs(collection(db, "students"));
-                let gradeStudents = {1: [], 2: [], 3: []};
-
-                querySnapshot.forEach(doc => {
-                    let data = doc.data();
-                    let g = data.current_grade;
-                    if(g && gradeStudents[g] && data[`year_${g}`]) {
-                        let classNum = parseInt(String(data.current_studentId).substring(1, 3), 10);
-                        let sc = data[`year_${g}`].total_score || 0;
-                        if(sc > 0) { 
-                            gradeStudents[g].push({
-                                name: data.name,
-                                classStr: `${g}-${classNum}`,
-                                score: sc
-                            });
-                        }
-                    }
-                });
-
-                for(let g = 1; g <= 3; g++) {
-                    gradeStudents[g].sort((a, b) => b.score - a.score); 
-                    let top5 = gradeStudents[g].slice(0, 5); 
+        // 2. 단 3개의 문서(grade_1, 2, 3)만 감시하여 요금 0원 유지
+        for(let g = 1; g <= 3; g++) {
+            onSnapshot(doc(db, "publicRankingBoard", `grade_${g}`), (docSnap) => {
+                const listEl = document.getElementById(`list-grade-${g}`);
+                listEl.innerHTML = '';
+                
+                // 데이터가 있고, top10 배열이 비어있지 않다면 화면에 그리기
+                if(docSnap.exists() && docSnap.data().top10 && docSnap.data().top10.length > 0) {
+                    const top10 = docSnap.data().top10;
                     
-                    const listContainer = document.querySelector(`#panel-${g} .rank-list`);
-                    listContainer.innerHTML = ''; 
-
-                    if(top5.length === 0) {
-                        listContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d; font-weight:bold;">아직 점수를 획득한 학생이 없습니다.</div>';
-                        continue;
-                    }
-
-                    top5.forEach((student, index) => {
-                        if(index < 3) {
-                            listContainer.innerHTML += `
-                                <div class="rank-card ${rankClasses[index]}">
+                    top10.forEach((student, index) => {
+                        // 1, 2, 3등은 특별한 카드 디자인
+                        if (index < 3) {
+                            listEl.innerHTML += `
+                                <div class="top-card top-${index + 1}" style="animation-delay: ${index * 0.1}s">
                                     <div class="rank-info">
-                                        <div class="medal">${medals[index]}</div>
-                                        <div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr})</p></div>
+                                        <img src="${medals[index]}" class="medal-img" alt="${index+1}등">
+                                        <div class="student-detail">
+                                            <h4>${student.name}</h4>
+                                            <p>${student.classStr}반</p>
+                                        </div>
                                     </div>
-                                    <div class="rank-score">${student.score}점</div>
+                                    <div class="score-display">
+                                        <h3>${student.score}점</h3>
+                                    </div>
                                 </div>
                             `;
-                        } else {
-                            listContainer.innerHTML += `
-                                <div class="normal-rank">
+                        } 
+                        // 4등부터 10등은 일반 리스트 디자인
+                        else {
+                            listEl.innerHTML += `
+                                <div class="normal-rank" style="animation-delay: ${index * 0.1}s">
                                     <div class="normal-info">
                                         <div class="rank-num">${index + 1}</div>
-                                        <div class="normal-name">${student.name}<span class="normal-class">(${student.classStr})</span></div>
+                                        <div class="normal-name">${student.name} <span class="normal-class">(${student.classStr}반)</span></div>
                                     </div>
                                     <div class="normal-score">${student.score}점</div>
                                 </div>
                             `;
                         }
                     });
+                } else {
+                    // 데이터가 비어있을 때
+                    listEl.innerHTML = '<div class="loading-msg" style="animation:none;">아직 랭킹에 등록된 학생이 없습니다.</div>';
                 }
-
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('rankingGrid').style.display = 'grid';
-
-            } catch (error) {
-                console.error("랭킹 로드 실패:", error);
-                document.getElementById('loading').innerText = "데이터를 불러오는 중 오류가 발생했습니다. API 키를 확인해주세요.";
-            }
+            });
         }
+    </script>
 
-        loadLiveRankings();
-        setInterval(loadLiveRankings, 60000);
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('liveClock').innerText = `${year}.${month}.${day} ${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
     </script>
 </body>
 </html>
