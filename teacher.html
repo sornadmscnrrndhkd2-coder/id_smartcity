@@ -481,6 +481,19 @@
                 try {
                     if (typeof window.checkSystemLock === 'function') await window.checkSystemLock();
                     if (typeof window.recordTeacherVisitor === 'function') await window.recordTeacherVisitor();
+
+                    // 🔥 [추가 1] 평소 로딩 시 1~3학년 TOP 3 화면 갱신
+                    setTimeout(() => { if(typeof window.preloadAllGradesTop3 === 'function') window.preloadAllGradesTop3(); }, 500);
+
+                    // 🔥 [추가 2] 스텔스 로직 (관리자 로그인 시 빈 보드 감지 후 조용히 채움)
+                    const userRole = sessionStorage.getItem('userRole');
+                    if (userRole === 'admin') {
+                        setTimeout(() => {
+                            if(typeof window.syncAllRankingsSilent === 'function') {
+                                window.syncAllRankingsSilent();
+                            }
+                        }, 1500);
+                    }
                 } catch(e) {
                     console.error("로딩 에러:", e);
                 }
@@ -663,44 +676,75 @@
             return picked.sort((a, b) => a - b);
         };
 
-        // 🔥 [보안 수술의 심장부] 
-        // 1. 해당 학년 학생 정보를 교사 PC가 직접 계산합니다.
-        // 2. 완벽하게 무결성 룰을 통과하는 형식({top10:[], updatedAt:number})으로 포장합니다.
-        // 3. 새로운 금고(publicRankingBoard)의 grade_X 문서 하나에 통째로 밀어넣습니다!
+        // 🔥 [추가 3] 새 금고에 랭킹 정보를 채워주는 핵심 마법
         window.updateGradeRanking = async function(grade) {
             try {
                 const q = window.query(window.collection(window.db, "students"), window.where("current_grade", "==", grade));
                 const snap = await window.getDocs(q);
                 let students = [];
-                
+
                 snap.forEach(doc => {
                     let d = doc.data();
                     let yData = d[`year_${grade}`] || {};
                     let score = yData.total_score || 0;
-                    
-                    let rawName = d.name || "학생";
-                    let maskName = rawName.length === 2 ? rawName[0] + '*' : rawName[0] + '*' + rawName.slice(2);
-                    let classNum = parseInt(String(d.current_studentId).substring(1,3)) || 0;
-                    
-                    students.push({
-                        name: maskName,
-                        classStr: `${grade}-${classNum}`,
-                        score: score
-                    });
+
+                    if (score > 0) { // 0점 제외
+                        let rawName = d.name || "학생";
+                        let maskName = rawName.length === 2 ? rawName[0] + '*' : rawName[0] + '*' + rawName.slice(2);
+                        let classNum = parseInt(String(d.current_studentId).substring(1,3)) || 0;
+
+                        students.push({
+                            name: maskName,
+                            classStr: `${classNum}`,
+                            score: score
+                        });
+                    }
                 });
-                
-                // 점수 기준 내림차순 정렬 후 딱 10명만 자릅니다!
+
                 students.sort((a, b) => b.score - a.score);
                 let top10 = students.slice(0, 10);
-                
-                // 새로운 안전 금고(publicRankingBoard)에 규칙에 맞춰서 넣기
+
                 await window.setDoc(window.doc(window.db, "publicRankingBoard", `grade_${grade}`), {
                     top10: top10,
                     updatedAt: Date.now()
                 });
-                console.log(`[완료] ${grade}학년 랭킹이 publicRankingBoard 에 업데이트 되었습니다.`);
+                console.log(`[Daily Update] ${grade}학년 랭킹 동기화 성공`);
             } catch(e) {
-                console.error("랭킹 업데이트 실패:", e);
+                console.error(`[Daily Update Failed] ${grade}학년:`, e);
+            }
+        };
+
+        // 🔥 [추가 4] 스텔스 1회성 초기화 함수
+        window.syncAllRankingsSilent = async function() {
+            console.log("[RankingBoard] 스텔스 초기화 감지 센서 가동...");
+            let needsInit = false;
+
+            for(let g=1; g<=3; g++) {
+                try {
+                    const docSnap = await window.getDoc(window.doc(window.db, "publicRankingBoard", `grade_${g}`));
+                    if(!docSnap.exists() || !docSnap.data() || !Array.isArray(docSnap.data().top10)) {
+                        needsInit = true;
+                        console.log(`[RankingBoard] grade_${g} 금고가 비어있거나 규격 위반! (초기화 필요)`);
+                        break;
+                    }
+                } catch(e) {
+                    console.error(`[RankingBoard] grade_${g} 금고 확인 중 에러 발생:`, e);
+                }
+            }
+
+            if(needsInit) {
+                console.log("[RankingBoard] ⚠️ 텅 빈 금고 발견. 1회성 전체 동기화를 조용히 시작합니다...");
+                try {
+                    await window.updateGradeRanking(1);
+                    await window.updateGradeRanking(2);
+                    await window.updateGradeRanking(3);
+                    await window.preloadAllGradesTop3();
+                    console.log("[RankingBoard] 🎉 전체 금고 초기화 완벽 성공! 이제 전광판이 정상 작동합니다.");
+                } catch(e) {
+                    console.error("[RankingBoard] ❌ 전체 금고 초기화 실패:", e);
+                }
+            } else {
+                console.log("[RankingBoard] 🔒 모든 금고가 정상입니다. (초기화 패스)");
             }
         };
 
@@ -758,7 +802,7 @@
                     updatedAt: Date.now() 
                 });
 
-                // 🔥 기존의 개별 랭킹 문서 저장 코드를 모두 지우고 랭킹 업데이트 함수 한방으로 끝냅니다!
+                // 🔥 [추가 5] 승인 후 랭킹 즉시 갱신
                 await window.updateGradeRanking(grade);
 
                 alert("✅ 승인 및 랭킹 동기화 완료"); 
@@ -925,9 +969,7 @@
             document.getElementById("searchInput").value = ""; document.getElementById("student-detail-area").style.display = "none";
             document.getElementById("top-search-area").style.display = "block"; document.getElementById("all-grades-dashboard").style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
         };
-        
-        // 🔥 [비용 절감 핵심] 교사 페이지의 TOP 10 버튼은 실시간 감시(onSnapshot)가 아니라,
-        // 딱 1번만 가져오는 getDoc 으로 변경했습니다! (새 금고 publicRankingBoard 바라봄)
+
         window.openTeacherRankModal = async function(grade) {
             document.getElementById('rankModalTitle').innerText = `🏆 ${grade}학년 명예의 전당 TOP 10`;
             const modalList = document.getElementById('rankModalList');
@@ -935,6 +977,7 @@
             document.getElementById('rankModal').classList.add('active'); document.body.style.overflow = 'hidden';
 
             try {
+                // publicRankingBoard 바라보도록 수정
                 const docSnap = await window.getDoc(window.doc(window.db, "publicRankingBoard", `grade_${grade}`));
                 
                 let top10 = [];
@@ -966,11 +1009,10 @@
             }
         };
 
-        // 🔥 [비용 절감 핵심] 교사 대시보드 메인 화면의 TOP 3 정보도 
-        // 새로운 금고(publicRankingBoard)에서 딱 3번만 읽어오게 수정 완료!
         window.preloadAllGradesTop3 = async function() {
             try {
                 for(let g = 1; g <= 3; g++) {
+                    // publicRankingBoard 바라보도록 수정
                     const docSnap = await window.getDoc(window.doc(window.db, "publicRankingBoard", `grade_${g}`));
                     if (docSnap.exists() && docSnap.data().top10) {
                         let top3 = docSnap.data().top10.slice(0, 3); 
@@ -1090,7 +1132,7 @@
                         } catch (err) { failCount++; }
                     }
                     
-                    // 🔥 엑셀 저장이 끝나면 바뀐 학년만 딱 랭킹 다시 계산해서 새 금고에 덮어씀!
+                    // 🔥 [추가 6] 엑셀 업로드 후 랭킹 즉시 갱신
                     for (let g of updatedGrades) {
                         await window.updateGradeRanking(g);
                     }
@@ -1164,7 +1206,7 @@
 
                         await window.updateDoc(docRef, updateData);
 
-                        // 🔥 선생님이 단건 수동 저장해도 랭킹 계산 함수 호출!
+                        // 🔥 [추가 7] 수동 저장 후 랭킹 즉시 갱신
                         await window.updateGradeRanking(grade);
 
                         alert("✅ 성공적으로 저장되었습니다!");
@@ -1251,10 +1293,6 @@
                 window.switchTab('tab-manual');
             }
             
-            setTimeout(() => { 
-                if(typeof window.preloadAllGradesTop3 === 'function') window.preloadAllGradesTop3(); 
-            }, 1000);
-
             const searchBtnEl = document.getElementById("searchBtn");
             if(searchBtnEl) {
                 searchBtnEl.addEventListener("click", async () => {
