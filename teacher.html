@@ -367,6 +367,7 @@
                 </div>
 
                 <h3 class="section-title" style="margin-top: 30px; margin-bottom: 20px;">🏆 스마트시티 학년별 명예의 전당</h3>
+
                 <div class="ranking-grid">
                     <div class="grade-ranking-panel">
                         <h4 style="margin:0 0 15px 0; color:var(--text-dark); text-align:center; cursor:pointer;" onclick="window.openTeacherRankModal(1)">🌱 1학년 TOP 3 <span style="font-size:12px; color:var(--primary-blue);">[TOP 10 보기 👆]</span></h4>
@@ -482,10 +483,10 @@
                     if (typeof window.checkSystemLock === 'function') await window.checkSystemLock();
                     if (typeof window.recordTeacherVisitor === 'function') await window.recordTeacherVisitor();
 
-                    // 🔥 [추가 1] 평소 로딩 시 1~3학년 TOP 3 화면 갱신
+                    // 🔥 평소 로딩 시 1~3학년 TOP 3 화면 갱신
                     setTimeout(() => { if(typeof window.preloadAllGradesTop3 === 'function') window.preloadAllGradesTop3(); }, 500);
 
-                    // 🔥 [추가 2] 스텔스 로직 (관리자 로그인 시 빈 보드 감지 후 조용히 채움)
+                    // 🔥 스텔스 로직 (관리자 로그인 시 빈 보드 감지 후 조용히 채움)
                     const userRole = sessionStorage.getItem('userRole');
                     if (userRole === 'admin') {
                         setTimeout(() => {
@@ -676,7 +677,7 @@
             return picked.sort((a, b) => a - b);
         };
 
-        // 🔥 [추가 3] 새 금고에 랭킹 정보를 채워주는 핵심 마법
+        // 🔥 새 금고에 랭킹 정보를 채워주는 핵심 마법
         window.updateGradeRanking = async function(grade) {
             try {
                 const q = window.query(window.collection(window.db, "students"), window.where("current_grade", "==", grade));
@@ -714,7 +715,7 @@
             }
         };
 
-        // 🔥 [추가 4] 스텔스 1회성 초기화 함수
+        // 🔥 스텔스 1회성 초기화 함수
         window.syncAllRankingsSilent = async function() {
             console.log("[RankingBoard] 스텔스 초기화 감지 센서 가동...");
             let needsInit = false;
@@ -802,8 +803,9 @@
                     updatedAt: Date.now() 
                 });
 
-                // 🔥 [추가 5] 승인 후 랭킹 즉시 갱신
+                // 🔥 승인 완료 후 즉시 백그라운드 랭킹 업데이트 및 선생님 화면(UI) 즉각 반영!
                 await window.updateGradeRanking(grade);
+                window.preloadAllGradesTop3();
 
                 alert("✅ 승인 및 랭킹 동기화 완료"); 
                 await window.logTeacherAction(`[결재 승인] ${studentId} ${area}영역 ${score}점 부여`);
@@ -1132,10 +1134,11 @@
                         } catch (err) { failCount++; }
                     }
                     
-                    // 🔥 [추가 6] 엑셀 업로드 후 랭킹 즉시 갱신
                     for (let g of updatedGrades) {
                         await window.updateGradeRanking(g);
                     }
+                    // 🔥 엑셀 업로드 후에도 즉각 화면 새로고침!
+                    window.preloadAllGradesTop3();
 
                     alert(`✅ 가로형 상세 엑셀 업로드 완료!\n성공: ${successCount}명\n실패: ${failCount}명\n(화면을 열어보면 알맞게 'V' 체크가 되어 있습니다!)`); 
                     await window.logTeacherAction(`[엑셀 상세 업로드] ${subjectStr}과목 ${successCount}명 반영`);
@@ -1206,8 +1209,9 @@
 
                         await window.updateDoc(docRef, updateData);
 
-                        // 🔥 [추가 7] 수동 저장 후 랭킹 즉시 갱신
+                        // 🔥 백그라운드 랭킹 업데이트 및 화면(UI) 즉각 반영!
                         await window.updateGradeRanking(grade);
+                        window.preloadAllGradesTop3();
 
                         alert("✅ 성공적으로 저장되었습니다!");
                         
