@@ -68,7 +68,8 @@
         .table-panel { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #edf0f2; margin-bottom: 25px;}
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 500px;}
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #edf0f2; font-size: 13px; vertical-align: middle;}
+        /* ★ [수술 1] td에도 white-space: nowrap;을 추가하여 글자가 밑으로 쪼개지는 현상 완벽 방지! */
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #edf0f2; font-size: 13px; vertical-align: middle; white-space: nowrap;}
         th { background-color: #f8f9fa; font-weight: bold; color: var(--text-gray); white-space: nowrap;}
         tr:hover { background-color: #fdfdfe; }
         
@@ -165,7 +166,6 @@
             .header { padding: 15px; justify-content: center; }
             .header-right { margin-top: 10px; width: 100%; justify-content: center;}
             
-            /* ★ [해결 1&2] 모바일에서 담임 이름과 과목 배지의 글자가 쪼개지지 않도록 방어막 추가! */
             .header-right span { display: inline-block; font-size: 10px; white-space: nowrap; word-break: keep-all; } 
             
             .approval-item { flex-direction: column; align-items: stretch;}
@@ -179,7 +179,6 @@
             .profile-score { text-align: left; }
             .action-buttons { flex-direction: column; }
 
-            /* 엑셀 업로드 폼 모바일 화면 깨짐 수정 */
             #excelUploadGuide > div {
                 flex-direction: column;
                 gap: 8px;
@@ -442,7 +441,7 @@
     <div id="proofModal" class="modal-overlay" onclick="window.closeTeacherModal(event, 'proofModal')">
         <div class="modal-content" style="max-width: 700px; text-align: center;">
             <div class="modal-header">
-                <h3>📄 제출된 증빙 자료</h3>
+                <h3 id="proofModalTitle">📄 제출된 증빙 자료</h3>
                 <button class="close-btn" onclick="document.getElementById('proofModal').classList.remove('active'); document.body.style.overflow = 'auto';">✕</button>
             </div>
             <div id="proofContent" style="margin-top: 15px; max-height: 60vh; overflow-y: auto; background: #eee; border-radius: 8px; display: flex; justify-content: center; align-items: center; min-height: 200px;"></div>
@@ -634,10 +633,24 @@
         window.viewProof = function(appId) {
             const app = window.currentPendingApps.find(a => a.id === appId);
             if(!app || !app.fileData) return alert("자료가 없습니다.");
+            
             const contentBox = document.getElementById('proofContent');
+            const titleBox = document.getElementById('proofModalTitle');
+            if(titleBox) titleBox.innerText = `📄 제출된 증빙 자료`; // 증빙자료 볼 땐 원래 제목 복구
+            
             if(app.fileType === 'image') contentBox.innerHTML = `<img src="${app.fileData}" style="max-width:100%; max-height:55vh; border-radius:8px; object-fit:contain;">`;
             else if(app.fileType === 'pdf') contentBox.innerHTML = `<iframe src="${app.fileData}" style="width:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
             else contentBox.innerHTML = `지원하지 않는 형식입니다.`;
+            document.getElementById('proofModal').classList.add('active'); document.body.style.overflow = 'hidden';
+        };
+
+        // ★ [새로운 기능] 표에 있는 학생 사진을 누르면 증빙자료 팝업창을 재활용해서 띄워줍니다!
+        window.viewStudentPhoto = function(photoUrl, studentName) {
+            const contentBox = document.getElementById('proofContent');
+            const titleBox = document.getElementById('proofModalTitle');
+            if(titleBox) titleBox.innerText = `🖼️ ${studentName} 학생 사진`; // 팝업 제목을 학생 사진으로 교체!
+            
+            contentBox.innerHTML = `<img src="${photoUrl}" style="max-width:100%; max-height:55vh; border-radius:8px; object-fit:contain;">`;
             document.getElementById('proofModal').classList.add('active'); document.body.style.overflow = 'hidden';
         };
 
@@ -758,7 +771,6 @@
             let sumScore = 0; let sumBadge = 0; let stuCount = 0;
             
             if (!window.homeroomGrade || !window.homeroomClass) { 
-                /* ★ 빈 칸 표시할 때 열 개수가 늘어났으니 colspan을 7로 수정했습니다. */
                 if(tbody) tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 40px;'>담임 학급 정보가 없습니다.</td></tr>"; 
                 return; 
             }
@@ -790,10 +802,11 @@
                     sumScore += totalScore; sumBadge += (badges >= 6 ? 1 : 0); stuCount++;
                     let tierClass = "tier-none"; if(badges >= 6) { if(window.homeroomGrade === 1) tierClass = "tier-starter"; else if(window.homeroomGrade === 2) tierClass = "tier-builder"; else tierClass = "tier-pro"; }
                     
-                    /* ★ [해결 4] 학생 사진이 리스트의 맨 앞에 동그랗게 쏙 들어가도록 td를 추가했습니다! */
                     let photoUrl = s.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+                    
+                    /* ★ 학생 사진을 클릭하면 확대보기 함수(viewStudentPhoto)가 실행됩니다! */
                     if(tbody) tbody.innerHTML += `<tr>
-                        <td style="text-align:center;"><img src="${photoUrl}" style="width:36px; height:36px; border-radius:8px; object-fit:cover; border:1px solid #edf0f2;"></td>
+                        <td style="text-align:center;"><img src="${photoUrl}" onclick="window.viewStudentPhoto('${photoUrl}', '${s.name}')" style="width:36px; height:36px; border-radius:8px; object-fit:cover; border:1px solid #edf0f2; cursor:pointer;"></td>
                         <td><strong>${s.current_studentId}</strong></td>
                         <td>${s.name}</td>
                         <td style="color:var(--primary-blue); font-weight:bold;">${totalScore}점</td>
