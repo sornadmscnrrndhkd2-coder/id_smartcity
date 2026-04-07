@@ -155,16 +155,55 @@
         window.AREAS = ['S', 'M', 'A', 'R', 'T', 'C', 'I', 'Tr', 'Y'];
         window.AREA_NAMES = { S: '정보화', M: '전공성적', A: '예체능', R: '한국사', T: '전공자격', C: '직업기초', I: '외국어', Tr: '성실', Y: '인성' };
         
-        window.CAPS = {
-            1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 },
-            2: { S:50, M:50, A:30, R:40, T:80, C:50, I:40, Tr:50, Y:30 },
-            3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 }
+        // 🚨 각 영역별 획득 가능한 이론상 최대 만점 한도 (학생들의 비정상적 점수 폭주 방지)
+        window.CAPS = { 
+            1: { S:60, M:80, A:60, R:30, T:130, C:50, I:70, Tr:50, Y:30 }, 
+            2: { S:70, M:80, A:50, R:40, T:135, C:50, I:120, Tr:50, Y:30 }, 
+            3: { S:70, M:130, A:50, R:30, T:200, C:50, I:110, Tr:60, Y:30 } 
         };
         
-        window.PASS_CUTOFF = {
-            1: { S:20, M:20, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 },
-            2: { S:20, M:20, A:20, R:20, T:30, C:30, I:30, Tr:30, Y:20 },
-            3: { S:20, M:40, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 }
+        // 🚨 배지를 획득하기 위한 영역별 최소 통과 점수 (커트라인)
+        window.PASS_CUTOFF = { 
+            1: { S:20, M:20, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 }, 
+            2: { S:20, M:20, A:20, R:20, T:30, C:30, I:30, Tr:30, Y:20 }, 
+            3: { S:20, M:40, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 } 
+        };
+
+        // 🚨 2026년도 최신 개편 학년별 세부 평가 기준표
+        window.EVAL_ITEMS_BY_GRADE = {
+            1: {
+                'S': [{ label: 'ITQ 2과목 합격(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목 합격(20점) (등급 무관)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'M': [{ label: '전공 A 4개(50점)', score: 50, group: 'm_grade' }, { label: '전공 A 3개(40점)', score: 40, group: 'm_grade' }, { label: '전공 A 2개(20점)', score: 20, group: 'm_grade' }, { label: '전공 B 2개(10점)', score: 10, group: 'm_grade' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
+                'A': [{ label: 'PAPS 전체 1등급(30점)', score: 30, group: 'paps' }, { label: 'PAPS 전체 2등급(20점)', score: 20, group: 'paps' }, { label: 'PAPS 전체 3등급(10점)', score: 10, group: 'paps' }, { label: '학교스포츠클럽 대회 입상 (20점)', score: 20, group: 'sp_contest' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'sp_part' }],
+                'R': [{ label: '한능검 3급(30점)', score: 30, group: 'r_his' }, { label: '한능검 4급(20점)', score: 20, group: 'r_his' }, { label: '한능검 5~6급(10점)', score: 10, group: 'r_his' }],
+                'T': [{ label: '기능사 자격증 취득(60점)', score: 60, group: 't_func' }, { label: '민간자격증 취득(40점)', score: 40, group: 't_priv' }, { label: '국가/민간 필기합격(30점)', score: 30, group: 't_written' }],
+                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_grade' }, { label: '평균 2등급(40점)', score: 40, group: 'c_grade' }, { label: '평균 3등급(30점)', score: 30, group: 'c_grade' }],
+                'I': [{ label: '교내 영어 관련 대회 입상(30점)', score: 30, group: 'i_contest' }, { label: '영어 교과 성취도 A 이상(40점)', score: 40, group: 'i_grade' }, { label: '영어 교과 성취도 B 이상(30점)', score: 30, group: 'i_grade' }],
+                'Tr': [{ label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
+                'Y': [{ label: '봉사 16시간+독서 4권이상(30점)', score: 30, group: 'y_act' }, { label: '봉사 12시간+독서 3권이상(20점)', score: 20, group: 'y_act' }]
+            },
+            2: {
+                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'M': [{ label: '전공 A 4개 이상(50점)', score: 50, group: 'm_grade' }, { label: '전공 A 3개(30점)', score: 30, group: 'm_grade' }, { label: '전공 A 2개(10점)', score: 10, group: 'm_grade' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
+                'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'paps' }, { label: 'PAPS 전체 3등급(5점)', score: 5, group: 'paps' }, { label: '학교스포츠클럽 대회 입상 (20점)', score: 20, group: 'sp_contest' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'sp_part' }],
+                'R': [{ label: '한능검 1급(40점)', score: 40, group: 'r_his' }, { label: '한능검 2급(30점)', score: 30, group: 'r_his' }, { label: '한능검 3급(20점)', score: 20, group: 'r_his' }, { label: '한능검 4급(10점)', score: 10, group: 'r_his' }],
+                'T': [{ label: '(해당학년)기능사 1개 취득(60점)', score: 60, group: 't_func_now' }, { label: '(해당학년)민간 자격증 1개 취득(40점)', score: 40, group: 't_priv_now' }, { label: '(해당학년)국가/민간 필기합격(20점) (해당학년 취득자격증 외)', score: 20, group: 't_written_now' }, { label: '(이전학년)기능사 1개 보유(10점)', score: 10, group: 't_func_prev' }, { label: '(이전학년)민간 자격증 1개 보유(5점)', score: 5, group: 't_priv_prev' }],
+                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_grade' }, { label: '평균 2등급(40점)', score: 40, group: 'c_grade' }, { label: '평균 3등급(30점)', score: 30, group: 'c_grade' }],
+                'I': [{ label: '영어/일어 교과 성취도 A (40점)', score: 40, group: 'i_grade' }, { label: '영어/일어 교과 성취도 B (30점)', score: 30, group: 'i_grade' }, { label: '토익 500점 / 토익 스피킹 NH 이상 / OPIc NH 이상 (40점)', score: 40, group: 'i_cert_eng' }, { label: '일본어 JLPT N5 / JPT 250점 이상 (40점)', score: 40, group: 'i_cert_jp' }],
+                'Tr': [{ label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
+                'Y': [{ label: '봉사 20시간+독서 5권이상(30점)', score: 30, group: 'y_act' }, { label: '봉사 16시간+독서 4권이상(20점)', score: 20, group: 'y_act' }]
+            },
+            3: {
+                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득)AI관련 (추가) 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'M': [{ label: '전공 A 6개(60점)', score: 60, group: 'm_grade' }, { label: '전공 A 4개(40점)', score: 40, group: 'm_grade' }, { label: '캡스톤 디자인 작품 전시 및 발표 (본인 성명 명시)(40점)', score: 40, group: 'm_capstone' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
+                'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'sp_contest' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'sp_part' }],
+                'R': [{ label: '한능검 1급(30점)', score: 30, group: 'r_his' }, { label: '한능검 2급(20점)', score: 20, group: 'r_his' }, { label: '한능검 3급(10점)', score: 10, group: 'r_his' }],
+                'T': [{ label: '(해당학년)기능사 1개 취득(60점)', score: 60, group: 't_now_func' }, { label: '(해당학년)민간 자격증 1개 취득(40점)', score: 40, group: 't_now_priv' }, { label: '(해당학년)국가/민간 필기합격(10점) (해당학년 취득자격증 외)', score: 10, group: 't_now_written' }, { label: '기능사 자격증 보유 : 3개(60점)', score: 60, group: 't_prev_func' }, { label: '기능사 자격증 보유 : 2개(30점)', score: 30, group: 't_prev_func' }, { label: '기능사 자격증 보유 : 1개(10점)', score: 10, group: 't_prev_func' }, { label: '민간 자격증 보유 : 3개(30점)', score: 30, group: 't_prev_priv' }, { label: '민간 자격증 보유 : 2개(20점)', score: 20, group: 't_prev_priv' }, { label: '민간 자격증 보유 : 1개(5점)', score: 5, group: 't_prev_priv' }],
+                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_grade' }, { label: '평균 2등급(40점)', score: 40, group: 'c_grade' }, { label: '평균 3등급(30점)', score: 30, group: 'c_grade' }],
+                'I': [{ label: '토익 600점 / 토익 스피킹 IL 이상 / OPIc IL 이상 (50점)', score: 50, group: 'i_cert_eng' }, { label: '일본어 JLPT N4 / JPT 350점 이상 (50점)', score: 50, group: 'i_cert_jp' }, { label: '2학년 공인어학시험 등급 보유 (10점)', score: 10, group: 'i_prev' }],
+                'Tr': [{ label: '3년 개근(60점)', score: 60, group: 'tr_att' }, { label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
+                'Y': [{ label: '봉사 24시간+독서 6권이상(30점)', score: 30, group: 'y_act' }, { label: '봉사 20시간+독서 5권이상(20점)', score: 20, group: 'y_act' }]
+            }
         };
     </script>
 
