@@ -146,7 +146,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"    // 여기에 API 키 복붙!
+  measurementId: "G-3SL84TXVHD"    
         };
     </script>
 
@@ -559,7 +559,7 @@
         catch(e) { shadowApp = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG, "ShadowApp"); }
         const shadowAuth = getAuth(shadowApp);
 
-        // 3. 전역 객체에 안전하게 할당
+        // 3. 전역 객체에 안전하게 할당 (오류 방지)
         window.db = db; 
         window.authV10 = auth; 
         window.shadowAuth = shadowAuth;
@@ -1203,7 +1203,7 @@
             const grade = document.getElementById("filterGrade").value; const cutoffs = window.PASS_CUTOFF[grade];
             let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="window.toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th>이름</th>`; 
             window.AREAS.forEach(a => { headerHtml += `<th>[${a}]<br><span class="th-criteria">(${cutoffs[a]}점↑)</span></th>`; }); 
-            headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력</th>`; 
+            headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력(1장 압축)</th>`; 
             document.getElementById("tableHeaderRow").innerHTML = headerHtml;
         };
 
@@ -1254,7 +1254,6 @@
                         rowHtml += `<td class="score-cell">${cellContent}</td>`; 
                     });
                     
-                    // 출력 버튼 연결
                     let certBtn = (s.yearData.earned_badges || 0) >= 6 ? `<button class="btn ${filterGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="window.printCertificate('${s.id}')">🖨️</button>` : "-"; 
                     rowHtml += `<td style="color:#2980b9; font-weight:bold;">${s.yearData.total_score || 0}점</td><td><strong>${s.yearData.earned_badges || 0}개</strong></td><td style="color:#27ae60; font-weight:bold; white-space:nowrap;">${s.yearData.title || '진행중'}</td><td>${certBtn}</td></tr>`;
                     tbody.innerHTML += rowHtml;
@@ -1303,7 +1302,7 @@
             printWindow.document.close(); 
         };
 
-        // 🔥 [관리자용] 1~3학년 누적 데이터 합산 포트폴리오 (가로 3단 1장 핏)
+        // 🔥 [A4 1장 핏 완벽 최적화] 3단 가로 누적 포트폴리오
         window.printCertificate = async function(studentId) {
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
@@ -1312,34 +1311,26 @@
                 const sData = qSnap.docs[0].data();
                 const studentGrade = sData.current_grade || 1; 
                 
-                let grandTotalScore = 0;
-                let finalBadges = 0;
-                let finalTier = "🌱 CITY 스타터";
-                
+                let grandTotalScore = 0; let finalBadges = 0; let finalTier = "🌱 CITY 스타터";
                 let sumScores = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
                 let sumCaps = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
-                
                 let timelineHtml = '';
                 
-                // 1학년부터 3학년까지 무조건 3개의 칸을 만듦 (가로 3단 배열용)
+                // 가로 3단 배열 (1~3학년)
                 for (let grade = 1; grade <= 3; grade++) {
                     let yData = sData[`year_${grade}`];
                     let gradeItemsHtml = '';
 
-                    // 해당 학년 데이터가 없거나 미래 학년이면 빈칸 처리
                     if (!yData || Object.keys(yData).length === 0 || grade > studentGrade) {
-                        gradeItemsHtml = `<div class="empty-spec" style="text-align:center; color:#bdc3c7; font-size:13px; padding:30px 0;">기록 없음</div>`;
+                        gradeItemsHtml = `<div class="empty-spec">기록 없음</div>`;
                     } else {
                         window.AREAS.forEach(a => {
                             sumCaps[a] += (window.CAPS[grade][a] || 0);
                             if(yData.scores) sumScores[a] += (yData.scores[a] || 0);
                         });
 
-                        // 🔥 모든 학년의 점수와 뱃지를 누적 합산 (중복 계산 뻥튀기 없음)
                         if(yData.total_score !== undefined) grandTotalScore += yData.total_score;
                         if(yData.earned_badges !== undefined) finalBadges += yData.earned_badges;
-                        
-                        // 티어는 최종 학년(현재 학년) 기준으로 가져옴
                         if(grade === studentGrade && yData.title) finalTier = yData.title;
 
                         let hasSpec = false;
@@ -1349,15 +1340,14 @@
                                 if (checkedIndices.length > 0) {
                                     hasSpec = true;
                                     let tags = checkedIndices.map(idx => {
-                                        return window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label.replace(/\([^)]+\)/g, '').trim();
+                                        return window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label.split('(')[0].trim();
                                     });
                                     let tagsHtml = tags.map(tag => `<span class="spec-tag">${tag}</span>`).join('');
-                                    gradeItemsHtml += `<div class="spec-row"><div class="spec-area-badge">${window.AREA_NAMES[area]}</div><div class="spec-tags-container">${tagsHtml}</div></div>`;
+                                    gradeItemsHtml += `<div class="spec-row"><div class="spec-area-badge">${area}</div><div class="spec-tags-container">${tagsHtml}</div></div>`;
                                 }
                             });
                         }
-                        
-                        if(!hasSpec) gradeItemsHtml = `<div class="empty-spec" style="text-align:center; color:#bdc3c7; font-size:13px; padding:30px 0;">세부 달성 스펙이 없습니다.</div>`;
+                        if(!hasSpec) gradeItemsHtml = `<div class="empty-spec">세부 스펙이 없습니다.</div>`;
                     }
 
                     timelineHtml += `
@@ -1368,7 +1358,6 @@
                     `;
                 }
 
-                // 레이더 차트 역시 1~3학년 누적 합산 기준으로 그림
                 let radarData = [
                     (sumCaps['M'] + sumCaps['T']) > 0 ? Math.min(100, Math.round(((sumScores['M'] + sumScores['T']) / (sumCaps['M'] + sumCaps['T'])) * 100)) : 0,
                     sumCaps['S'] > 0 ? Math.min(100, Math.round((sumScores['S'] / sumCaps['S']) * 100)) : 0,
@@ -1383,51 +1372,51 @@
                 const photoUrl = sData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
                 
                 printWindow.document.write(`
-                    <html><head><title>${sData.name} 학생 스펙 포트폴리오</title>
+                    <html><head><title>${sData.name}_포트폴리오</title>
                     <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
                     <style>
                         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
                         body { font-family: 'Pretendard', sans-serif; background-color: #fff; margin: 0; padding: 20px; color: #2c3e50; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                        .portfolio-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-                        .header-profile { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf0f2; padding-bottom: 20px; margin-bottom: 25px; }
-                        .profile-left { display: flex; align-items: center; gap: 20px; }
-                        .profile-img { width: 90px; height: 110px; border-radius: 12px; object-fit: cover; border: 1px solid #edf0f2; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-                        .profile-info h1 { margin: 0 0 5px 0; font-size: 28px; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;}
-                        .profile-info p { margin: 0; font-size: 15px; color: #7f8c8d; font-weight: 600; }
-                        .tier-badge { background: linear-gradient(135deg, #1a252f, #2c3e50); color: white; padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);}
+                        .portfolio-container { max-width: 1000px; margin: 0 auto; padding: 0; }
+                        .header-profile { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf0f2; padding-bottom: 10px; margin-bottom: 15px; }
+                        .profile-left { display: flex; align-items: center; gap: 15px; }
+                        .profile-img { width: 70px; height: 90px; border-radius: 12px; object-fit: cover; border: 1px solid #edf0f2; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+                        .profile-info h1 { margin: 0 0 5px 0; font-size: 24px; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;}
+                        .profile-info p { margin: 0; font-size: 13px; color: #7f8c8d; font-weight: 600; }
+                        .tier-badge { background: linear-gradient(135deg, #1a252f, #2c3e50); color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold;}
                         .school-brand { text-align: right; }
-                        .school-brand h2 { margin: 0 0 5px 0; color: #3b71ca; font-size: 18px; font-weight: 900; }
-                        .school-brand p { margin: 0; font-size: 11px; color: #95a5a6; font-weight: bold; }
-                        .hero-stats-container { display: flex; gap: 20px; margin-bottom: 30px; align-items: center; }
-                        .summary-cards { flex: 1; display: flex; flex-direction: column; gap: 15px; }
-                        .dash-card { background: #f8f9fa; border-radius: 16px; padding: 20px; text-align: center; border: 1px solid #edf0f2; }
-                        .dash-card p { margin: 0 0 8px 0; font-size: 14px; color: #7f8c8d; font-weight: 700; }
-                        .dash-card h3 { margin: 0; font-size: 28px; font-weight: 900; color: #3b71ca; }
-                        .dash-card h3 span { font-size: 16px; color: #2c3e50; }
-                        .radar-container { flex: 1.2; background: #fff; border-radius: 16px; padding: 15px; border: 1px solid #edf0f2; display: flex; justify-content: center; align-items: center; height: 260px; }
+                        .school-brand h2 { margin: 0 0 4px 0; color: #3b71ca; font-size: 16px; font-weight: 900; }
+                        .school-brand p { margin: 0; font-size: 10px; color: #95a5a6; font-weight: bold; }
+                        .hero-stats-container { display: flex; gap: 15px; margin-bottom: 20px; align-items: stretch; }
+                        .summary-cards { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+                        .dash-card { background: #f8f9fa; border-radius: 12px; padding: 15px; text-align: center; border: 1px solid #edf0f2; }
+                        .dash-card p { margin: 0 0 6px 0; font-size: 12px; color: #7f8c8d; font-weight: 700; }
+                        .dash-card h3 { margin: 0; font-size: 24px; font-weight: 900; color: #3b71ca; }
+                        .dash-card h3 span { font-size: 14px; color: #2c3e50; }
+                        .radar-container { flex: 1.5; background: #fff; border-radius: 12px; padding: 10px; border: 1px solid #edf0f2; display: flex; justify-content: center; align-items: center; height: 180px; }
                         .radar-container canvas { max-height: 100%; max-width: 100%; }
                         
-                        /* 🔥 A4 1장에 쏙 들어가는 3단 가로 그리드! */
-                        .timeline-title { font-size: 20px; font-weight: 900; color: #1a252f; border-bottom: 3px solid #3b71ca; display: inline-block; padding-bottom: 8px; margin-bottom: 20px; }
-                        .timeline-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; }
-                        .timeline-item { background: #f8f9fa; border: 1px solid #edf0f2; border-radius: 16px; padding: 15px; display: flex; flex-direction: column; }
-                        .timeline-grade { margin: 0 0 15px 0; font-size: 16px; font-weight: 900; color: #1a252f; text-align: center; border-bottom: 2px dashed #d6e1f5; padding-bottom: 10px; }
-                        .spec-box { display: flex; flex-direction: column; gap: 10px; flex: 1; }
-                        .spec-row { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; background: white; padding: 10px; border-radius: 10px; border: 1px solid #e0e6ed; }
-                        .spec-area-badge { background: #eef2fb; color: #3b71ca; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 900; display: inline-block; }
-                        .spec-tags-container { display: flex; flex-wrap: wrap; gap: 4px; }
-                        .spec-tag { background: #f1f2f6; color: #2c3e50; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1px solid #dfe6e9; }
+                        /* 🔥 A4 세로 방어를 위한 완벽 압축 (가로 3단) */
+                        .timeline-title { font-size: 16px; font-weight: 900; color: #1a252f; border-left: 4px solid #3b71ca; padding-left: 8px; margin-bottom: 10px; }
+                        .timeline-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; height: 500px; }
+                        .timeline-item { background: #f8f9fa; border: 1px solid #edf0f2; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; }
+                        .timeline-grade { margin: 0 0 10px 0; font-size: 14px; font-weight: 900; color: #1a252f; text-align: center; border-bottom: 1px dashed #d6e1f5; padding-bottom: 6px; }
+                        .spec-box { display: flex; flex-direction: column; gap: 6px; flex: 1; overflow: hidden; }
+                        .spec-row { display: flex; align-items: center; gap: 6px; background: white; padding: 6px; border-radius: 8px; border: 1px solid #e0e6ed; flex-wrap: wrap;}
+                        .spec-area-badge { background: #eef2fb; color: #3b71ca; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; }
+                        .spec-tags-container { display: flex; flex-wrap: wrap; gap: 3px; }
+                        .spec-tag { background: #f1f2f6; color: #2c3e50; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; border: 1px solid #dfe6e9; }
+                        .empty-spec { text-align:center; color:#bdc3c7; font-size:12px; margin-top:20px; font-weight:bold; }
                         
-                        .footer-sign { margin-top: 40px; text-align: right; padding-top: 20px; border-top: 2px solid #edf0f2; }
-                        .footer-sign p { margin: 0 0 10px 0; color: #7f8c8d; font-size: 14px; font-weight: bold; }
-                        .footer-sign h2 { margin: 0; color: #1a252f; font-size: 22px; font-weight: 900; letter-spacing: 2px;}
+                        .footer-sign { margin-top: 15px; text-align: center; border-top: 1px solid #edf0f2; padding-top: 15px; }
+                        .footer-sign p { margin: 0 0 5px 0; color: #7f8c8d; font-size: 12px; font-weight: bold; }
+                        .footer-sign h2 { margin: 0; color: #1a252f; font-size: 18px; font-weight: 900; letter-spacing: 5px;}
                         
                         @media print { 
                             @page { size: A4 portrait; margin: 10mm; }
                             body { padding: 0; } 
-                            .portfolio-container { width: 100%; max-width: none; padding: 0; } 
-                            .timeline-item { page-break-inside: avoid; border: 2px solid #edf0f2; }
-                            .dash-card, .radar-container { border: 2px solid #edf0f2; }
+                            .portfolio-container { width: 100%; padding: 0; } 
+                            .timeline-item { page-break-inside: avoid; border: 1px solid #edf0f2; }
                         }
                     </style>
                     </head><body>
@@ -1443,17 +1432,17 @@
                                 <div class="school-brand">
                                     <h2>SMART CITY PORTFOLIO</h2>
                                     <p>INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</p>
-                                    <p style="margin-top:4px; font-size:11px; color:#bdc3c7;">출력일: ${todayStr}</p>
+                                    <p style="margin-top:4px; font-size:10px; color:#bdc3c7;">출력일: ${todayStr}</p>
                                 </div>
                             </div>
                             <div class="hero-stats-container">
                                 <div class="summary-cards">
                                     <div class="dash-card">
-                                        <p>전체 누적 총점 (1~${studentGrade}학년)</p>
+                                        <p>3년 누적 총점</p>
                                         <h3>${grandTotalScore}<span>점</span></h3>
                                     </div>
                                     <div class="dash-card">
-                                        <p>누적 핵심 배지 (1~${studentGrade}학년)</p>
+                                        <p>3년 누적 배지</p>
                                         <h3>${finalBadges}<span>개</span></h3>
                                     </div>
                                 </div>
@@ -1461,7 +1450,7 @@
                                     <canvas id="printRadarChart"></canvas>
                                 </div>
                             </div>
-                            <div class="timeline-title">📈 학년별 Growth Timeline</div>
+                            <div class="timeline-title">📈 학년별 역량 성장 타임라인</div>
                             <div class="timeline-container">${timelineHtml}</div>
                             <div class="footer-sign">
                                 <p>위 학생은 본교의 스마트시티 역량 인증 과정을 성실히 이수하였음을 증명함.</p>
@@ -1473,10 +1462,10 @@
                             new Chart(ctx, {
                                 type: 'radar',
                                 data: {
-                                    labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
-                                    datasets: [{ data: [${radarData.join(',')}], backgroundColor: 'rgba(59, 113, 202, 0.3)', borderColor: '#3b71ca', pointBackgroundColor: '#2c3e50', pointBorderColor: '#fff', borderWidth: 2, pointRadius: 4 }]
+                                    labels: ['전공', 'AI', '기초', '어학', '체력', '인성'],
+                                    datasets: [{ data: [${radarData.join(',')}], backgroundColor: 'rgba(59, 113, 202, 0.3)', borderColor: '#3b71ca', pointRadius: 0, borderWidth: 2 }]
                                 },
-                                options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100, angleLines: { color: 'rgba(0,0,0,0.1)' }, grid: { color: 'rgba(0,0,0,0.1)' }, pointLabels: { color: '#1a252f', font: { size: 10, family: 'Pretendard', weight: '900' } }, ticks: { display: false } } }, plugins: { legend: { display: false } }, animation: false }
+                                options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100, angleLines: { color: 'rgba(0,0,0,0.1)' }, grid: { color: 'rgba(0,0,0,0.1)' }, pointLabels: { color: '#1a252f', font: { size: 9, family: 'Pretendard', weight: '900' } }, ticks: { display: false } } }, plugins: { legend: { display: false } }, animation: false }
                             });
                             setTimeout(() => { window.print(); }, 800); 
                         <\/script>
@@ -1506,9 +1495,7 @@
                 if(dynamicDeptCounts["미지정"] === 0) delete dynamicDeptCounts["미지정"];
 
                 const chartLabels = Object.keys(dynamicDeptCounts).map(name => name.length > 5 ? [name.substring(0, 4), name.substring(4)] : name); const chartData = Object.values(dynamicDeptCounts);
-                
-                const safeChartLabels = chartLabels.length > 0 ? chartLabels : ["데이터 없음"];
-                const safeChartData = chartData.length > 0 ? chartData : [0];
+                const safeChartLabels = chartLabels.length > 0 ? chartLabels : ["데이터 없음"]; const safeChartData = chartData.length > 0 ? chartData : [0];
 
                 const ctxDept = document.getElementById('deptChart').getContext('2d'); if(window.myDeptChart) window.myDeptChart.destroy(); 
                 window.myDeptChart = new Chart(ctxDept, { type: 'bar', data: { labels: safeChartLabels, datasets: [{ label: '인증 달성자', data: safeChartData, backgroundColor: '#3498db' }] } });
