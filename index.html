@@ -226,7 +226,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"
+  measurementId: "G-3SL84TXVHD"    // API KEY 등 복붙!
         };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app); 
@@ -262,7 +262,7 @@
         document.getElementById('tabStudent').addEventListener('click', () => switchTab('student'));
         document.getElementById('tabTeacher').addEventListener('click', () => switchTab('teacher'));
 
-        // ★ [완벽한 권한 판별 및 입학 연도 자동 계산 로그인 엔진]
+        // ★ [구버전 아이디까지 모두 찾아내는 3중 탐색 로그인 엔진]
         document.getElementById('btnLogin').addEventListener('click', async function(e) {
             e.preventDefault();
             const idVal = document.getElementById('inputId').value.trim();
@@ -281,12 +281,12 @@
             try {
                 await setPersistence(auth, isAutoLogin ? browserLocalPersistence : browserSessionPersistence);
                 
-                let authEmail = idVal;
+                let emailsToTry = [idVal];
 
-                // 이메일 형식이 아닐 때만 자동 변환
-                if (!authEmail.includes('@')) {
-                    // 학번 5자리(학생)일 경우 입학 연도 자동 계산 로직 적용
+                // 이메일 형식이 아닐 때만 포맷 자동 생성
+                if (!idVal.includes('@')) {
                     if (/^\d{5}$/.test(idVal)) {
+                        // 학생 학번인 경우 (연도별 스마트 식별자 생성)
                         const grade = parseInt(idVal.charAt(0));
                         const today = new Date();
                         let currentYear = today.getFullYear();
@@ -295,26 +295,43 @@
                         let admissionYear = academicYear - grade + 1;
                         let prefix = String(admissionYear).slice(-2);
 
-                        // 자동 계산된 접두사 적용 (예: stu26_10101@...)
-                        authEmail = `stu${prefix}_${idVal}@induk.hs.kr`;
+                        // 💡 핵심: 최신 아이디부터 옛날 아이디까지 3번 연속으로 찔러봅니다! (학생은 모름)
+                        emailsToTry = [
+                            `stu${prefix}_${idVal}@induk.hs.kr`, // 1순위: 최신 (stu26_10101)
+                            `stu_${idVal}@induk.hs.kr`,          // 2순위: 구버전 (stu_10101)
+                            `${idVal}@induk.hs.kr`               // 3순위: 극초기버전 (10101)
+                        ];
                     } else if (idVal === 'admin') {
-                        // 🚨 2. 여기에 선생님이 실제로 구글에 가입한 최고관리자 이메일을 꼭 넣어주세요! 🚨
-                        authEmail = 'admin@naver.com'; 
+                        // 🚨 2. 여기에 최고관리자 이메일을 꼭 다시 넣어주세요! 🚨
+                        emailsToTry = ['admin@naver.com']; 
                     } else {
                         // 교사 아이디인 경우
-                        authEmail = `${idVal}@induk.hs.kr`;
+                        emailsToTry = [`${idVal}@induk.hs.kr`];
                     }
                 }
 
-                // 1. Firebase Auth 로그인 시도
-                const userCredential = await signInWithEmailAndPassword(auth, authEmail, pwVal);
-                const uid = userCredential.user.uid;
+                let userCredential = null;
+                let lastError = null;
 
+                // 만들어진 이메일 배열을 순회하며 로그인 시도 (눈에 보이지 않는 속도)
+                for (let email of emailsToTry) {
+                    try {
+                        userCredential = await signInWithEmailAndPassword(auth, email, pwVal);
+                        break; // 성공하면 루프 즉시 탈출!
+                    } catch (error) {
+                        lastError = error;
+                        // 실패하면 다음 이메일 포맷으로 묵묵히 재시도
+                    }
+                }
+
+                if (!userCredential) {
+                    throw lastError; // 3번 다 실패하면 최종 에러 발생
+                }
+
+                const uid = userCredential.user.uid;
                 btn.innerText = "권한 판별 중... 🔍";
 
                 // 2. 권한 판별 (관리자 -> 교사 -> 학생)
-                
-                // [A] 최고 관리자 확인
                 const adminSnap = await getDoc(doc(db, "admin_users", uid));
                 if (adminSnap.exists()) {
                     sessionStorage.setItem('userRole', 'admin');
@@ -323,7 +340,6 @@
                     return; 
                 }
 
-                // [B] 교사 확인
                 const teacherSnap = await getDoc(doc(db, "teachers", uid));
                 if (teacherSnap.exists()) {
                     const tData = teacherSnap.data();
@@ -337,7 +353,6 @@
                     return;
                 }
 
-                // [C] 학생 확인
                 const studentSnap = await getDoc(doc(db, "students", uid));
                 if (studentSnap.exists()) {
                     const sData = studentSnap.data();
@@ -349,7 +364,6 @@
                     return;
                 }
 
-                // [D] DB에 정보가 없는 고아 계정 처리
                 throw new Error("role_not_found");
 
             } catch(error) {
