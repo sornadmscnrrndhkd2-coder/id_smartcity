@@ -151,15 +151,15 @@
     </script>
 
     <script>
-        // ★ 문서 V. 영역별 운영 지침서에 명시된 '만점 상한선 제어' 완벽 반영!
+        // ★ 문서 V. 영역별 운영 지침서 완벽 반영 (2026 개정판)
         window.AREAS = ['S', 'M', 'A', 'R', 'T', 'C', 'I', 'Tr', 'Y'];
         window.AREA_NAMES = { S: '정보화', M: '전공성적', A: '예체능', R: '한국사', T: '전공자격', C: '직업기초', I: '외국어', Tr: '성실', Y: '인성' };
         
-        // 🚨 각 영역별 획득 가능한 이론상 최대 만점 한도 (학생들의 비정상적 점수 폭주 방지)
+        // 🚨 지침서 기준: 각 영역별 획득 가능한 이론상 최대 만점 한도
         window.CAPS = { 
-            1: { S:60, M:80, A:60, R:30, T:130, C:50, I:70, Tr:50, Y:30 }, 
-            2: { S:70, M:80, A:50, R:40, T:135, C:50, I:120, Tr:50, Y:30 }, 
-            3: { S:70, M:130, A:50, R:30, T:200, C:50, I:110, Tr:60, Y:30 } 
+            1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, // 1학년 (합계 380점)
+            2: { S:50, M:50, A:30, R:40, T:80, C:50, I:40, Tr:50, Y:30 }, // 2학년 (합계 420점)
+            3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 }  // 3학년 (합계 450점)
         };
         
         // 🚨 배지를 획득하기 위한 영역별 최소 통과 점수 (커트라인)
@@ -169,40 +169,45 @@
             3: { S:20, M:40, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 } 
         };
 
-        // 🚨 2026년도 최신 개편 학년별 세부 평가 기준표
+        // 🚨 세부 평가 기준 (중복 체크 방지를 위한 group 철저 적용)
         window.EVAL_ITEMS_BY_GRADE = {
             1: {
                 'S': [{ label: 'ITQ 2과목 합격(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목 합격(20점) (등급 무관)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
                 'M': [{ label: '전공 A 4개(50점)', score: 50, group: 'm_grade' }, { label: '전공 A 3개(40점)', score: 40, group: 'm_grade' }, { label: '전공 A 2개(20점)', score: 20, group: 'm_grade' }, { label: '전공 B 2개(10점)', score: 10, group: 'm_grade' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
-                'A': [{ label: 'PAPS 전체 1등급(30점)', score: 30, group: 'paps' }, { label: 'PAPS 전체 2등급(20점)', score: 20, group: 'paps' }, { label: 'PAPS 전체 3등급(10점)', score: 10, group: 'paps' }, { label: '학교스포츠클럽 대회 입상 (20점)', score: 20, group: 'sp_contest' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'sp_part' }],
+                'A': [{ label: 'PAPS 전체 1등급(30점)', score: 30, group: 'a_paps' }, { label: 'PAPS 전체 2등급(20점)', score: 20, group: 'a_paps' }, { label: 'PAPS 전체 3등급(10점)', score: 10, group: 'a_paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'a_sports_c' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'a_sports_p' }],
                 'R': [{ label: '한능검 3급(30점)', score: 30, group: 'r_his' }, { label: '한능검 4급(20점)', score: 20, group: 'r_his' }, { label: '한능검 5~6급(10점)', score: 10, group: 'r_his' }],
-                'T': [{ label: '기능사 자격증 취득(60점)', score: 60, group: 't_func' }, { label: '민간자격증 취득(40점)', score: 40, group: 't_priv' }, { label: '국가/민간 필기합격(30점)', score: 30, group: 't_written' }],
-                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_grade' }, { label: '평균 2등급(40점)', score: 40, group: 'c_grade' }, { label: '평균 3등급(30점)', score: 30, group: 'c_grade' }],
-                'I': [{ label: '교내 영어 관련 대회 입상(30점)', score: 30, group: 'i_contest' }, { label: '영어 교과 성취도 A 이상(40점)', score: 40, group: 'i_grade' }, { label: '영어 교과 성취도 B 이상(30점)', score: 30, group: 'i_grade' }],
+                'T': [{ label: '기능사 자격증 취득(60점)', score: 60, group: 't_now' }, { label: '민간자격증 취득(40점)', score: 40, group: 't_now' }, { label: '국가/민간 필기합격(30점)', score: 30, group: 't_now' }],
+                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_ncs' }, { label: '평균 2등급(40점)', score: 40, group: 'c_ncs' }, { label: '평균 3등급(30점)', score: 30, group: 'c_ncs' }],
+                // 🔥 외국어 단일 항목 산정 방어 (group: i_total 통일)
+                'I': [{ label: '영어 교과 성취도 A 이상(40점)', score: 40, group: 'i_total' }, { label: '영어 교과 성취도 B 이상(30점)', score: 30, group: 'i_total' }, { label: '교내 영어 관련 대회 입상(30점)', score: 30, group: 'i_total' }],
                 'Tr': [{ label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
-                'Y': [{ label: '봉사 16시간+독서 4권이상(30점)', score: 30, group: 'y_act' }, { label: '봉사 12시간+독서 3권이상(20점)', score: 20, group: 'y_act' }]
+                'Y': [{ label: '봉사 16시간+독서 4권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 12시간+독서 3권이상(20점)', score: 20, group: 'y_set' }]
             },
             2: {
-                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
                 'M': [{ label: '전공 A 4개 이상(50점)', score: 50, group: 'm_grade' }, { label: '전공 A 3개(30점)', score: 30, group: 'm_grade' }, { label: '전공 A 2개(10점)', score: 10, group: 'm_grade' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
-                'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'paps' }, { label: 'PAPS 전체 3등급(5점)', score: 5, group: 'paps' }, { label: '학교스포츠클럽 대회 입상 (20점)', score: 20, group: 'sp_contest' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'sp_part' }],
+                'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'a_paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'a_paps' }, { label: 'PAPS 전체 3등급(5점)', score: 5, group: 'a_paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'a_sports_c' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'a_sports_p' }],
                 'R': [{ label: '한능검 1급(40점)', score: 40, group: 'r_his' }, { label: '한능검 2급(30점)', score: 30, group: 'r_his' }, { label: '한능검 3급(20점)', score: 20, group: 'r_his' }, { label: '한능검 4급(10점)', score: 10, group: 'r_his' }],
-                'T': [{ label: '(해당학년)기능사 1개 취득(60점)', score: 60, group: 't_func_now' }, { label: '(해당학년)민간 자격증 1개 취득(40점)', score: 40, group: 't_priv_now' }, { label: '(해당학년)국가/민간 필기합격(20점) (해당학년 취득자격증 외)', score: 20, group: 't_written_now' }, { label: '(이전학년)기능사 1개 보유(10점)', score: 10, group: 't_func_prev' }, { label: '(이전학년)민간 자격증 1개 보유(5점)', score: 5, group: 't_priv_prev' }],
-                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_grade' }, { label: '평균 2등급(40점)', score: 40, group: 'c_grade' }, { label: '평균 3등급(30점)', score: 30, group: 'c_grade' }],
-                'I': [{ label: '영어/일어 교과 성취도 A (40점)', score: 40, group: 'i_grade' }, { label: '영어/일어 교과 성취도 B (30점)', score: 30, group: 'i_grade' }, { label: '토익 500점 / 토익 스피킹 NH 이상 / OPIc NH 이상 (40점)', score: 40, group: 'i_cert_eng' }, { label: '일본어 JLPT N5 / JPT 250점 이상 (40점)', score: 40, group: 'i_cert_jp' }],
+                // 🔥 전공자격 당해 최고점(t_now) + 이전 최고점(t_prev) 분리 방어
+                'T': [{ label: '(당해연도)기능사 1개 취득(60점)', score: 60, group: 't_now_f' }, { label: '(당해연도)민간 자격증 1개 취득(40점)', score: 40, group: 't_now_p' }, { label: '(당해연도)국가/민간 필기합격(20점)', score: 20, group: 't_now_w' }, { label: '(이전학년)기능사 1개 보유(10점)', score: 10, group: 't_prev_f' }, { label: '(이전학년)민간 자격증 1개 보유(5점)', score: 5, group: 't_prev_p' }],
+                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_ncs' }, { label: '평균 2등급(40점)', score: 40, group: 'c_ncs' }, { label: '평균 3등급(30점)', score: 30, group: 'c_ncs' }],
+                // 🔥 외국어 단일 항목 산정 방어 (group: i_total 통일)
+                'I': [{ label: '영어/일어 교과 성취도 A(40점)', score: 40, group: 'i_total' }, { label: '영어/일어 교과 성취도 B(30점)', score: 30, group: 'i_total' }, { label: '토익 500점 등 공인어학(40점)', score: 40, group: 'i_total' }, { label: 'JLPT N5 등 공인어학(40점)', score: 40, group: 'i_total' }],
                 'Tr': [{ label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
-                'Y': [{ label: '봉사 20시간+독서 5권이상(30점)', score: 30, group: 'y_act' }, { label: '봉사 16시간+독서 4권이상(20점)', score: 20, group: 'y_act' }]
+                'Y': [{ label: '봉사 20시간+독서 5권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 16시간+독서 4권이상(20점)', score: 20, group: 'y_set' }]
             },
             3: {
-                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득)AI관련 (추가) 자격증 취득(20점)', score: 20, group: 's_ai' }],
-                'M': [{ label: '전공 A 6개(60점)', score: 60, group: 'm_grade' }, { label: '전공 A 4개(40점)', score: 40, group: 'm_grade' }, { label: '캡스톤 디자인 작품 전시 및 발표 (본인 성명 명시)(40점)', score: 40, group: 'm_capstone' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
-                'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'sp_contest' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'sp_part' }],
+                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'M': [{ label: '전공 A 6개(60점)', score: 60, group: 'm_grade' }, { label: '전공 A 4개(40점)', score: 40, group: 'm_grade' }, { label: '캡스톤 디자인 작품 전시 및 발표(40점)', score: 40, group: 'm_caps' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
+                'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'a_paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'a_paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'a_sports_c' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'a_sports_p' }],
                 'R': [{ label: '한능검 1급(30점)', score: 30, group: 'r_his' }, { label: '한능검 2급(20점)', score: 20, group: 'r_his' }, { label: '한능검 3급(10점)', score: 10, group: 'r_his' }],
-                'T': [{ label: '(해당학년)기능사 1개 취득(60점)', score: 60, group: 't_now_func' }, { label: '(해당학년)민간 자격증 1개 취득(40점)', score: 40, group: 't_now_priv' }, { label: '(해당학년)국가/민간 필기합격(10점) (해당학년 취득자격증 외)', score: 10, group: 't_now_written' }, { label: '기능사 자격증 보유 : 3개(60점)', score: 60, group: 't_prev_func' }, { label: '기능사 자격증 보유 : 2개(30점)', score: 30, group: 't_prev_func' }, { label: '기능사 자격증 보유 : 1개(10점)', score: 10, group: 't_prev_func' }, { label: '민간 자격증 보유 : 3개(30점)', score: 30, group: 't_prev_priv' }, { label: '민간 자격증 보유 : 2개(20점)', score: 20, group: 't_prev_priv' }, { label: '민간 자격증 보유 : 1개(5점)', score: 5, group: 't_prev_priv' }],
-                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_grade' }, { label: '평균 2등급(40점)', score: 40, group: 'c_grade' }, { label: '평균 3등급(30점)', score: 30, group: 'c_grade' }],
-                'I': [{ label: '토익 600점 / 토익 스피킹 IL 이상 / OPIc IL 이상 (50점)', score: 50, group: 'i_cert_eng' }, { label: '일본어 JLPT N4 / JPT 350점 이상 (50점)', score: 50, group: 'i_cert_jp' }, { label: '2학년 공인어학시험 등급 보유 (10점)', score: 10, group: 'i_prev' }],
+                // 🔥 전공자격 당해 최고점(t_now) + 이전 최고점(t_prev) 완벽 분리 방어!
+                'T': [{ label: '(당해연도)기능사 1개 취득(60점)', score: 60, group: 't_now_f' }, { label: '(당해연도)민간 자격증 1개 취득(40점)', score: 40, group: 't_now_p' }, { label: '(당해연도)국가/민간 필기합격(10점)', score: 10, group: 't_now_w' }, { label: '(누적보유)기능사 3개(60점)', score: 60, group: 't_prev_f' }, { label: '(누적보유)기능사 2개(30점)', score: 30, group: 't_prev_f' }, { label: '(누적보유)기능사 1개(10점)', score: 10, group: 't_prev_f' }, { label: '(누적보유)민간 3개(30점)', score: 30, group: 't_prev_p' }, { label: '(누적보유)민간 2개(20점)', score: 20, group: 't_prev_p' }, { label: '(누적보유)민간 1개(5점)', score: 5, group: 't_prev_p' }],
+                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_ncs' }, { label: '평균 2등급(40점)', score: 40, group: 'c_ncs' }, { label: '평균 3등급(30점)', score: 30, group: 'c_ncs' }],
+                // 🔥 외국어 단일 항목 산정 방어 (group: i_total 통일)
+                'I': [{ label: '토익 600점 등 공인어학(50점)', score: 50, group: 'i_total' }, { label: 'JLPT N4 등 공인어학(50점)', score: 50, group: 'i_total' }, { label: '2학년 공인어학시험 등급 보유(10점)', score: 10, group: 'i_total' }],
                 'Tr': [{ label: '3년 개근(60점)', score: 60, group: 'tr_att' }, { label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
-                'Y': [{ label: '봉사 24시간+독서 6권이상(30점)', score: 30, group: 'y_act' }, { label: '봉사 20시간+독서 5권이상(20점)', score: 20, group: 'y_act' }]
+                'Y': [{ label: '봉사 24시간+독서 6권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 20시간+독서 5권이상(20점)', score: 20, group: 'y_set' }]
             }
         };
     </script>
@@ -437,7 +442,7 @@
 
             <div id="systemLog" style="display:none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap:10px;">
-                    <h2>🔍 시스템 활동 로그 (CCTV)</h2><button onclick="window.downloadExcelReport('logTable', '스마트시티_시스템로그')" class="btn btn-dark">⬇️ 로그 엑셀 다운로드</button>
+                    <h2>🔍 시스템 활동 로그 (C CCTV)</h2><button onclick="window.downloadExcelReport('logTable', '스마트시티_시스템로그')" class="btn btn-dark">⬇️ 로그 엑셀 다운로드</button>
                 </div>
                 <div class="summary-box" style="border-left-color: #8e44ad;"><strong>💡 투명한 시스템 감시 기록</strong><br>로그인 및 데이터 수정 기록이 영구 보존됩니다. (최근 200건 표시)</div>
                 <button onclick="window.loadLogs()" class="btn btn-purple" style="margin-bottom: 10px;">🔄 로그 새로고침</button>
@@ -524,26 +529,6 @@
                 <button class="btn btn-dark" onclick="window.closeEditTeacherModal()">취소</button>
                 <button class="btn btn-orange" onclick="window.saveTeacherEdit()">💾 수정 완료</button>
             </div>
-        </div>
-    </div>
-
-    <div id="pendingModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-        <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header"><span>📝 전교생 미승인 결재 대기 명단</span><button class="btn btn-dark" onclick="document.getElementById('pendingModal').style.display='none'">✕</button></div>
-            <div class="summary-box" style="margin-bottom: 15px;">전교생이 신청한 배지 인증 증빙자료를 통합 관리자가 확인하고 승인/반려할 수 있습니다.</div>
-            <div style="overflow-x: auto; border: 1px solid #eee; border-radius: 8px;">
-                <table class="data-table" style="min-width: 600px; margin: 0;">
-                    <thead style="background:#34495e; color:white;"><tr><th>신청일</th><th>학번/이름</th><th>신청 역량(점수)</th><th>증빙자료</th><th>상태관리</th></tr></thead>
-                    <tbody id="adminPendingList"><tr><td colspan="5" style="text-align: center; padding: 30px; color: #7f8c8d; font-weight: bold;">결재 데이터를 불러오는 중입니다...⏳</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="adminProofModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
-        <div class="modal-content" style="max-width: 700px; text-align: center;">
-            <div class="modal-header"><h3>📄 제출된 증빙 자료 (관리자 확인용)</h3><button class="close-btn" onclick="document.getElementById('adminProofModal').style.display='none'">✕</button></div>
-            <div id="adminProofContent" style="margin-top: 15px; max-height: 60vh; overflow-y: auto; background: #eee; border-radius: 8px; display: flex; justify-content: center; align-items: center; min-height: 200px;"></div>
         </div>
     </div>
 
@@ -704,66 +689,89 @@
                             }
                             
                             let newAuthEmail = `stu${prefix}_${newId}@induk.hs.kr`;
-                            
-                            // 🔥 [핵심] 이전 학년 점수를 기반으로 한 진급 누적 인공지능 엔진
-                            let g1_R = existingData.year_1?.scores?.R || 0;
-                            let g1_T = existingData.year_1?.scores?.T || 0;
-                            let g2_R = existingData.year_2?.scores?.R || 0;
-                            let g2_T = existingData.year_2?.scores?.T || 0;
-                            let g2_I = existingData.year_2?.scores?.I || 0;
 
-                            let auto_R = 0, auto_T = 0, auto_I = 0;
+                            let g1_chk_S = existingData.year_1?.checked_items?.S || [];
+                            let g1_chk_R = existingData.year_1?.checked_items?.R || [];
+                            let g1_chk_T = existingData.year_1?.checked_items?.T || [];
+
+                            let g2_chk_S = existingData.year_2?.checked_items?.S || [];
+                            let g2_chk_R = existingData.year_2?.checked_items?.R || [];
+                            let g2_chk_T = existingData.year_2?.checked_items?.T || [];
+                            let g2_chk_I = existingData.year_2?.checked_items?.I || [];
+
+                            let auto_S = 0, auto_R = 0, auto_T = 0, auto_I = 0;
+                            let checked_S = [], checked_R = [], checked_T = [], checked_I = [];
 
                             if (newGrade === 2) {
-                                // 한국사
-                                if (g1_R >= 30) auto_R = 20; 
-                                else if (g1_R >= 20) auto_R = 10;
-                                // 전공자격
-                                if (g1_T >= 60) auto_T += 10;
-                                if (g1_T === 40 || g1_T >= 100) auto_T += 5;
+                                if (g1_chk_S.includes(0)) { checked_S.push(2); auto_S = 10; }
+                                if (g1_chk_R.includes(0)) { checked_R.push(2); auto_R = 20; } 
+                                else if (g1_chk_R.includes(1)) { checked_R.push(3); auto_R = 10; } 
+                                if (g1_chk_T.includes(0)) { checked_T.push(3); auto_T += 10; }
+                                if (g1_chk_T.includes(1)) { checked_T.push(4); auto_T += 5; }
                             } 
                             else if (newGrade === 3) {
-                                // 한국사 최고 등급
-                                let histLevel = 99;
-                                if (g2_R >= 40) histLevel = 1; 
-                                else if (g2_R >= 30) histLevel = 2; 
-                                else if (g2_R >= 20 || g1_R >= 30) histLevel = 3;
+                                let itqLevel = 0;
+                                if (g2_chk_S.includes(0)) itqLevel = 3;
+                                else if (g2_chk_S.includes(1)) itqLevel = 2;
+                                else if (g2_chk_S.includes(2) || g1_chk_S.includes(0)) itqLevel = 1;
 
-                                if (histLevel === 1) auto_R = 30; 
-                                else if (histLevel === 2) auto_R = 20; 
-                                else if (histLevel === 3) auto_R = 10;
+                                if (itqLevel === 3) { checked_S.push(0); auto_S = 50; }
+                                else if (itqLevel === 2) { checked_S.push(1); auto_S = 10; }
+
+                                let histLevel = 99;
+                                if (g2_chk_R.includes(0)) histLevel = 1; 
+                                else if (g2_chk_R.includes(1)) histLevel = 2; 
+                                else if (g2_chk_R.includes(2) || g1_chk_R.includes(0)) histLevel = 3; 
+
+                                if (histLevel === 1) { checked_R.push(0); auto_R = 30; }
+                                else if (histLevel === 2) { checked_R.push(1); auto_R = 20; }
+                                else if (histLevel === 3) { checked_R.push(2); auto_R = 10; }
                                 
-                                // 전공자격 누적 개수
                                 let funcCount = 0, privCount = 0;
-                                if (g1_T >= 60) funcCount++;
-                                if (g1_T === 40 || g1_T >= 100) privCount++;
-                                if (g2_T >= 60) funcCount++;
-                                if ((g2_T % 60) >= 40) privCount++;
+                                if (g1_chk_T.includes(0)) funcCount++;
+                                if (g1_chk_T.includes(1)) privCount++;
+                                if (g2_chk_T.includes(0)) funcCount++; 
+                                if (g2_chk_T.includes(1)) privCount++; 
                                 
-                                if (funcCount >= 3) auto_T += 60; 
-                                else if (funcCount === 2) auto_T += 30; 
-                                else if (funcCount === 1) auto_T += 10;
+                                if (funcCount >= 3) { checked_T.push(3); auto_T += 60; }
+                                else if (funcCount === 2) { checked_T.push(4); auto_T += 30; }
+                                else if (funcCount === 1) { checked_T.push(5); auto_T += 10; }
                                 
-                                if (privCount >= 3) auto_T += 30; 
-                                else if (privCount === 2) auto_T += 20; 
-                                else if (privCount === 1) auto_T += 5;
+                                if (privCount >= 3) { checked_T.push(6); auto_T += 30; }
+                                else if (privCount === 2) { checked_T.push(7); auto_T += 20; }
+                                else if (privCount === 1) { checked_T.push(8); auto_T += 5; }
                                 
-                                // 영어 공인어학
-                                if (g2_I >= 40) auto_I = 10;
+                                if (g2_chk_I.includes(2) || g2_chk_I.includes(3)) {
+                                    checked_I.push(2); auto_I = 10;
+                                }
                             }
 
-                            // 상한선 적용 (안전 장치)
+                            auto_S = Math.min(auto_S, window.CAPS[newGrade].S);
                             auto_R = Math.min(auto_R, window.CAPS[newGrade].R);
                             auto_T = Math.min(auto_T, window.CAPS[newGrade].T);
                             auto_I = Math.min(auto_I, window.CAPS[newGrade].I);
 
-                            let s_map = {S:0, M:0, A:0, R:auto_R, T:auto_T, C:0, I:auto_I, Tr:0, Y:0};
+                            let s_map = {S:auto_S, M:0, A:0, R:auto_R, T:auto_T, C:0, I:auto_I, Tr:0, Y:0};
                             let p_map = {}; window.AREAS.forEach(a => p_map[a] = s_map[a] >= window.PASS_CUTOFF[newGrade][a]);
                             let earned = Object.values(p_map).filter(Boolean).length; 
                             let title = earned >= 6 ? (newGrade === 1 ? "🏆 CITY 스타터" : (newGrade === 2 ? "🏆 CITY 빌더" : "🏆 CITY 프로")) : "진행중";
 
+                            let checked_items_map = {};
+                            if(checked_S.length > 0) checked_items_map.S = checked_S;
+                            if(checked_R.length > 0) checked_items_map.R = checked_R;
+                            if(checked_T.length > 0) checked_items_map.T = checked_T;
+                            if(checked_I.length > 0) checked_items_map.I = checked_I;
+
                             let updatePayload = { current_studentId: newId, current_grade: newGrade, department: newDept };
-                            updatePayload[`year_${newGrade}`] = { scores: s_map, pass: p_map, earned_badges: earned, total_score: (auto_R+auto_T+auto_I), title: title, delivery_status: {} };
+                            updatePayload[`year_${newGrade}`] = { 
+                                scores: s_map, 
+                                pass: p_map, 
+                                earned_badges: earned, 
+                                total_score: (auto_S+auto_R+auto_T+auto_I), 
+                                title: title, 
+                                delivery_status: {},
+                                checked_items: checked_items_map 
+                            };
 
                             batch.update(window.doc(window.db, "students", targetDocId), updatePayload);
                             batch.delete(window.doc(window.db, "directory", oldId));
@@ -964,11 +972,17 @@
                 const studentSnap = await window.getDoc(studentRef);
                 if(studentSnap.exists()) {
                     const sData = studentSnap.data(); let yData = sData[`year_${grade}`] || { scores: {}, pass: {} };
-                    yData.scores[area] = score; yData.pass[area] = score >= window.PASS_CUTOFF[grade][area]; 
+                    
+                    // 💡 [해결] 승인 시점에도 캡(CAPS)을 적용하여 총점 뻥튀기 방지
+                    let prevScore = yData.scores[area] || 0;
+                    yData.scores[area] = Math.min(Math.max(score, prevScore), window.CAPS[grade][area]); 
+                    yData.pass[area] = yData.scores[area] >= window.PASS_CUTOFF[grade][area]; 
+                    
                     let total = 0, badges = 0; window.AREAS.forEach(a => { total += (yData.scores[a] || 0); if(yData.pass[a]) badges++; });
                     let title = yData.title || "진행중";
                     if(badges >= 6) { if(grade === 1) title = "🏆 CITY 스타터"; else if(grade === 2) title = "🏆 CITY 빌더"; else title = "🏆 CITY 프로"; }
                     yData.total_score = total; yData.earned_badges = badges; yData.title = title;
+                    
                     await window.updateDoc(studentRef, { [`year_${grade}`]: yData });
                 }
                 alert("✅ 승인 완료 및 점수가 업데이트되었습니다.");
@@ -1180,144 +1194,243 @@
             try { const querySnapshot = await window.getDocs(window.collection(window.db, "system_logs")); let logs = []; querySnapshot.forEach(doc => logs.push(doc.data())); logs.sort((a, b) => b.timestamp - a.timestamp); tbody.innerHTML = ""; logs.slice(0, 200).forEach(log => { let userIcon = "👤"; if(log.user.includes("학생")) userIcon = "🧑‍🎓"; else if(log.user.includes("교사")) userIcon = "👨‍🏫"; else if(log.user.includes("관리자") || log.user.includes("Admin")) userIcon = "👑"; tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${userIcon} ${log.user}</td><td>${log.action}</td></tr>`; }); if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>활동 로그가 없습니다.</td></tr>"; } catch(e) { tbody.innerHTML = "<tr><td colspan='3'>오류</td></tr>"; }
         };
 
-        window.printClassChart = function() {
-            const filterClass = document.getElementById("filterClass").value; const filterGrade = document.getElementById("filterGrade").value;
-            if (filterClass === "ALL") return alert("❗ '반'을 먼저 선택 후 [조회]를 눌러주세요.");
-            if (!window.allStudentsData || window.allStudentsData.length === 0) return alert("출력할 데이터가 없습니다.");
-            
-            const labels = []; const dataValues = []; 
-            window.allStudentsData.forEach(s => { labels.push(s.name); dataValues.push(s.yearData.earned_badges || 0); });
-            const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-            
-            const printWindow = window.open('', '_blank', 'width=1100,height=800');
-            printWindow.document.write(`
-                <html><head><title>우리 반 역량 현황 출력</title><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
-                <style>
-                    @page { size: landscape; margin: 0; } 
-                    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box; }
-                    body { display: flex; flex-direction: column; font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 3vh 3vw; background: white; justify-content: space-between; }
-                    .title-wrap { flex: 0 0 auto; margin-bottom: 2vh; }
-                    h1 { color: #2c3e50; font-size: 4vh; border-bottom: 0.4vh solid #3498db; padding-bottom: 1vh; margin: 0 0 1vh 0; display: inline-block; font-weight: 900;}
-                    .date-text { color: #7f8c8d; font-size: 2vh; font-weight: bold; }
-                    .chart-container { flex: 1 1 auto; position: relative; width: 100%; min-height: 0; padding: 1vh 0; }
-                    .footer { flex: 0 0 auto; font-size: 1.8vh; color: #7f8c8d; font-weight: bold; letter-spacing: 2px;}
-                </style>
-                </head>
-                <body>
-                    <div class="title-wrap">
-                        <h1>👑 ${filterGrade}학년 ${filterClass}반 스마트시티 배지 획득 현황</h1>
-                        <div class="date-text">[ ${todayStr} 기준 ]</div>
-                    </div>
-                    <div class="chart-container"><canvas id="classChart"></canvas></div>
-                    <div class="footer">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
-                    <script>
-                        const badgeLabelPlugin = { id: 'badgeLabels', afterDatasetsDraw(chart) { const { ctx } = chart; chart.data.datasets.forEach((dataset, i) => { const meta = chart.getDatasetMeta(i); meta.data.forEach((bar, index) => { const data = dataset.data[index]; ctx.fillStyle = '#c0392b'; ctx.font = 'bold 1.8vh "Malgun Gothic"'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(data + '개', bar.x, bar.y - 8); }); }); } }; 
-                        const ctx = document.getElementById('classChart').getContext('2d'); 
-                        new Chart(ctx, { type: 'bar', data: { labels: [${labels.map(l => `'${l}'`).join(',')}], datasets: [{ label: '획득 배지', data: [${dataValues.join(',')}], backgroundColor: 'rgba(52, 152, 219, 0.85)', borderColor: 'rgba(41, 128, 185, 1)', borderWidth: 2, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1000 }, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 9, ticks: { stepSize: 1, font: { size: 16, weight: 'bold' }, color: '#7f8c8d' }, grid: { color: '#ecf0f1' } }, x: { ticks: { font: { size: 15, weight: 'bold' }, color: '#2c3e50' }, grid: { display: false } } } }, plugins: [badgeLabelPlugin] }); 
-                        setTimeout(() => { window.print(); }, 1500);
-                    <\/script>
-                </body></html>
-            `); 
-            printWindow.document.close(); 
-        };
-        
-        window.downloadExcelReport = function(tableId, fileName) { const table = document.getElementById(tableId); const wb = XLSX.utils.table_to_book(table, {sheet: "보고서"}); XLSX.writeFile(wb, `${fileName}.xlsx`); };
-
-        window.updateTableHeaders = function() {
-            const grade = document.getElementById("filterGrade").value; const cutoffs = window.PASS_CUTOFF[grade];
-            let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="window.toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th>이름</th>`; 
-            window.AREAS.forEach(a => { headerHtml += `<th>[${a}]<br><span class="th-criteria">(${cutoffs[a]}점↑)</span></th>`; }); 
-            headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력</th>`; 
-            document.getElementById("tableHeaderRow").innerHTML = headerHtml;
-        };
-
-        window.toggleAllCheckboxes = function(source) { const checkboxes = document.querySelectorAll('.student-checkbox'); checkboxes.forEach(cb => cb.checked = source.checked); };
-
-        window.loadData = async function() {
-            const tbody = document.getElementById("studentTableBody"); 
-            const filterGrade = document.getElementById("filterGrade").value; const filterDept = document.getElementById("filterDept").value; 
-            const filterClass = document.getElementById("filterClass").value; const filterCert = document.getElementById("filterCert").value;
-            tbody.innerHTML = "<tr><td colspan='17'>불러오는 중...</td></tr>";
+        // 🖨️ [자동 반응형 육각형 포트폴리오] 학년/데이터 유무에 따라 자동 편집
+        window.printCertificate = async function(studentId) {
             try {
-                const querySnapshot = await window.getDocs(window.collection(window.db, "students")); 
-                let students = []; window.allStudentsData = []; let dbDepartments = new Set();
-
-                querySnapshot.forEach(doc => {
-                    let data = doc.data(); 
-                    if(data.department && data.department !== "-" && data.department !== "미지정") dbDepartments.add(data.department);
-                    let yearData = data[`year_${filterGrade}`] || {};
-                    if (data.current_grade == filterGrade && data[`year_${filterGrade}`]) {
-                        if (filterDept !== "ALL" && (data.department || "미지정") !== filterDept) return;
-                        let classNum = parseInt(String(data.current_studentId).substring(1, 3), 10); 
-                        if (filterClass !== "ALL" && !isNaN(classNum) && classNum !== Number(filterClass)) return;
-                        if (filterCert === 'PASS' && (yearData.earned_badges || 0) < 6) return;
-                        let sInfo = { docId: doc.id, id: data.current_studentId, name: data.name, dept: data.department || "-", photo: data.photoUrl || null, birthdate: data.birthdate, yearData: yearData };
-                        students.push(sInfo); window.allStudentsData.push(sInfo);
-                    }
-                });
-
-                const filterDeptEl = document.getElementById("filterDept"); const badgeFilterDeptEl = document.getElementById("badgeFilterDept"); const editDeptEl = document.getElementById("edit-Dept");
-                let currentFilter = filterDeptEl.value; let currentBadgeFilter = badgeFilterDeptEl.value;
-                let optionsHtml = `<option value="ALL">전체 학과</option>`; let editOptionsHtml = `<option value="미지정">미지정</option>`;
-                Array.from(dbDepartments).sort().forEach(dept => { optionsHtml += `<option value="${dept}">${dept}</option>`; editOptionsHtml += `<option value="${dept}">${dept}</option>`; });
-                filterDeptEl.innerHTML = optionsHtml; badgeFilterDeptEl.innerHTML = optionsHtml; editDeptEl.innerHTML = editOptionsHtml;
-                if(dbDepartments.has(currentFilter)) filterDeptEl.value = currentFilter; if(dbDepartments.has(currentBadgeFilter)) badgeFilterDeptEl.value = currentBadgeFilter;
-
-                students.sort((a,b) => String(a.id).localeCompare(String(b.id))); window.allStudentsData.sort((a,b) => String(a.id).localeCompare(String(b.id)));
-
-                tbody.innerHTML = students.length === 0 ? `<tr><td colspan='17' style='padding:30px;'>데이터가 없습니다.</td></tr>` : "";
+                const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
+                if(qSnap.empty) return alert("학생 데이터를 찾을 수 없습니다.");
                 
-                students.forEach(s => {
-                    let sc = s.yearData.scores || {}; let p = s.yearData.pass || {}; let d = s.yearData.delivery_status || {};
-                    let photoHtml = s.photo ? `<img src="${s.photo}" class="profile-img" onclick="window.openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
-                    let rowHtml = `<tr class="${(s.yearData.earned_badges || 0) >= 6 ? 'certified-row' : ''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}" data-name="${s.name}"></td><td style="white-space:nowrap;">${s.dept}</td><td>${s.id}</td><td style="text-align: left; display: flex; align-items: center; justify-content: space-between;"><div>${photoHtml} <strong>${s.name}</strong></div><div><span style="cursor:pointer; color:#f39c12; font-size:16px;" onclick="window.openEditModal('${s.docId}', ${filterGrade})" title="수정">✏️</span></div></td>`;
+                const sData = qSnap.docs[0].data();
+                const studentGrade = sData.current_grade || 1; 
+                
+                let grandTotalScore = 0;
+                let finalBadges = 0;
+                let finalTier = "🌱 CITY 스타터";
+                
+                let sumScores = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
+                let sumCaps = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
+                
+                let timelineHtml = '';
+                let dataFoundCount = 0; 
+                
+                // 🔥 [마법의 로직] 1학년부터 '현재 학년'까지만 반복하며 빈 데이터는 스킵!
+                for (let grade = 1; grade <= studentGrade; grade++) {
+                    let yData = sData[`year_${grade}`];
                     
-                    window.AREAS.forEach(area => { 
-                        let isDone = d[area] === true; let scoreVal = sc[area] || 0; let cellContent = scoreVal; 
-                        if(p[area]) cellContent = `<span class="pass-star">★</span>${scoreVal}<br><span class="badge-status ${isDone?'status-done':'status-yet'}" onclick="window.toggleDelivery('${s.docId}', ${filterGrade}, '${area}', ${isDone})">${isDone?'지급완료':'미지급'}</span>`; 
-                        rowHtml += `<td class="score-cell">${cellContent}</td>`; 
+                    // 💡 과거 학년 데이터가 없으면 박스를 그리지 않고 쿨하게 건너뜀!
+                    if (!yData || Object.keys(yData).length === 0) continue;
+                    
+                    dataFoundCount++;
+
+                    // 데이터가 존재하는 학년만 만점 상한선 누적 (육각형 찌그러짐 방지)
+                    window.AREAS.forEach(a => {
+                        sumCaps[a] += (window.CAPS[grade][a] || 0);
+                        if(yData.scores) sumScores[a] += (yData.scores[a] || 0);
                     });
+
+                    if(yData.total_score !== undefined) grandTotalScore = yData.total_score;
+                    if(yData.earned_badges !== undefined) finalBadges = yData.earned_badges;
+                    if(yData.title) finalTier = yData.title;
+
+                    let hasSpec = false;
+                    let gradeItemsHtml = '';
                     
-                    let certBtn = (s.yearData.earned_badges || 0) >= 6 ? `<button class="btn ${filterGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="alert('인증서 출력 준비중')">🖨️</button>` : "-"; 
-                    rowHtml += `<td style="color:#2980b9; font-weight:bold;">${s.yearData.total_score || 0}점</td><td><strong>${s.yearData.earned_badges || 0}개</strong></td><td style="color:#27ae60; font-weight:bold; white-space:nowrap;">${s.yearData.title || '진행중'}</td><td>${certBtn}</td></tr>`;
-                    tbody.innerHTML += rowHtml;
-                });
-            } catch(e) { tbody.innerHTML = `<tr><td colspan='17' style='color:red; font-weight:bold;'>🚨 오류: ${e.message}</td></tr>`; }
-        };
+                    if (yData.checked_items) {
+                        window.AREAS.forEach(area => {
+                            let checkedIndices = yData.checked_items[area] || [];
+                            if (checkedIndices.length > 0) {
+                                hasSpec = true;
+                                let tags = checkedIndices.map(idx => {
+                                    return window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label.replace(/\([^)]+\)/g, '').trim();
+                                });
+                                let tagsHtml = tags.map(tag => `<span class="spec-tag">${tag}</span>`).join('');
+                                gradeItemsHtml += `<div class="spec-row"><div class="spec-area-badge">${window.AREA_NAMES[area]}</div><div class="spec-tags-container">${tagsHtml}</div></div>`;
+                            }
+                        });
+                    }
+                    
+                    if(!hasSpec) gradeItemsHtml = `<div class="empty-spec">기록된 달성 스펙이 없습니다.</div>`;
 
-        window.loadDashboard = async function() {
-            try {
-                let dToday = new Date(new Date().getTime() + 9*60*60*1000); let todayStr = dToday.toISOString().slice(0,10);
-                try { const todaySnap = await window.getDoc(window.doc(window.db, "system_stats", todayStr)); document.getElementById('visitorCount').innerText = todaySnap.exists() ? todaySnap.data().visitors : 0; } catch(e) { document.getElementById('visitorCount').innerText = 0; }
-                const appSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중"))); document.getElementById('dashPendingApprove').innerText = appSnap.size + "건";
-
-                const querySnapshot = await window.getDocs(window.collection(window.db, "students"));
-                let totalBadges = 0, topAchievers = 0, pendingAlerts = 0; let badgeCounts = { S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0 }; let dynamicDeptCounts = {}; 
-                
-                querySnapshot.forEach(doc => { 
-                    let d = doc.data(); if(!d.current_grade) return; let g = d.current_grade; let yData = d[`year_${g}`]; if(!yData) return; 
-                    let dept = d.department && d.department !== "-" ? d.department : "미지정"; if(!dynamicDeptCounts[dept]) dynamicDeptCounts[dept] = 0;
-                    if(yData.earned_badges >= 6) { topAchievers++; dynamicDeptCounts[dept]++; } 
-                    window.AREAS.forEach(a => { if(yData.pass && yData.pass[a]) { badgeCounts[a]++; totalBadges++; } if(yData.pass && yData.pass[a] === true && (!yData.delivery_status || yData.delivery_status[a] !== true)) { pendingAlerts++; } }); 
-                });
-                
-                document.getElementById('dashMonthlyBadges').innerText = totalBadges + "개"; document.getElementById('dashTopAchievers').innerText = topAchievers + "명"; document.getElementById('dashPendingAlert').innerText = pendingAlerts + "건";
-                if(dynamicDeptCounts["미지정"] === 0) delete dynamicDeptCounts["미지정"];
-
-                const chartLabels = Object.keys(dynamicDeptCounts).map(name => name.length > 5 ? [name.substring(0, 4), name.substring(4)] : name); const chartData = Object.values(dynamicDeptCounts);
-                const ctxDept = document.getElementById('deptChart').getContext('2d'); if(window.myDeptChart) window.myDeptChart.destroy(); 
-                window.myDeptChart = new Chart(ctxDept, { type: 'bar', data: { labels: chartLabels, datasets: [{ label: '인증 달성자', data: chartData, backgroundColor: '#3498db' }] } });
-
-                const ctxBadge = document.getElementById('badgeChart').getContext('2d'); if(window.myBadgeChart) window.myBadgeChart.destroy(); 
-                window.myBadgeChart = new Chart(ctxBadge, { type: 'doughnut', data: { labels: window.AREAS.map(a => window.AREA_NAMES[a]), datasets: [{ data: window.AREAS.map(a => badgeCounts[a]), backgroundColor: ['#1abc9c', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c', '#2ecc71', '#95a5a6'] }] }, options: { plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } } } } });
-
-                let dates = []; let visitors = [];
-                for(let i=6; i>=0; i--) {
-                    let d = new Date(new Date().getTime() + 9*60*60*1000 - (i*24*60*60*1000)); let dStr = d.toISOString().slice(0,10); dates.push(dStr.slice(5));
-                    try { const snap = await window.getDoc(window.doc(window.db, "system_stats", dStr)); visitors.push(snap.exists() ? snap.data().visitors : 0); } catch(e) { visitors.push(0); }
+                    // 💡 데이터가 있을 때만 타임라인 박스 HTML 생성!
+                    timelineHtml += `
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <h3 class="timeline-grade">${grade}학년 역량 달성 기록</h3>
+                                <div class="spec-box">${gradeItemsHtml}</div>
+                            </div>
+                        </div>
+                    `;
                 }
-                const ctxVis = document.getElementById('visitorChart').getContext('2d'); if(window.myVisitorChart) window.myVisitorChart.destroy(); window.myVisitorChart = new Chart(ctxVis, { type: 'line', data: { labels: dates, datasets: [{ label: '방문자', data: visitors, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)', fill: true, tension: 0.3 }] }, options: { maintainAspectRatio: false } });
-            } catch(e) {}
+
+                // 만약 모든 학년 데이터가 텅 비었다면 안내 문구 출력
+                if (dataFoundCount === 0) {
+                    timelineHtml = `<div class="empty-spec" style="padding: 20px; text-align: center; color: #7f8c8d; font-size: 16px;">아직 기록된 역량 달성 데이터가 없습니다.</div>`;
+                }
+
+                // 육각형 차트 퍼센트 계산 (분모가 0일 경우 에러 방지)
+                let radarData = [
+                    (sumCaps['M'] + sumCaps['T']) > 0 ? Math.min(100, Math.round(((sumScores['M'] + sumScores['T']) / (sumCaps['M'] + sumCaps['T'])) * 100)) : 0,
+                    sumCaps['S'] > 0 ? Math.min(100, Math.round((sumScores['S'] / sumCaps['S']) * 100)) : 0,
+                    (sumCaps['C'] + sumCaps['R']) > 0 ? Math.min(100, Math.round(((sumScores['C'] + sumScores['R']) / (sumCaps['C'] + sumCaps['R'])) * 100)) : 0,
+                    sumCaps['I'] > 0 ? Math.min(100, Math.round((sumScores['I'] / sumCaps['I']) * 100)) : 0,
+                    sumCaps['A'] > 0 ? Math.min(100, Math.round((sumScores['A'] / sumCaps['A']) * 100)) : 0,
+                    (sumCaps['Tr'] + sumCaps['Y']) > 0 ? Math.min(100, Math.round(((sumScores['Tr'] + sumScores['Y']) / (sumCaps['Tr'] + sumCaps['Y'])) * 100)) : 0
+                ];
+
+                // 새 창 열고 렌더링
+                const printWindow = window.open('', '_blank', 'width=850,height=1000');
+                const todayStr = new Date().toLocaleDateString('ko-KR');
+                const photoUrl = sData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+                
+                printWindow.document.write(`
+                    <html><head><title>${sData.name} 학생 스펙 포트폴리오</title>
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+                    <style>
+                        @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+                        body { font-family: 'Pretendard', sans-serif; background-color: #f4f6f9; margin: 0; padding: 40px; color: #2c3e50; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        
+                        .portfolio-container { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); padding: 50px; position: relative; overflow: hidden; }
+                        
+                        .header-profile { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf0f2; padding-bottom: 30px; margin-bottom: 30px; }
+                        .profile-left { display: flex; align-items: center; gap: 25px; }
+                        .profile-img { width: 100px; height: 120px; border-radius: 16px; object-fit: cover; border: 1px solid #edf0f2; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+                        .profile-info h1 { margin: 0 0 5px 0; font-size: 32px; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;}
+                        .profile-info p { margin: 0; font-size: 16px; color: #7f8c8d; font-weight: 600; }
+                        .tier-badge { background: linear-gradient(135deg, #1a252f, #2c3e50); color: white; padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);}
+                        
+                        .school-brand { text-align: right; }
+                        .school-brand h2 { margin: 0 0 5px 0; color: #3b71ca; font-size: 20px; font-weight: 900; }
+                        .school-brand p { margin: 0; font-size: 12px; color: #95a5a6; font-weight: bold; }
+
+                        .hero-stats-container { display: flex; gap: 30px; margin-bottom: 40px; align-items: center; }
+                        
+                        .summary-cards { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+                        .dash-card { background: #f8f9fa; border-radius: 16px; padding: 20px; text-align: center; border: 1px solid #edf0f2; }
+                        .dash-card p { margin: 0 0 8px 0; font-size: 14px; color: #7f8c8d; font-weight: 700; }
+                        .dash-card h3 { margin: 0; font-size: 28px; font-weight: 900; color: #3b71ca; }
+                        .dash-card h3 span { font-size: 16px; color: #2c3e50; }
+
+                        .radar-container { flex: 1.5; background: #fff; border-radius: 16px; padding: 20px; border: 1px solid #edf0f2; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; justify-content: center; align-items: center; height: 260px; }
+                        .radar-container canvas { max-height: 100%; max-width: 100%; }
+
+                        /* 타임라인 레이아웃 - 높이/개수에 따라 자동 조절됨 */
+                        .timeline-title { font-size: 22px; font-weight: 900; color: #1a252f; border-bottom: 3px solid #3b71ca; display: inline-block; padding-bottom: 8px; margin-bottom: 30px; }
+                        .timeline-container { position: relative; margin-left: 20px; border-left: 3px solid #e0e6ed; padding-left: 30px; }
+                        .timeline-item { position: relative; margin-bottom: 40px; }
+                        .timeline-item:last-child { margin-bottom: 0; }
+                        .timeline-dot { position: absolute; width: 16px; height: 16px; background: #3b71ca; border: 4px solid #fff; border-radius: 50%; left: -41.5px; top: 0; box-shadow: 0 2px 6px rgba(59, 113, 202, 0.4); }
+                        
+                        .timeline-grade { margin: 0 0 15px 0; font-size: 20px; font-weight: 900; color: #1a252f; }
+                        
+                        .spec-box { background: #fff; border: 1px solid #edf0f2; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+                        .spec-row { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 15px; border-bottom: 1px dashed #edf0f2; padding-bottom: 15px; }
+                        .spec-row:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+                        
+                        .spec-area-badge { background: #eef2fb; color: #3b71ca; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 900; white-space: nowrap; width: 70px; text-align: center; }
+                        .spec-tags-container { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; align-items: center; }
+                        .spec-tag { background: #f1f2f6; color: #2c3e50; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 700; border: 1px solid #dfe6e9; }
+                        
+                        .empty-spec { color: #bdc3c7; font-size: 14px; font-weight: bold; font-style: italic; }
+
+                        .footer-sign { margin-top: 60px; text-align: right; padding-top: 30px; border-top: 2px solid #edf0f2; }
+                        .footer-sign p { margin: 0 0 10px 0; color: #7f8c8d; font-size: 15px; font-weight: bold; }
+                        .footer-sign h2 { margin: 0; color: #1a252f; font-size: 24px; font-weight: 900; letter-spacing: 2px;}
+
+                        @media print { 
+                            @page { size: A4; margin: 10mm; }
+                            body { background: #fff; padding: 0; }
+                            .portfolio-container { box-shadow: none; padding: 10px; width: 100%; border-radius: 0; }
+                            .spec-box { border: 2px solid #f1f2f6; }
+                            .radar-container { border: 2px solid #f1f2f6; }
+                        }
+                    </style>
+                    </head><body>
+                        <div class="portfolio-container">
+                            <div class="header-profile">
+                                <div class="profile-left">
+                                    <img src="${photoUrl}" class="profile-img" alt="학생사진">
+                                    <div class="profile-info">
+                                        <h1>${sData.name} <span class="tier-badge">${finalTier}</span></h1>
+                                        <p>${sData.department} | 학번: ${sData.current_studentId}</p>
+                                    </div>
+                                </div>
+                                <div class="school-brand">
+                                    <h2>SMART CITY PORTFOLIO</h2>
+                                    <p>INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</p>
+                                    <p style="margin-top:4px; font-size:11px; color:#bdc3c7;">기준일: ${todayStr}</p>
+                                </div>
+                            </div>
+
+                            <div class="hero-stats-container">
+                                <div class="summary-cards">
+                                    <div class="dash-card">
+                                        <p>현재 누적 총점</p>
+                                        <h3>${grandTotalScore}<span>점</span></h3>
+                                    </div>
+                                    <div class="dash-card">
+                                        <p>획득 핵심 배지</p>
+                                        <h3>${finalBadges}<span>개</span></h3>
+                                    </div>
+                                </div>
+                                <div class="radar-container">
+                                    <canvas id="printRadarChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="timeline-title">📈 Growth Timeline</div>
+                            <div class="timeline-container">
+                                ${timelineHtml}
+                            </div>
+
+                            <div class="footer-sign">
+                                <p>위 학생은 본교의 스마트시티 역량 인증 과정을 성실히 이수하였음을 증명함.</p>
+                                <h2>인덕과학기술고등학교장</h2>
+                            </div>
+                        </div>
+                        <script>
+                            const ctx = document.getElementById('printRadarChart').getContext('2d');
+                            new Chart(ctx, {
+                                type: 'radar',
+                                data: {
+                                    labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
+                                    datasets: [{
+                                        data: [${radarData.join(',')}],
+                                        backgroundColor: 'rgba(59, 113, 202, 0.3)', 
+                                        borderColor: '#3b71ca',     
+                                        pointBackgroundColor: '#2c3e50',
+                                        pointBorderColor: '#fff',
+                                        borderWidth: 2,
+                                        pointRadius: 4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        r: {
+                                            min: 0,
+                                            max: 100,
+                                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                                            grid: { color: 'rgba(0,0,0,0.1)' },
+                                            pointLabels: { color: '#1a252f', font: { size: 12, family: 'Pretendard', weight: '900' } },
+                                            ticks: { display: false }
+                                        }
+                                    },
+                                    plugins: { legend: { display: false } },
+                                    animation: false
+                                }
+                            });
+
+                            setTimeout(() => { window.print(); }, 800); 
+                        <\/script>
+                    </body></html>
+                `);
+                printWindow.document.close();
+                
+            } catch(e) {
+                alert("출력 중 오류가 발생했습니다: " + e.message);
+            }
         };
 
         window.loadLockStatus = async function() {
