@@ -548,18 +548,18 @@
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, updatePassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, writeBatch, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // 1. 기본 앱 초기화
+        // 1. 기본 앱 초기화 (중복 에러 원천 차단)
         const app = !getApps().length ? initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG) : getApp();
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // 2. 계정 생성 전용 섀도우 앱 (단일화)
+        // 2. 계정 생성 전용 섀도우 앱
         let shadowApp;
         try { shadowApp = getApp("ShadowApp"); } 
         catch(e) { shadowApp = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG, "ShadowApp"); }
         const shadowAuth = getAuth(shadowApp);
 
-        // 3. 전역 객체에 안전하게 할당 (아래 레거시 코드들과 호환 유지)
+        // 3. 전역 객체에 안전하게 할당
         window.db = db; 
         window.authV10 = auth; 
         window.shadowAuth = shadowAuth;
@@ -584,37 +584,33 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // 🔥 치명적 에러 방어: compat 방식 초기화 시 이미 초기화되어 있으면 무시
         try {
             if (!firebase.apps.length) {
                 firebase.initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
             }
-            let secondaryApp;
-            try { secondaryApp = firebase.app("ShadowApp"); } 
-            catch(e) { secondaryApp = firebase.initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG, "ShadowApp"); }
-            
-            const db_compat = firebase.firestore();
-        } catch(e) {
-            console.error("Firebase 초기화 에러 (UI는 작동하도록 우회함):", e);
-        }
+        } catch(e) {}
 
         window.showSection = function(id) {
-            ['dashboard', 'studentList', 'uploadData', 'photoUpload', 'teacherManage', 'badgeManagement', 'promotion', 'systemLog'].forEach(s => { 
-                const el = document.getElementById(s);
-                if(el) el.style.display = 'none'; 
-                const nav = document.getElementById('nav-' + s);
-                if(nav) nav.classList.remove('menu-active'); 
-            });
-            const target = document.getElementById(id);
-            if(target) target.style.display = 'block'; 
-            const activeNav = document.getElementById('nav-' + id);
-            if(activeNav) activeNav.classList.add('menu-active');
-            
-            if(id === 'dashboard' && typeof window.loadDashboard === 'function') window.loadDashboard();
-            if(id === 'studentList') { if(typeof window.updateTableHeaders === 'function') window.updateTableHeaders(); if(typeof window.loadData === 'function') window.loadData(); }
-            if(id === 'teacherManage' && typeof window.loadTeachers === 'function') window.loadTeachers();
-            if(id === 'systemLog' && typeof window.loadLogs === 'function') window.loadLogs();
-            if(id === 'badgeManagement' && typeof window.loadBadgeData === 'function') window.loadBadgeData();
+            try {
+                ['dashboard', 'studentList', 'uploadData', 'photoUpload', 'teacherManage', 'badgeManagement', 'promotion', 'systemLog'].forEach(s => { 
+                    const el = document.getElementById(s);
+                    if(el) el.style.display = 'none'; 
+                    const nav = document.getElementById('nav-' + s);
+                    if(nav) nav.classList.remove('menu-active'); 
+                });
+                const target = document.getElementById(id);
+                if(target) target.style.display = 'block'; 
+                const activeNav = document.getElementById('nav-' + id);
+                if(activeNav) activeNav.classList.add('menu-active');
+                
+                if(id === 'dashboard' && typeof window.loadDashboard === 'function') window.loadDashboard();
+                if(id === 'studentList') { if(typeof window.updateTableHeaders === 'function') window.updateTableHeaders(); if(typeof window.loadData === 'function') window.loadData(); }
+                if(id === 'teacherManage' && typeof window.loadTeachers === 'function') window.loadTeachers();
+                if(id === 'systemLog' && typeof window.loadLogs === 'function') window.loadLogs();
+                if(id === 'badgeManagement' && typeof window.loadBadgeData === 'function') window.loadBadgeData();
+            } catch(e) {
+                console.error("메뉴 이동 오류:", e);
+            }
         };
 
         window.openChangePwModal = function() { document.getElementById('newAdminPwInput').value = ""; document.getElementById('changePwModal').style.display = "flex"; };
@@ -685,7 +681,6 @@
             } catch(e) { console.error("오류:", e); alert("오류: " + e.message); }
         };
 
-        // 🔥 [진급 인공지능 엔진 개선] 체크항목(스펙)까지 완벽 이월!
         window.uploadPromotion = async function() {
             if(!window.isSystemLocked) return alert("🚨 먼저 시스템을 '마감(🔒)' 처리해야 진급 처리가 가능합니다.");
             const fileInput = document.getElementById("promoteFileInput");
@@ -1204,6 +1199,69 @@
             try { const querySnapshot = await window.getDocs(window.collection(window.db, "system_logs")); let logs = []; querySnapshot.forEach(doc => logs.push(doc.data())); logs.sort((a, b) => b.timestamp - a.timestamp); tbody.innerHTML = ""; logs.slice(0, 200).forEach(log => { let userIcon = "👤"; if(log.user.includes("학생")) userIcon = "🧑‍🎓"; else if(log.user.includes("교사")) userIcon = "👨‍🏫"; else if(log.user.includes("관리자") || log.user.includes("Admin")) userIcon = "👑"; tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${userIcon} ${log.user}</td><td>${log.action}</td></tr>`; }); if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>활동 로그가 없습니다.</td></tr>"; } catch(e) { console.error("로그 로드 오류:", e); tbody.innerHTML = "<tr><td colspan='3'>오류</td></tr>"; }
         };
 
+        window.updateTableHeaders = function() {
+            const grade = document.getElementById("filterGrade").value; const cutoffs = window.PASS_CUTOFF[grade];
+            let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="window.toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th>이름</th>`; 
+            window.AREAS.forEach(a => { headerHtml += `<th>[${a}]<br><span class="th-criteria">(${cutoffs[a]}점↑)</span></th>`; }); 
+            headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력</th>`; 
+            document.getElementById("tableHeaderRow").innerHTML = headerHtml;
+        };
+
+        window.toggleAllCheckboxes = function(source) { const checkboxes = document.querySelectorAll('.student-checkbox'); checkboxes.forEach(cb => cb.checked = source.checked); };
+
+        window.loadData = async function() {
+            const tbody = document.getElementById("studentTableBody"); 
+            const filterGrade = document.getElementById("filterGrade").value; const filterDept = document.getElementById("filterDept").value; 
+            const filterClass = document.getElementById("filterClass").value; const filterCert = document.getElementById("filterCert").value;
+            tbody.innerHTML = "<tr><td colspan='17'>불러오는 중...</td></tr>";
+            try {
+                const querySnapshot = await window.getDocs(window.collection(window.db, "students")); 
+                let students = []; window.allStudentsData = []; let dbDepartments = new Set();
+
+                querySnapshot.forEach(doc => {
+                    let data = doc.data(); 
+                    if(data.department && data.department !== "-" && data.department !== "미지정") dbDepartments.add(data.department);
+                    let yearData = data[`year_${filterGrade}`] || {};
+                    if (data.current_grade == filterGrade && data[`year_${filterGrade}`]) {
+                        if (filterDept !== "ALL" && (data.department || "미지정") !== filterDept) return;
+                        let classNum = parseInt(String(data.current_studentId).substring(1, 3), 10); 
+                        if (filterClass !== "ALL" && !isNaN(classNum) && classNum !== Number(filterClass)) return;
+                        if (filterCert === 'PASS' && (yearData.earned_badges || 0) < 6) return;
+                        let sInfo = { docId: doc.id, id: data.current_studentId, name: data.name, dept: data.department || "-", photo: data.photoUrl || null, birthdate: data.birthdate, yearData: yearData, fullData: data };
+                        students.push(sInfo); window.allStudentsData.push(sInfo);
+                    }
+                });
+
+                const filterDeptEl = document.getElementById("filterDept"); const badgeFilterDeptEl = document.getElementById("badgeFilterDept"); const editDeptEl = document.getElementById("edit-Dept");
+                let currentFilter = filterDeptEl.value; let currentBadgeFilter = badgeFilterDeptEl.value;
+                let optionsHtml = `<option value="ALL">전체 학과</option>`; let editOptionsHtml = `<option value="미지정">미지정</option>`;
+                Array.from(dbDepartments).sort().forEach(dept => { optionsHtml += `<option value="${dept}">${dept}</option>`; editOptionsHtml += `<option value="${dept}">${dept}</option>`; });
+                filterDeptEl.innerHTML = optionsHtml; badgeFilterDeptEl.innerHTML = optionsHtml; editDeptEl.innerHTML = editOptionsHtml;
+                if(dbDepartments.has(currentFilter)) filterDeptEl.value = currentFilter; if(dbDepartments.has(currentBadgeFilter)) badgeFilterDeptEl.value = currentBadgeFilter;
+
+                students.sort((a,b) => String(a.id).localeCompare(String(b.id))); window.allStudentsData.sort((a,b) => String(a.id).localeCompare(String(b.id)));
+
+                tbody.innerHTML = students.length === 0 ? `<tr><td colspan='17' style='padding:30px;'>데이터가 없습니다.</td></tr>` : "";
+                
+                students.forEach(s => {
+                    let sc = s.yearData.scores || {}; let p = s.yearData.pass || {}; let d = s.yearData.delivery_status || {};
+                    let photoHtml = s.photo ? `<img src="${s.photo}" class="profile-img" onclick="window.openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
+                    let rowHtml = `<tr class="${(s.yearData.earned_badges || 0) >= 6 ? 'certified-row' : ''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}" data-name="${s.name}"></td><td style="white-space:nowrap;">${s.dept}</td><td>${s.id}</td><td style="text-align: left; display: flex; align-items: center; justify-content: space-between;"><div>${photoHtml} <strong>${s.name}</strong></div><div><span style="cursor:pointer; color:#f39c12; font-size:16px;" onclick="window.openEditModal('${s.docId}', ${filterGrade})" title="수정">✏️</span></div></td>`;
+                    
+                    window.AREAS.forEach(area => { 
+                        let isDone = d[area] === true; let scoreVal = sc[area] || 0; let cellContent = scoreVal; 
+                        if(p[area]) cellContent = `<span class="pass-star">★</span>${scoreVal}<br><span class="badge-status ${isDone?'status-done':'status-yet'}" onclick="window.toggleDelivery('${s.docId}', ${filterGrade}, '${area}', ${isDone})">${isDone?'지급완료':'미지급'}</span>`; 
+                        rowHtml += `<td class="score-cell">${cellContent}</td>`; 
+                    });
+                    
+                    // 출력 버튼 연결
+                    let certBtn = (s.yearData.earned_badges || 0) >= 6 ? `<button class="btn ${filterGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="window.printCertificate('${s.id}')">🖨️</button>` : "-"; 
+                    rowHtml += `<td style="color:#2980b9; font-weight:bold;">${s.yearData.total_score || 0}점</td><td><strong>${s.yearData.earned_badges || 0}개</strong></td><td style="color:#27ae60; font-weight:bold; white-space:nowrap;">${s.yearData.title || '진행중'}</td><td>${certBtn}</td></tr>`;
+                    tbody.innerHTML += rowHtml;
+                });
+            } catch(e) { console.error("학생 목록 로드 오류:", e); tbody.innerHTML = `<tr><td colspan='17' style='color:red; font-weight:bold;'>🚨 오류: ${e.message}</td></tr>`; }
+        };
+
         window.printClassChart = function() {
             const filterClass = document.getElementById("filterClass").value; const filterGrade = document.getElementById("filterGrade").value;
             if (filterClass === "ALL") return alert("❗ '반'을 먼저 선택 후 [조회]를 눌러주세요.");
@@ -1245,7 +1303,7 @@
             printWindow.document.close(); 
         };
 
-        // 🔥 [자동 반응형 3단 가로 출력] 포트폴리오 출력 함수!
+        // 🔥 [관리자용] 1~3학년 누적 데이터 합산 포트폴리오 (가로 3단 1장 핏)
         window.printCertificate = async function(studentId) {
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
@@ -1262,25 +1320,22 @@
                 let sumCaps = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
                 
                 let timelineHtml = '';
-                let dataFoundCount = 0; 
                 
-                // 💡 1학년부터 3학년까지 3개의 칸을 무조건 만듦 (가로 3단 배열용)
+                // 1학년부터 3학년까지 무조건 3개의 칸을 만듦 (가로 3단 배열용)
                 for (let grade = 1; grade <= 3; grade++) {
                     let yData = sData[`year_${grade}`];
                     let gradeItemsHtml = '';
 
-                    // 해당 학년 데이터가 없거나, 현재 학년보다 미래의 학년인 경우 빈칸 처리
+                    // 해당 학년 데이터가 없거나 미래 학년이면 빈칸 처리
                     if (!yData || Object.keys(yData).length === 0 || grade > studentGrade) {
                         gradeItemsHtml = `<div class="empty-spec" style="text-align:center; color:#bdc3c7; font-size:13px; padding:30px 0;">기록 없음</div>`;
                     } else {
-                        dataFoundCount++;
-
                         window.AREAS.forEach(a => {
                             sumCaps[a] += (window.CAPS[grade][a] || 0);
                             if(yData.scores) sumScores[a] += (yData.scores[a] || 0);
                         });
 
-                        // 🔥 선생님 요청: 각 학년의 점수와 뱃지를 모두 '단순 누적 합산'
+                        // 🔥 모든 학년의 점수와 뱃지를 누적 합산 (중복 계산 뻥튀기 없음)
                         if(yData.total_score !== undefined) grandTotalScore += yData.total_score;
                         if(yData.earned_badges !== undefined) finalBadges += yData.earned_badges;
                         
@@ -1313,6 +1368,7 @@
                     `;
                 }
 
+                // 레이더 차트 역시 1~3학년 누적 합산 기준으로 그림
                 let radarData = [
                     (sumCaps['M'] + sumCaps['T']) > 0 ? Math.min(100, Math.round(((sumScores['M'] + sumScores['T']) / (sumCaps['M'] + sumCaps['T'])) * 100)) : 0,
                     sumCaps['S'] > 0 ? Math.min(100, Math.round((sumScores['S'] / sumCaps['S']) * 100)) : 0,
@@ -1428,6 +1484,45 @@
                 `);
                 printWindow.document.close();
             } catch(e) { console.error("포트폴리오 출력 오류:", e); alert("출력 중 오류가 발생했습니다."); }
+        };
+
+        window.loadDashboard = async function() {
+            try {
+                let dToday = new Date(new Date().getTime() + 9*60*60*1000); let todayStr = dToday.toISOString().slice(0,10);
+                try { const todaySnap = await window.getDoc(window.doc(window.db, "system_stats", todayStr)); document.getElementById('visitorCount').innerText = todaySnap.exists() ? todaySnap.data().visitors : 0; } catch(e) { document.getElementById('visitorCount').innerText = 0; }
+                const appSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중"))); document.getElementById('dashPendingApprove').innerText = appSnap.size + "건";
+
+                const querySnapshot = await window.getDocs(window.collection(window.db, "students"));
+                let totalBadges = 0, topAchievers = 0, pendingAlerts = 0; let badgeCounts = { S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0 }; let dynamicDeptCounts = {}; 
+                
+                querySnapshot.forEach(doc => { 
+                    let d = doc.data(); if(!d.current_grade) return; let g = d.current_grade; let yData = d[`year_${g}`]; if(!yData) return; 
+                    let dept = d.department && d.department !== "-" ? d.department : "미지정"; if(!dynamicDeptCounts[dept]) dynamicDeptCounts[dept] = 0;
+                    if(yData.earned_badges >= 6) { topAchievers++; dynamicDeptCounts[dept]++; } 
+                    window.AREAS.forEach(a => { if(yData.pass && yData.pass[a]) { badgeCounts[a]++; totalBadges++; } if(yData.pass && yData.pass[a] === true && (!yData.delivery_status || yData.delivery_status[a] !== true)) { pendingAlerts++; } }); 
+                });
+                
+                document.getElementById('dashMonthlyBadges').innerText = totalBadges + "개"; document.getElementById('dashTopAchievers').innerText = topAchievers + "명"; document.getElementById('dashPendingAlert').innerText = pendingAlerts + "건";
+                if(dynamicDeptCounts["미지정"] === 0) delete dynamicDeptCounts["미지정"];
+
+                const chartLabels = Object.keys(dynamicDeptCounts).map(name => name.length > 5 ? [name.substring(0, 4), name.substring(4)] : name); const chartData = Object.values(dynamicDeptCounts);
+                
+                const safeChartLabels = chartLabels.length > 0 ? chartLabels : ["데이터 없음"];
+                const safeChartData = chartData.length > 0 ? chartData : [0];
+
+                const ctxDept = document.getElementById('deptChart').getContext('2d'); if(window.myDeptChart) window.myDeptChart.destroy(); 
+                window.myDeptChart = new Chart(ctxDept, { type: 'bar', data: { labels: safeChartLabels, datasets: [{ label: '인증 달성자', data: safeChartData, backgroundColor: '#3498db' }] } });
+
+                const ctxBadge = document.getElementById('badgeChart').getContext('2d'); if(window.myBadgeChart) window.myBadgeChart.destroy(); 
+                window.myBadgeChart = new Chart(ctxBadge, { type: 'doughnut', data: { labels: window.AREAS.map(a => window.AREA_NAMES[a]), datasets: [{ data: window.AREAS.map(a => badgeCounts[a]), backgroundColor: ['#1abc9c', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c', '#2ecc71', '#95a5a6'] }] }, options: { plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } } } } });
+
+                let dates = []; let visitors = [];
+                for(let i=6; i>=0; i--) {
+                    let d = new Date(new Date().getTime() + 9*60*60*1000 - (i*24*60*60*1000)); let dStr = d.toISOString().slice(0,10); dates.push(dStr.slice(5));
+                    try { const snap = await window.getDoc(window.doc(window.db, "system_stats", dStr)); visitors.push(snap.exists() ? snap.data().visitors : 0); } catch(e) { visitors.push(0); }
+                }
+                const ctxVis = document.getElementById('visitorChart').getContext('2d'); if(window.myVisitorChart) window.myVisitorChart.destroy(); window.myVisitorChart = new Chart(ctxVis, { type: 'line', data: { labels: dates, datasets: [{ label: '방문자', data: visitors, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)', fill: true, tension: 0.3 }] }, options: { maintainAspectRatio: false } });
+            } catch(e) { console.error("대시보드 로드 오류:", e); }
         };
 
         window.loadLockStatus = async function() {
