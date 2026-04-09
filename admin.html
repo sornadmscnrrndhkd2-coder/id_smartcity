@@ -177,7 +177,7 @@
                 'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_ncs' }, { label: '평균 2등급(40점)', score: 40, group: 'c_ncs' }, { label: '평균 3등급(30점)', score: 30, group: 'c_ncs' }],
                 'I': [{ label: '영어 교과 성취도 A 이상(40점)', score: 40, group: 'i_total' }, { label: '영어 교과 성취도 B 이상(30점)', score: 30, group: 'i_total' }, { label: '교내 영어 관련 대회 입상(30점)', score: 30, group: 'i_total' }],
                 'Tr': [{ label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
-                'Y': [{ label: '봉사 16시간+독서 3권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 12시간+독서 2권이상(20점)', score: 20, group: 'y_set' }]
+                'Y': [{ label: '봉사 16시간+독서 4권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 12시간+독서 3권이상(20점)', score: 20, group: 'y_set' }]
             },
             2: {
                 'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
@@ -188,7 +188,7 @@
                 'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_ncs' }, { label: '평균 2등급(40점)', score: 40, group: 'c_ncs' }, { label: '평균 3등급(30점)', score: 30, group: 'c_ncs' }],
                 'I': [{ label: '영어/일어 교과 성취도 A(40점)', score: 40, group: 'i_total' }, { label: '영어/일어 교과 성취도 B(30점)', score: 30, group: 'i_total' }, { label: '토익 500점 등 공인어학(40점)', score: 40, group: 'i_total' }, { label: 'JLPT N5 등 공인어학(40점)', score: 40, group: 'i_total' }],
                 'Tr': [{ label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
-                'Y': [{ label: '봉사 20시간+독서 4권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 16시간+독서 3권이상(20점)', score: 20, group: 'y_set' }]
+                'Y': [{ label: '봉사 20시간+독서 5권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 16시간+독서 4권이상(20점)', score: 20, group: 'y_set' }]
             },
             3: {
                 'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
@@ -199,7 +199,7 @@
                 'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_ncs' }, { label: '평균 2등급(40점)', score: 40, group: 'c_ncs' }, { label: '평균 3등급(30점)', score: 30, group: 'c_ncs' }],
                 'I': [{ label: '토익 600점 등 공인어학(50점)', score: 50, group: 'i_total' }, { label: 'JLPT N4 등 공인어학(50점)', score: 50, group: 'i_total' }, { label: '2학년 공인어학시험 등급 보유(10점)', score: 10, group: 'i_total' }],
                 'Tr': [{ label: '3년 개근(60점)', score: 60, group: 'tr_att' }, { label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
-                'Y': [{ label: '봉사 24시간+독서 5권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 20시간+독서 4권이상(20점)', score: 20, group: 'y_set' }]
+                'Y': [{ label: '봉사 24시간+독서 6권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 20시간+독서 5권이상(20점)', score: 20, group: 'y_set' }]
             }
         };
     </script>
@@ -553,7 +553,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // 2. 계정 생성 전용 섀도우 앱
+        // 2. 계정 생성 전용 섀도우 앱 (관리자용 기능)
         let shadowApp;
         try { shadowApp = getApp("ShadowApp"); } 
         catch(e) { shadowApp = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG, "ShadowApp"); }
@@ -1472,7 +1472,7 @@
                     </body></html>
                 `);
                 printWindow.document.close();
-            } catch(e) { console.error("포트폴리오 출력 오류:", e); alert("출력 중 오류가 발생했습니다."); }
+            } catch(e) { console.error("출력 오류:", e); alert("출력 중 오류가 발생했습니다."); }
         };
 
         window.loadDashboard = async function() {
