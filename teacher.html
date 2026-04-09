@@ -1284,10 +1284,18 @@
                         document.getElementById("all-grades-dashboard").style.display = "none"; 
                         document.getElementById("student-detail-area").style.display = "block";
                         
-                        const printBtn = document.getElementById("btnTeacherPrint");
-                        if(printBtn) printBtn.onclick = function() { window.printCertificate(sid); };
-
                         const isMyHomeroom = (window.homeroomGrade === grade && window.homeroomClass === parseInt(sid.substring(1,3)));
+                        
+                        const printBtn = document.getElementById("btnTeacherPrint");
+                        if(printBtn) {
+                            printBtn.onclick = function() { window.printCertificate(sid); };
+                            if (isMyHomeroom) {
+                                printBtn.style.display = "block"; 
+                            } else {
+                                printBtn.style.display = "none";
+                            }
+                        }
+
                         const btnSave = document.getElementById("saveBtn");
                         
                         let isAllLocked = window.isSystemLocked || (subjectStr === "일반" && !isMyHomeroom);
