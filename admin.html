@@ -548,18 +548,15 @@
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, updatePassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, writeBatch, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // 1. 기본 앱 초기화
         const app = !getApps().length ? initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG) : getApp();
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // 2. 계정 생성 전용 섀도우 앱
         let shadowApp;
         try { shadowApp = getApp("ShadowApp"); } 
         catch(e) { shadowApp = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG, "ShadowApp"); }
         const shadowAuth = getAuth(shadowApp);
 
-        // 3. 전역 변수 할당
         window.db = db; 
         window.authV10 = auth; 
         window.shadowAuth = shadowAuth;
@@ -1174,7 +1171,7 @@
 
         window.loadLogs = async function() {
             const tbody = document.getElementById("logTableBody"); tbody.innerHTML = "<tr><td colspan='3'>불러오는 중...</td></tr>";
-            try { const querySnapshot = await window.getDocs(window.collection(window.db, "system_logs")); let logs = []; querySnapshot.forEach(doc => logs.push(doc.data())); logs.sort((a, b) => b.timestamp - a.timestamp); tbody.innerHTML = ""; logs.slice(0, 200).forEach(log => { let userIcon = "👤"; if(log.user.includes("학생")) userIcon = "🧑‍🎓"; else if(log.user.includes("교사")) userIcon = "👨‍🏫"; else if(log.user.includes("관리자") || log.user.includes("Admin")) userIcon = "👑"; tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${userIcon} ${log.user}</td><td>${log.action}</td></tr>`; }); if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>활동 로그가 없습니다.</td></tr>"; } catch(e) { tbody.innerHTML = "<tr><td colspan='3'>오류</td></tr>"; }
+            try { const querySnapshot = await window.getDocs(window.collection(window.db, "system_logs")); let logs = []; querySnapshot.forEach(doc => logs.push(doc.data())); logs.sort((a, b) => b.timestamp - a.timestamp); tbody.innerHTML = ""; logs.slice(0, 200).forEach(log => { let userIcon = "👤"; if(log.user.includes("학생")) userIcon = "🧑🎓"; else if(log.user.includes("교사")) userIcon = "👨🏫"; else if(log.user.includes("관리자") || log.user.includes("Admin")) userIcon = "👑"; tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${userIcon} ${log.user}</td><td>${log.action}</td></tr>`; }); if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>활동 로그가 없습니다.</td></tr>"; } catch(e) { tbody.innerHTML = "<tr><td colspan='3'>오류</td></tr>"; }
         };
 
         window.updateTableHeaders = function() {
