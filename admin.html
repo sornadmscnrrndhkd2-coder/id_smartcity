@@ -1175,7 +1175,7 @@
         
         document.getElementById("uploadPhotosBtn").addEventListener("click", async () => { 
             const files = document.getElementById("photoFilesInput").files; const prog = document.getElementById("photoUploadProgress"); 
-            if (files.length === 0) return alert("선택!"); if (!confirm(`업로드?`)) return; prog.style.display = "block"; prog.innerText = "⏳ 처리 중..."; let sCnt = 0;
+            if (files.length === 0) return alert("선택!"); if (!confirm(`업로드 하시겠습니까까?`)) return; prog.style.display = "block"; prog.innerText = "⏳ 처리 중..."; let sCnt = 0;
             for (let i = 0; i < files.length; i++) { 
                 let studentId = files[i].name.split('.')[0]; const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId))); 
                 if (!qSnap.empty) { const reader = new FileReader(); await new Promise((res) => { reader.onload = async function(e) { await window.updateDoc(window.doc(window.db, "students", qSnap.docs[0].id), { photoUrl: e.target.result }); sCnt++; res(); }; reader.readAsDataURL(files[i]); }); } 
@@ -1217,7 +1217,7 @@
             const grade = document.getElementById("filterGrade").value; const cutoffs = window.PASS_CUTOFF[grade];
             let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="window.toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th>이름</th>`; 
             window.AREAS.forEach(a => { headerHtml += `<th>[${a}]<br><span class="th-criteria">(${cutoffs[a]}점↑)</span></th>`; }); 
-            headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력(1장 압축)</th>`; document.getElementById("tableHeaderRow").innerHTML = headerHtml;
+            headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력</th>`; document.getElementById("tableHeaderRow").innerHTML = headerHtml;
         };
 
         window.toggleAllCheckboxes = function(source) { document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = source.checked); };
@@ -1252,7 +1252,7 @@
                     let pHtml = s.photo ? `<img src="${s.photo}" class="profile-img" onclick="window.openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
                     let rHtml = `<tr class="${(s.yearData.earned_badges||0)>=6?'certified-row':''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}"></td><td>${s.dept}</td><td>${s.id}</td><td style="text-align:left;display:flex;justify-content:space-between;"><div>${pHtml} <strong>${s.name}</strong></div><div onclick="window.openEditModal('${s.docId}', ${fGrade})" style="cursor:pointer;">✏️</div></td>`;
                     window.AREAS.forEach(area => { let isD = d[area] === true; let cell = sc[area] || 0; if(p[area]) cell = `<span class="pass-star">★</span>${cell}<br><span class="badge-status ${isD?'status-done':'status-yet'}" onclick="window.toggleDelivery('${s.docId}', ${fGrade}, '${area}', ${isD})">${isD?'지급완료':'미지급'}</span>`; rHtml += `<td class="score-cell">${cell}</td>`; });
-                    let cBtn = (s.yearData.earned_badges||0)>=6 ? `<button class="btn btn-blue" onclick="window.printCertificate('${s.id}')">🖨️</button>` : "-"; 
+                    let cBtn = `<button class="btn ${filterGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="window.printCertificate('${s.id}')">🖨️</button>`; 
                     rHtml += `<td style="color:#2980b9;font-weight:bold;">${s.yearData.total_score||0}점</td><td><strong>${s.yearData.earned_badges||0}개</strong></td><td style="color:#27ae60;font-weight:bold;">${s.yearData.title||'진행중'}</td><td>${cBtn}</td></tr>`; tbody.innerHTML += rHtml;
                 });
             } catch(e) { tbody.innerHTML = `<tr><td colspan='17' style='color:red;'>오류</td></tr>`; }
@@ -1439,7 +1439,7 @@
       gap: 8px;
     }
     .student-name {
-      font-size: 18px;
+      font-size: 26px;
       font-weight: 800;
       line-height: 1;
     }
@@ -1447,11 +1447,11 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 4px 10px;
+      padding: 6px 14px;
       border-radius: 999px;
       background: #273f69;
       color: #f1c40f; 
-      font-size: 9px;
+      font-size: 14px;
       font-weight: 800;
       line-height: 1;
     }
@@ -1662,7 +1662,7 @@
       <div>${sData.name}_포트폴리오</div>
     </div>
 
-    <div class="doc-title">${sData.name} 학생 스펙 포트폴리오</div>
+    <div class="doc-title">${sData.name} 학생 포트폴리오</div>
 
     <div class="header">
       <div class="header-left">
