@@ -8,40 +8,183 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
-        body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; margin: 0; background-color: #f4f7f6; font-size: 13px; color: #333; }
-        .header { background-color: #1a252f; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; z-index: 10; }
-        .header h1 { margin: 0; font-size: 20px; letter-spacing: 0.5px; line-height: 1.4; word-break: keep-all;}
-        .header-controls { display: flex; align-items: center; gap: 15px; }
-        .visitor-count { background: #e67e22; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; white-space: nowrap; }
-        .btn-lock { padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); white-space: nowrap;}
+        
+        body { 
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+            margin: 0; 
+            background-color: #f4f7f6; 
+            font-size: 13px; 
+            color: #333; 
+        }
+        
+        .header { 
+            background-color: #1a252f; 
+            color: white; 
+            padding: 15px 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            position: relative; 
+            z-index: 10; 
+        }
+        
+        .header h1 { 
+            margin: 0; 
+            font-size: 20px; 
+            letter-spacing: 0.5px; 
+            line-height: 1.4; 
+            word-break: keep-all;
+        }
+        
+        .header-controls { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+        }
+        
+        .visitor-count { 
+            background: #e67e22; 
+            padding: 6px 15px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            font-size: 12px; 
+            white-space: nowrap; 
+        }
+        
+        .btn-lock { 
+            padding: 6px 15px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            font-size: 13px; 
+            border: none; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+            white-space: nowrap;
+        }
+        
         .lock-active { background-color: #e74c3c; color: white; }
         .lock-inactive { background-color: #2ecc71; color: white; }
-        .container { display: flex; padding: 20px; gap: 25px; max-width: 1600px; margin: 0 auto; box-sizing: border-box;}
-        .sidebar { width: 240px; background-color: #1e2a38; padding: 25px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: fit-content; color: white; flex-shrink: 0;}
-        .menu-group { font-size: 13px; font-weight: 800; margin: 35px 0 12px 5px; padding-bottom: 8px; letter-spacing: 0.5px; opacity: 0.9; }
+        
+        .container { 
+            display: flex; 
+            padding: 20px; 
+            gap: 25px; 
+            max-width: 1600px; 
+            margin: 0 auto; 
+            box-sizing: border-box;
+        }
+        
+        .sidebar { 
+            width: 240px; 
+            background-color: #1e2a38; 
+            padding: 25px 15px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            height: fit-content; 
+            color: white; 
+            flex-shrink: 0;
+        }
+        
+        .menu-group { 
+            font-size: 13px; 
+            font-weight: 800; 
+            margin: 35px 0 12px 5px; 
+            padding-bottom: 8px; 
+            letter-spacing: 0.5px; 
+            opacity: 0.9; 
+        }
+        
         .menu-group:first-child { margin-top: 0; }
+        
         .g-monitor { color: #5dade2; border-bottom: 1px solid rgba(52, 152, 219, 0.3); }
         .g-student { color: #58d68d; border-bottom: 1px solid rgba(46, 204, 113, 0.3); }
         .g-system  { color: #af7ac5; border-bottom: 1px solid rgba(155, 89, 182, 0.3); }
-        .menu-item { padding: 13px 15px; margin-bottom: 6px; background-color: transparent; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13.5px; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); color: #bdc3c7; display: flex; align-items: center; border: 1px solid transparent; }
-        .menu-item:hover { background-color: rgba(255,255,255,0.05); color: white; }
-        .menu-active { background: rgba(255, 255, 255, 0.12) !important; backdrop-filter: blur(10px) !important; -webkit-backdrop-filter: blur(10px) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; color: #fff !important; font-weight: 800; }
-        .content { flex: 1; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto; min-height: 80vh; min-width: 0;}
-        .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
-        .dash-card { padding: 20px; border-radius: 12px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .dash-card h3 { margin: 0 0 10px 0; font-size: 15px; opacity: 0.9; word-break: keep-all; }
-        .dash-card .number { font-size: 32px; font-weight: bold; margin: 0; }
+        
+        .menu-item { 
+            padding: 13px 15px; 
+            margin-bottom: 6px; 
+            background-color: transparent; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 13.5px; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            color: #bdc3c7; 
+            display: flex; 
+            align-items: center; 
+            border: 1px solid transparent; 
+        }
+        
+        .menu-item:hover { 
+            background-color: rgba(255,255,255,0.05); 
+            color: white; 
+        }
+        
+        .menu-active { 
+            background: rgba(255, 255, 255, 0.12) !important; 
+            backdrop-filter: blur(10px) !important; 
+            -webkit-backdrop-filter: blur(10px) !important; 
+            border: 1px solid rgba(255, 255, 255, 0.2) !important; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; 
+            color: #fff !important; 
+            font-weight: 800; 
+        }
+        
+        .content { 
+            flex: 1; 
+            background-color: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            overflow-x: auto; 
+            min-height: 80vh; 
+            min-width: 0;
+        }
+        
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 15px; 
+            margin-bottom: 25px; 
+        }
+        
+        .dash-card { 
+            padding: 20px; 
+            border-radius: 12px; 
+            color: white; 
+            text-align: center; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+        
+        .dash-card h3 { 
+            margin: 0 0 10px 0; 
+            font-size: 15px; 
+            opacity: 0.9; 
+            word-break: keep-all; 
+        }
+        
+        .dash-card .number { 
+            font-size: 32px; 
+            font-weight: bold; 
+            margin: 0; 
+        }
+        
         .card-blue { background: linear-gradient(135deg, #3498db, #2980b9); cursor: pointer; transition: 0.3s; }
         .card-blue:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4); }
         .card-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
         .card-orange { background: linear-gradient(135deg, #f39c12, #d35400); }
         .card-red { background: linear-gradient(135deg, #e74c3c, #c0392b); cursor: pointer; transition: 0.3s; }
         .card-red:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(231,76,60,0.4); }
+        
         .chart-container { display: flex; gap: 20px; margin-bottom: 20px; }
         .chart-box { flex: 1; background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; min-width: 0;}
         .chart-full { width: 100%; background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); box-sizing: border-box; min-width: 0;}
+        
         .filter-group { display: flex; gap: 10px; align-items: center; background: #f8f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; flex-wrap: wrap; border: 1px solid #e0e6ed; }
         .filter-group select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold;}
+        
         .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px;}
         .data-table th, .data-table td { border: 1px solid #ddd; padding: 10px 8px; text-align: center; vertical-align: middle; white-space: nowrap; }
         .data-table th { background-color: #f1f2f6; color: #2c3e50; position: sticky; top: 0; font-weight: 800; z-index: 5; }
@@ -49,41 +192,56 @@
         .check-cell { width: 30px; text-align: center; }
         .student-checkbox { transform: scale(1.3); cursor: pointer; }
         .score-cell { text-align: center; } 
+        
         .badge-status { font-size: 10px; display: inline-block; margin-top: 4px; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap; }
         .status-yet { background-color: #fdf2f2; color: #e74c3c; border: 1px solid #fadbd8; }
         .status-done { background-color: #e8f8f5; color: #1abc9c; border: 1px solid #d1f2eb; }
         .pass-star { color: #f1c40f; font-weight: bold; font-size: 14px; margin-right: 2px; }
         .certified-row { background-color: #fef9e7 !important; }
+        
         .profile-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 8px; border: 2px solid #ecf0f1; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s;}
         .profile-img:hover { transform: scale(1.1); border-color: #3498db; }
         .profile-placeholder { display: inline-block; width: 36px; height: 36px; border-radius: 50%; background-color: #bdc3c7; vertical-align: middle; margin-right: 8px; border: 2px solid #ecf0f1; }
+        
         .btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; font-size: 12px; margin: 2px; transition: 0.2s; white-space: nowrap; display: inline-block;}
         .btn:hover { opacity: 0.9; }
-        .btn-green { background-color: #2ecc71; } .btn-orange { background-color: #f39c12; } .btn-blue { background-color: #3498db; } .btn-dark { background-color: #34495e; } .btn-red { background-color: #e74c3c; } .btn-purple { background-color: #9b59b6; }
+        .btn-green { background-color: #2ecc71; } 
+        .btn-orange { background-color: #f39c12; } 
+        .btn-blue { background-color: #3498db; } 
+        .btn-dark { background-color: #34495e; } 
+        .btn-red { background-color: #e74c3c; } 
+        .btn-purple { background-color: #9b59b6; }
+        
         .action-group { margin-left: auto; display: flex; gap: 5px; } 
         .summary-box { background-color: #f4f6f7; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #3498db; line-height: 1.6;}
+        
         .log-table { width: 100%; border-collapse: collapse; font-size: 13px; background: white; min-width: 500px;}
         .log-table th, .log-table td { border: 1px solid #eee; padding: 10px; text-align: left; }
         .log-table th { background: #34495e; color: white; position: sticky; top: 0;}
         .log-time { color: #7f8c8d; font-size: 11px; }
         .log-user { font-weight: bold; color: #2980b9; }
+        
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
         .photo-view-content { background: white; padding: 15px; border-radius: 12px; text-align: center; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: popIn 0.2s ease-out; }
         .photo-view-content img { max-width: 300px; max-height: 400px; border-radius: 8px; object-fit: cover; }
         .photo-view-name { font-size: 18px; font-weight: bold; margin: 10px 0 5px 0; color: #2c3e50;}
+        
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: popIn 0.2s ease-out; box-sizing: border-box; max-height: 90vh; overflow-y: auto;}
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
         .edit-profile-header { display: flex; gap: 20px; margin-bottom: 15px; }
         .edit-photo-box { width: 100px; height: 130px; border-radius: 8px; border: 1px solid #ddd; background: #eee; display: flex; justify-content: center; align-items: center; overflow: hidden; flex-shrink: 0; }
         .edit-photo-box img { width: 100%; height: 100%; object-fit: cover; }
         .info-grid { flex: 1; display: grid; grid-template-columns: 1fr; gap: 8px; }
         .info-grid label { font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 2px; }
         .info-grid input, .info-grid select { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
         .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee;}
         .score-grid div { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;}
         .score-grid input { width: 55px; padding: 5px; text-align: right; border: 1px solid #ccc; border-radius: 4px; }
         .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        
         .rank-card { display: flex; align-items: center; padding: 12px 15px; border-radius: 12px; color: white; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 10px;}
         .rank-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
         .rare-medal { width: 32px; height: 32px; min-width: 32px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; overflow: hidden;}
@@ -95,12 +253,14 @@
         .rank-1 { background: linear-gradient(135deg, #f1c40f, #f39c12); }
         .rank-2 { background: linear-gradient(135deg, #bdc3c7, #a4b0be); color: #2c3e50; }
         .rank-3 { background: linear-gradient(135deg, #e67e22, #d35400); }
+        
         .normal-rank { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: #f8f9fa; border-radius: 12px; border: 1px solid #edf0f2; color: #2c3e50; margin-bottom: 6px;}
         .normal-info { display: flex; align-items: center; gap: 12px; }
         .rank-num { font-size: 15px; font-weight: 900; color: #7f8c8d; width: 20px; text-align: center;}
         .normal-name { font-size: 14px; font-weight: 900; color: #1a252f;}
         .normal-class { font-size: 11px; color: #7f8c8d; font-weight: bold; margin-left: 5px;}
         .normal-score { font-size: 15px; font-weight: 900; color: #3b71ca;}
+        
         @media (max-width: 850px) {
             .header { flex-direction: column; text-align: center; gap: 10px; padding: 15px 10px 10px 10px; }
             .header h1 { font-size: 18px; margin-bottom: 0; line-height: 1.4; word-break: keep-all; }
@@ -146,7 +306,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"   
+  measurementId: "G-3SL84TXVHD"    
         };
     </script>
 
@@ -319,10 +479,22 @@
                 </div>
                 
                 <div class="filter-group">
-                    <select id="filterGrade" onchange="window.updateTableHeaders(); window.loadData();"><option value="1" selected>1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
-                    <select id="filterDept" onchange="window.loadData()"><option value="ALL">전체 학과</option></select>
-                    <select id="filterClass" onchange="window.loadData()"><option value="ALL">전체 반</option><option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option><option value="7">7반</option><option value="8">8반</option><option value="9">9반</option><option value="10">10반</option></select>
-                    <select id="filterCert" onchange="window.loadData()"><option value="ALL">모든 학생</option><option value="PASS">인증 통과자(6개↑)</option></select>
+                    <select id="filterGrade" onchange="window.updateTableHeaders(); window.loadData();">
+                        <option value="1" selected>1학년</option>
+                        <option value="2">2학년</option>
+                        <option value="3">3학년</option>
+                    </select>
+                    <select id="filterDept" onchange="window.loadData()">
+                        <option value="ALL">전체 학과</option>
+                    </select>
+                    <select id="filterClass" onchange="window.loadData()">
+                        <option value="ALL">전체 반</option>
+                        <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option><option value="7">7반</option><option value="8">8반</option><option value="9">9반</option><option value="10">10반</option>
+                    </select>
+                    <select id="filterCert" onchange="window.loadData()">
+                        <option value="ALL">모든 학생</option>
+                        <option value="PASS">인증 통과자(6개↑)</option>
+                    </select>
                     <button onclick="window.loadData()" class="btn btn-green" style="padding: 8px 20px;">🔄 조회</button>
                     
                     <div class="action-group">
@@ -363,7 +535,9 @@
                     <button onclick="window.downloadExcelReport('badgeTable', '스마트시티_배지결산명단')" class="btn btn-dark">⬇️ 결산 명단 다운로드</button>
                 </div>
                 <div class="filter-group">
-                    <select id="badgeFilterGrade" onchange="window.loadBadgeData()"><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
+                    <select id="badgeFilterGrade" onchange="window.loadBadgeData()">
+                        <option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option>
+                    </select>
                     <select id="badgeFilterDept" onchange="window.loadBadgeData()">
                         <option value="ALL">전체 학과</option>
                     </select>
@@ -371,7 +545,10 @@
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="data-table" id="badgeTable">
-                        <thead style="background-color: #c0392b; color: white;"><tr><th>학과</th><th>학번</th><th>이름</th><th>지급 대상 배지</th><th>관리</th></tr></thead><tbody id="badgeTableBody"></tbody>
+                        <thead style="background-color: #c0392b; color: white;">
+                            <tr><th>학과</th><th>학번</th><th>이름</th><th>지급 대상 배지</th><th>관리</th></tr>
+                        </thead>
+                        <tbody id="badgeTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -398,12 +575,15 @@
 
             <div id="teacherManage" style="display:none;">
                 <h2>👨‍🏫 교사 계정 및 권한 관리</h2>
-                <div class="summary-box" style="border-left-color: #16a085;"><strong>💡 엑셀 업로드 인공지능 지원:</strong><br>담임학급에 '1-2', '1학년 2반', '1월 2일' 등 무작위로 적어도 시스템이 <b>'1-2'</b>로 자동 변환하여 저장합니다. 특별권한도 내용에 맞춰 자동 인식합니다.</div>
+                <div class="summary-box" style="border-left-color: #16a085;">
+                    <strong>💡 엑셀 업로드 인공지능 지원:</strong><br>담임학급에 '1-2', '1학년 2반', '1월 2일' 등 무작위로 적어도 시스템이 <b>'1-2'</b>로 자동 변환하여 저장합니다. 특별권한도 내용에 맞춰 자동 인식합니다.
+                </div>
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 300px; background: #fff; padding: 20px; border: 1px dashed #16a085; border-radius: 8px; margin-bottom: 20px;">
                         <h3 style="margin-top: 0; color: #16a085;">📂 새 학기 교사 일괄 등록 (엑셀)</h3>
                         <button onclick="window.downloadTeacherTemplate()" class="btn btn-dark" style="margin-bottom: 15px;">📄 교사 등록 양식 다운로드</button><br>
-                        <input type="file" id="teacherExcelInput" accept=".xlsx" style="margin-bottom:15px;"/><br><button id="uploadTeacherExcelBtn" class="btn btn-purple">🚀 교사 계정 일괄 업로드 실행</button>
+                        <input type="file" id="teacherExcelInput" accept=".xlsx" style="margin-bottom:15px;"/><br>
+                        <button id="uploadTeacherExcelBtn" class="btn btn-purple">🚀 교사 계정 일괄 업로드 실행</button>
                     </div>
                     <div style="flex: 1; min-width: 300px; background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px;">
                         <h3 style="margin-top: 0; color: #34495e;">➕ 학기 중 개별 교사 추가</h3>
@@ -412,13 +592,17 @@
                             <input type="text" id="tId" placeholder="로그인 아이디 (영문/숫자)" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
                             
                             <select id="tHomeroom" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
-                                <option value="">비담임</option><option value="1-1">1-1</option><option value="1-2">1-2</option><option value="1-3">1-3</option><option value="1-4">1-4</option><option value="1-5">1-5</option><option value="1-6">1-6</option>
+                                <option value="">비담임</option>
+                                <option value="1-1">1-1</option><option value="1-2">1-2</option><option value="1-3">1-3</option><option value="1-4">1-4</option><option value="1-5">1-5</option><option value="1-6">1-6</option>
                                 <option value="2-1">2-1</option><option value="2-2">2-2</option><option value="2-3">2-3</option><option value="2-4">2-4</option><option value="2-5">2-5</option><option value="2-6">2-6</option>
                                 <option value="3-1">3-1</option><option value="3-2">3-2</option><option value="3-3">3-3</option><option value="3-4">3-4</option><option value="3-5">3-5</option><option value="3-6">3-6</option>
                             </select>
 
                             <select id="tSubject" style="padding:10px; border:1px solid #ccc; border-radius:5px; background-color: #ebf5fb;">
-                                <option value="일반">일반 교사 (조회 전용)</option><option value="체육">체육 담당 (A영역 입력)</option><option value="직업기초">직업기초 담당 (C영역 입력)</option><option value="영어1">1학년 영어 담당 (I영역 입력)</option>
+                                <option value="일반">일반 교사 (조회 전용)</option>
+                                <option value="체육">체육 담당 (A영역 입력)</option>
+                                <option value="직업기초">직업기초 담당 (C영역 입력)</option>
+                                <option value="영어1">1학년 영어 담당 (I영역 입력)</option>
                             </select>
 
                             <button class="btn btn-green" style="padding: 12px; font-size:14px;" onclick="window.addTeacher()">개별 등록하기</button>
@@ -427,20 +611,27 @@
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="data-table">
-                        <thead style="background-color: #16a085; color:white;"><tr><th>교사 성함</th><th>아이디</th><th>담임반</th><th>특별 권한</th><th>등록일</th><th>관리</th></tr></thead><tbody id="teacherTableBody"></tbody>
+                        <thead style="background-color: #16a085; color:white;">
+                            <tr><th>교사 성함</th><th>아이디</th><th>담임반</th><th>특별 권한</th><th>등록일</th><th>관리</th></tr>
+                        </thead>
+                        <tbody id="teacherTableBody"></tbody>
                     </table>
                 </div>
             </div>
 
             <div id="systemLog" style="display:none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap:10px;">
-                    <h2>🔍 시스템 활동 로그 (CCTV)</h2><button onclick="window.downloadExcelReport('logTable', '스마트시티_시스템로그')" class="btn btn-dark">⬇️ 로그 엑셀 다운로드</button>
+                    <h2>🔍 시스템 활동 로그 (CCTV)</h2>
+                    <button onclick="window.downloadExcelReport('logTable', '스마트시티_시스템로그')" class="btn btn-dark">⬇️ 로그 엑셀 다운로드</button>
                 </div>
-                <div class="summary-box" style="border-left-color: #8e44ad;"><strong>💡 투명한 시스템 감시 기록</strong><br>로그인 및 데이터 수정 기록이 영구 보존됩니다. (최근 200건 표시)</div>
+                <div class="summary-box" style="border-left-color: #8e44ad;">
+                    <strong>💡 투명한 시스템 감시 기록</strong><br>로그인 및 데이터 수정 기록이 영구 보존됩니다. (최근 200건 표시)
+                </div>
                 <button onclick="window.loadLogs()" class="btn btn-purple" style="margin-bottom: 10px;">🔄 로그 새로고침</button>
                 <div style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; overflow-x: auto;">
                     <table class="log-table" id="logTable">
-                        <thead><tr><th style="width: 180px;">발생 일시</th><th style="width: 150px;">수행자 (유형)</th><th>상세 작업 내역</th></tr></thead><tbody id="logTableBody"></tbody>
+                        <thead><tr><th style="width: 180px;">발생 일시</th><th style="width: 150px;">수행자 (유형)</th><th>상세 작업 내역</th></tr></thead>
+                        <tbody id="logTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -473,26 +664,56 @@
         </div>
     </div>
 
-    <div id="photoViewModal" class="modal-overlay" onclick="window.closePhotoView()"><div class="photo-view-content" onclick="event.stopPropagation();"><h3 id="photoViewName" class="photo-view-name">학생 이름</h3><p id="photoViewInfo" style="margin:0 0 15px 0; color:#7f8c8d; font-size:13px;"></p><img id="photoViewImg" src=""><div style="margin-top: 15px;"><button class="btn btn-dark" onclick="window.closePhotoView()">닫기</button></div></div></div>
+    <div id="photoViewModal" class="modal-overlay" onclick="window.closePhotoView()">
+        <div class="photo-view-content" onclick="event.stopPropagation();">
+            <h3 id="photoViewName" class="photo-view-name">학생 이름</h3>
+            <p id="photoViewInfo" style="margin:0 0 15px 0; color:#7f8c8d; font-size:13px;"></p>
+            <img id="photoViewImg" src="">
+            <div style="margin-top: 15px;">
+                <button class="btn btn-dark" onclick="window.closePhotoView()">닫기</button>
+            </div>
+        </div>
+    </div>
     
     <div id="editModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header"><span>학생 정보 및 점수 개별 수정</span></div>
-            <input type="hidden" id="editDocId"><input type="hidden" id="editGrade">
+            <input type="hidden" id="editDocId">
+            <input type="hidden" id="editGrade">
+            
             <div class="edit-profile-header">
-                <div class="edit-photo-box"><img id="edit-PhotoImg" src="" alt="사진"></div>
+                <div class="edit-photo-box">
+                    <img id="edit-PhotoImg" src="" alt="사진">
+                </div>
                 <div class="info-grid">
-                    <div><label>이름</label><input type="text" id="edit-Name"></div><div><label>학번 (5자리)</label><input type="text" id="edit-StudentId"></div>
-                    <div><label>학과</label><select id="edit-Dept"><option value="미지정">미지정</option></select></div>
+                    <div><label>이름</label><input type="text" id="edit-Name"></div>
+                    <div><label>학번 (5자리)</label><input type="text" id="edit-StudentId"></div>
+                    <div>
+                        <label>학과</label>
+                        <select id="edit-Dept">
+                            <option value="미지정">미지정</option>
+                        </select>
+                    </div>
                 </div>
             </div>
+            
             <div class="score-grid">
-                <div><span>[S] 정보화:</span><input type="number" id="edit-S"></div><div><span>[M] 전공성적:</span><input type="number" id="edit-M"></div><div><span>[A] 예체능:</span><input type="number" id="edit-A"></div>
-                <div><span>[R] 한국사:</span><input type="number" id="edit-R"></div><div><span>[T] 전공자격:</span><input type="number" id="edit-T"></div><div><span>[C] 직업기초:</span><input type="number" id="edit-C"></div>
-                <div><span>[I] 외국어:</span><input type="number" id="edit-I"></div><div><span>[Tr] 성실:</span><input type="number" id="edit-Tr"></div><div><span>[Y] 인성:</span><input type="number" id="edit-Y"></div>
+                <div><span>[S] 정보화:</span><input type="number" id="edit-S"></div>
+                <div><span>[M] 전공성적:</span><input type="number" id="edit-M"></div>
+                <div><span>[A] 예체능:</span><input type="number" id="edit-A"></div>
+                <div><span>[R] 한국사:</span><input type="number" id="edit-R"></div>
+                <div><span>[T] 전공자격:</span><input type="number" id="edit-T"></div>
+                <div><span>[C] 직업기초:</span><input type="number" id="edit-C"></div>
+                <div><span>[I] 외국어:</span><input type="number" id="edit-I"></div>
+                <div><span>[Tr] 성실:</span><input type="number" id="edit-Tr"></div>
+                <div><span>[Y] 인성:</span><input type="number" id="edit-Y"></div>
             </div>
+            
             <div style="display: flex; justify-content: center; margin-top: 15px; flex-wrap: wrap; gap:10px;">
-                <div style="display:flex; gap:5px;"><button class="btn btn-dark" onclick="window.closeEditModal()">취소</button><button class="btn btn-orange" onclick="window.saveEdit()">💾 즉시 반영</button></div>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn btn-dark" onclick="window.closeEditModal()">취소</button>
+                    <button class="btn btn-orange" onclick="window.saveEdit()">💾 즉시 반영</button>
+                </div>
             </div>
         </div>
     </div>
@@ -502,18 +723,30 @@
             <div class="modal-header"><span>👨‍🏫 교사 권한 개별 수정</span></div>
             <input type="hidden" id="edit-tDocId">
             <div class="info-grid" style="display: flex; flex-direction: column; gap: 12px;">
-                <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">교사 성함</label><input type="text" id="edit-tName" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></div>
-                <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">아이디 (수정 불가)</label><input type="text" id="edit-tId" readonly style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background: #f4f6f7;"></div>
-                <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">담임 학급 설정</label>
+                <div>
+                    <label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">교사 성함</label>
+                    <input type="text" id="edit-tName" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">아이디 (수정 불가)</label>
+                    <input type="text" id="edit-tId" readonly style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background: #f4f6f7;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">담임 학급 설정</label>
                     <select id="edit-tHomeroom" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-                        <option value="">비담임</option><option value="1-1">1-1</option><option value="1-2">1-2</option><option value="1-3">1-3</option><option value="1-4">1-4</option><option value="1-5">1-5</option><option value="1-6">1-6</option>
+                        <option value="">비담임</option>
+                        <option value="1-1">1-1</option><option value="1-2">1-2</option><option value="1-3">1-3</option><option value="1-4">1-4</option><option value="1-5">1-5</option><option value="1-6">1-6</option>
                         <option value="2-1">2-1</option><option value="2-2">2-2</option><option value="2-3">2-3</option><option value="2-4">2-4</option><option value="2-5">2-5</option><option value="2-6">2-6</option>
                         <option value="3-1">3-1</option><option value="3-2">3-2</option><option value="3-3">3-3</option><option value="3-4">3-4</option><option value="3-5">3-5</option><option value="3-6">3-6</option>
                     </select>
                 </div>
-                <div><label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">특별 권한 설정</label>
+                <div>
+                    <label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">특별 권한 설정</label>
                     <select id="edit-tSubject" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #ebf5fb;">
-                        <option value="일반">일반 교사 (조회 전용)</option><option value="체육">체육 담당 (A영역 입력)</option><option value="직업기초">직업기초 담당 (C영역 입력)</option><option value="영어1">1학년 영어 담당 (I영역 입력)</option>
+                        <option value="일반">일반 교사 (조회 전용)</option>
+                        <option value="체육">체육 담당 (A영역 입력)</option>
+                        <option value="직업기초">직업기초 담당 (C영역 입력)</option>
+                        <option value="영어1">1학년 영어 담당 (I영역 입력)</option>
                     </select>
                 </div>
             </div>
@@ -526,12 +759,19 @@
 
     <div id="pendingModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
         <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header"><span>📝 전교생 미승인 결재 대기 명단</span><button class="btn btn-dark" onclick="document.getElementById('pendingModal').style.display='none'">✕</button></div>
+            <div class="modal-header">
+                <span>📝 전교생 미승인 결재 대기 명단</span>
+                <button class="btn btn-dark" onclick="document.getElementById('pendingModal').style.display='none'">✕</button>
+            </div>
             <div class="summary-box" style="margin-bottom: 15px;">전교생이 신청한 배지 인증 증빙자료를 통합 관리자가 확인하고 승인/반려할 수 있습니다.</div>
             <div style="overflow-x: auto; border: 1px solid #eee; border-radius: 8px;">
                 <table class="data-table" style="min-width: 600px; margin: 0;">
-                    <thead style="background:#34495e; color:white;"><tr><th>신청일</th><th>학번/이름</th><th>신청 역량(점수)</th><th>증빙자료</th><th>상태관리</th></tr></thead>
-                    <tbody id="adminPendingList"><tr><td colspan="5" style="text-align: center; padding: 30px; color: #7f8c8d; font-weight: bold;">결재 데이터를 불러오는 중입니다...⏳</td></tr></tbody>
+                    <thead style="background:#34495e; color:white;">
+                        <tr><th>신청일</th><th>학번/이름</th><th>신청 역량(점수)</th><th>증빙자료</th><th>상태관리</th></tr>
+                    </thead>
+                    <tbody id="adminPendingList">
+                        <tr><td colspan="5" style="text-align: center; padding: 30px; color: #7f8c8d; font-weight: bold;">결재 데이터를 불러오는 중입니다...⏳</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -539,8 +779,12 @@
 
     <div id="adminProofModal" class="modal-overlay" onclick="if(event.target===this) this.style.display='none'">
         <div class="modal-content" style="max-width: 700px; text-align: center;">
-            <div class="modal-header"><h3>📄 제출된 증빙 자료 (관리자 확인용)</h3><button class="close-btn" onclick="document.getElementById('adminProofModal').style.display='none'">✕</button></div>
-            <div id="adminProofContent" style="margin-top: 15px; max-height: 60vh; overflow-y: auto; background: #eee; border-radius: 8px; display: flex; justify-content: center; align-items: center; min-height: 200px;"></div>
+            <div class="modal-header">
+                <h3>📄 제출된 증빙 자료 (관리자 확인용)</h3>
+                <button class="close-btn" onclick="document.getElementById('adminProofModal').style.display='none'">✕</button>
+            </div>
+            <div id="adminProofContent" style="margin-top: 15px; max-height: 60vh; overflow-y: auto; background: #eee; border-radius: 8px; display: flex; justify-content: center; align-items: center; min-height: 200px;">
+            </div>
         </div>
     </div>
     <script type="module">
@@ -1014,293 +1258,39 @@
             } catch(e) { tbody.innerHTML = `<tr><td colspan='17' style='color:red;'>오류</td></tr>`; }
         };
 
-        // 🖨️ [1장 압축 완벽 최적화] 포트폴리오 인쇄 전용 함수
-        window.printCertificate = async function(studentId) {
-            try {
-                const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
-                if(qSnap.empty) return alert("데이터를 찾을 수 없습니다.");
-                
-                const sData = qSnap.docs[0].data();
-                const studentGrade = sData.current_grade || 1; 
-                
-                let grandTotalScore = 0; let finalBadges = 0; let finalTier = "🌱 CITY 스타터";
-                let sumScores = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
-                let sumCaps = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
-                let timelineHtml = '';
-                
-                for (let grade = 1; grade <= 3; grade++) {
-                    let yData = sData[`year_${grade}`];
-                    let gradeItemsHtml = '';
-
-                    // 해당 학년 데이터가 없거나 기록이 없는 경우
-                    if (!yData || !yData.checked_items || Object.keys(yData.checked_items).length === 0 || grade > studentGrade) {
-                        gradeItemsHtml = `<div class="timeline-empty">기록 없음</div>`;
-                    } else {
-                        window.AREAS.forEach(a => { sumCaps[a] += (window.CAPS[grade][a] || 0); if(yData.scores) sumScores[a] += (yData.scores[a] || 0); });
-                        if(yData.total_score !== undefined) grandTotalScore += yData.total_score;
-                        if(yData.earned_badges !== undefined) finalBadges += yData.earned_badges;
-                        if(grade === studentGrade && yData.title) finalTier = yData.title;
-
-                        let badgeListHtml = '';
-                        let hasSpec = false;
-                        
-                        if (yData.checked_items) {
-                            window.AREAS.forEach(area => {
-                                let checkedIndices = yData.checked_items[area] || [];
-                                if (checkedIndices.length > 0) {
-                                    hasSpec = true;
-                                    checkedIndices.forEach(idx => {
-                                        let rawLabel = window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label;
-                                        let label = rawLabel.split('(')[0].trim();
-                                        badgeListHtml += `
-                                            <div class="timeline-badge-item">
-                                                <div class="timeline-badge-code">${area}</div>
-                                                <div class="timeline-badge-text">${label}</div>
-                                            </div>
-                                        `;
-                                    });
-                                }
-                            });
-                        }
-                        
-                        if(hasSpec) {
-                            gradeItemsHtml = `<div class="timeline-badge-list">${badgeListHtml}</div>`;
-                        } else {
-                            gradeItemsHtml = `<div class="timeline-empty">기록 없음</div>`;
-                        }
-                    }
-
-                    // 각 학년별 고정 템플릿 칸 생성
-                    timelineHtml += `
-                        <div class="timeline-col">
-                            <div class="timeline-col-title">${grade}학년 역량 기록</div>
-                            ${gradeItemsHtml}
-                        </div>
-                    `;
-                }
-
-                let radarData = [
-                    (sumCaps['M'] + sumCaps['T']) > 0 ? Math.min(100, Math.round(((sumScores['M'] + sumScores['T']) / (sumCaps['M'] + sumCaps['T'])) * 100)) : 0,
-                    sumCaps['S'] > 0 ? Math.min(100, Math.round((sumScores['S'] / sumCaps['S']) * 100)) : 0,
-                    (sumCaps['C'] + sumCaps['R']) > 0 ? Math.min(100, Math.round(((sumScores['C'] + sumScores['R']) / (sumCaps['C'] + sumCaps['R'])) * 100)) : 0,
-                    sumCaps['I'] > 0 ? Math.min(100, Math.round((sumScores['I'] / sumCaps['I']) * 100)) : 0,
-                    sumCaps['A'] > 0 ? Math.min(100, Math.round((sumScores['A'] / sumCaps['A']) * 100)) : 0,
-                    (sumCaps['Tr'] + sumCaps['Y']) > 0 ? Math.min(100, Math.round(((sumScores['Tr'] + sumScores['Y']) / (sumCaps['Tr'] + sumCaps['Y'])) * 100)) : 0
-                ];
-
-                const printWindow = window.open('', '_blank', 'width=1000,height=1200');
-                const now = new Date();
-                const yy = String(now.getFullYear()).slice(-2);
-                const mm = now.getMonth() + 1;
-                const dd = now.getDate();
-                const ampm = now.getHours() >= 12 ? '오후' : '오전';
-                const hh = now.getHours() % 12 || 12;
-                const min = String(now.getMinutes()).padStart(2, '0');
-                
-                const printDateText = `${yy}. ${mm}. ${dd}. ${ampm} ${hh}:${min}`;
-                const baseDateText = `${now.getFullYear()}. ${mm}. ${dd}.`;
-                const photoUrl = sData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-                
-                /* ==============================================================
-                   🔥 포트폴리오 출력용 HTML / CSS 템플릿 🔥
-                   ============================================================== */
-                printWindow.document.write(`
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <title>${sData.name}_포트폴리오</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
-  <style>
-    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
-    @page { size: A4 portrait; margin: 8mm; }
-    body { margin: 0; padding: 0; background: #fff; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; color: #1f2937; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    
-    /* A4 한 장 꽉 차게 5개의 Row로 그리드 고정 */
-    .portfolio-page { width: 194mm; height: 281mm; margin: 0 auto; padding: 5mm 6mm 4mm 6mm; display: grid; grid-template-rows: auto auto auto 1fr auto; row-gap: 3.5mm; background: #fff; }
-    .top-meta { font-size: 10px; color: #222; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1mm; }
-    .doc-title { text-align: center; font-size: 10px; font-weight: 700; margin-top: -1mm; margin-bottom: 1mm; }
-
-    /* 헤더: 프로필 + 로고 */
-    .header { display: flex; justify-content: space-between; align-items: center; padding: 3mm 0 4mm 0; border-top: 1px solid #d9dee7; border-bottom: 1px solid #d9dee7; }
-    .header-left { display: flex; align-items: center; gap: 10px; }
-    .photo { width: 46px; height: 58px; border-radius: 10px; border: 1px solid #d8dee8; object-fit: cover; background: #eef2f7; flex-shrink: 0; }
-    .student-info { display: flex; flex-direction: column; gap: 2px; }
-    .name-row { display: flex; align-items: center; gap: 8px; }
-    .student-name { font-size: 16px; font-weight: 800; line-height: 1; }
-    .title-badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 10px; border-radius: 999px; background: #273f69; color: #fff; font-size: 9px; font-weight: 800; line-height: 1; }
-    .student-sub { font-size: 10px; color: #5b6472; font-weight: 600; }
-    .header-right { text-align: right; }
-    .portfolio-title { font-size: 18px; font-weight: 800; color: #2f67d8; line-height: 1.05; }
-    .portfolio-sub { font-size: 8px; color: #97a3b6; font-weight: 700; margin-top: 2px; }
-
-    /* 🚨 중앙 요약 (왼쪽 폭 58mm 강제 고정, 직사각형) 🚨 */
-    .summary-wrap { display: grid; grid-template-columns: 58mm 1fr; gap: 7mm; align-items: stretch; min-height: 74mm; }
-    .summary-left { display: grid; grid-template-rows: 1fr 1fr; gap: 5mm; }
-    .score-box, .badge-box { background: #f2f4f7; border: 1px solid #d8dee8; border-radius: 10px; min-height: 31mm; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4mm 2mm; }
-    .box-label { font-size: 9px; color: #7b8794; font-weight: 700; margin-bottom: 5px; }
-    .box-value { color: #2f67d8; font-weight: 800; line-height: 1; }
-    .box-value strong { font-size: 25px; line-height: 1; letter-spacing: -0.5px; }
-    .box-value span { font-size: 13px; margin-left: 2px; }
-    
-    /* 🚨 레이더 차트 (최대 폭 95mm, 1:1 정사각형 가둠) 🚨 */
-    .chart-col { display: flex; align-items: center; justify-content: center; }
-    .radar-frame { width: 100%; max-width: 95mm; aspect-ratio: 1 / 1; background: #fff; border: 1px solid #d8dee8; border-radius: 12px; padding: 5mm; display: flex; align-items: center; justify-content: center; }
-    .radar-frame canvas { width: 100% !important; height: 100% !important; }
-
-    /* 성장 타임라인 */
-    .timeline-title { font-size: 11px; font-weight: 800; color: #111827; padding-bottom: 1.5mm; border-bottom: 2px solid #3b6edc; margin-top: 0; }
-    .timeline-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.5mm; min-height: 0; }
-    .timeline-col { background: #fafbfc; border: 1px solid #d8dee8; border-radius: 10px; padding: 8px; min-height: 88mm; display: flex; flex-direction: column; }
-    .timeline-col-title { text-align: center; font-size: 11px; font-weight: 800; color: #111827; padding-bottom: 6px; border-bottom: 1px dashed #d8dee8; margin-bottom: 8px; }
-    .timeline-empty { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding-top: 18px; color: #c0c7d2; font-size: 10px; font-weight: 700; }
-    .timeline-badge-list { display: flex; flex-direction: column; gap: 6px; }
-    .timeline-badge-item { display: grid; grid-template-columns: 18px 1fr; align-items: center; gap: 7px; min-height: 24px; border: 1px solid #d8dee8; border-radius: 8px; background: #fff; padding: 0 7px; }
-    .timeline-badge-code { width: 16px; height: 16px; border-radius: 4px; background: #eef3ff; color: #3b6edc; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
-    .timeline-badge-text { font-size: 9px; font-weight: 700; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    /* 하단 서명란 */
-    .footer { text-align: center; padding-top: 1mm; }
-    .proof-text { font-size: 8px; color: #7b8794; margin-bottom: 1.5mm; }
-    .principal { font-size: 15px; font-weight: 800; letter-spacing: 1px; }
-  </style>
-</head>
-<body>
-  <div class="portfolio-page">
-    <div class="top-meta">
-      <div>${printDateText}</div>
-      <div>${sData.name}_포트폴리오</div>
-    </div>
-    <div class="doc-title">${sData.name} 학생 스마트시티 포트폴리오</div>
-    <div class="header">
-      <div class="header-left">
-        <img class="photo" src="${photoUrl}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png';" />
-        <div class="student-info">
-          <div class="name-row">
-            <div class="student-name">${sData.name}</div>
-            <div class="title-badge">${finalTier}</div>
-          </div>
-          <div class="student-sub">${sData.department} | 학번: ${sData.current_studentId}</div>
-        </div>
-      </div>
-      <div class="header-right">
-        <div class="portfolio-title">SMART CITY PORTFOLIO</div>
-        <div class="portfolio-sub">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
-        <div class="portfolio-sub">기준일: ${baseDateText}</div>
-      </div>
-    </div>
-    <div class="summary-wrap">
-      <div class="summary-left">
-        <div class="score-box">
-          <div class="box-label">현재 누적 총점</div>
-          <div class="box-value"><strong>${grandTotalScore}</strong><span>점</span></div>
-        </div>
-        <div class="badge-box">
-          <div class="box-label">획득 핵심 배지</div>
-          <div class="box-value"><strong>${finalBadges}</strong><span>개</span></div>
-        </div>
-      </div>
-      <div class="chart-col">
-        <div class="radar-frame">
-          <canvas id="printRadarChart"></canvas>
-        </div>
-      </div>
-    </div>
-    <div class="timeline-title">📈 성장 타임라인</div>
-    <div class="timeline-grid">
-      ${timelineHtml}
-    </div>
-    <div class="footer">
-      <div class="proof-text">위 학생은 본교의 스마트시티 역량 인증 과정을 성실히 이수하였음을 증명함.</div>
-      <div class="principal">인덕과학기술고등학교장</div>
-    </div>
-  </div>
-  <script>
-    const ctx = document.getElementById('printRadarChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
-            datasets: [{
-                data: [${radarData.join(',')}],
-                backgroundColor: 'rgba(59, 113, 202, 0.25)',
-                borderColor: '#3b71ca',
-                borderWidth: 2,
-                pointRadius: 2,
-                pointBackgroundColor: '#2c3e50'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                r: {
-                    min: 0,
-                    max: 100,
-                    ticks: { display: false, stepSize: 10 },
-                    angleLines: { color: 'rgba(0,0,0,0.08)' },
-                    grid: { color: 'rgba(0,0,0,0.08)', circular: false },
-                    pointLabels: { color: '#1a252f', font: { size: 10, weight: '700' } }
-                }
-            }
-        }
-    });
-    setTimeout(() => { window.print(); }, 500); 
-  <\/script>
-</body>
-</html>
-                `);
-                printWindow.document.close();
-            } catch(e) { console.error("출력 오류:", e); alert("출력 중 오류가 발생했습니다."); }
-        };
-
         window.loadDashboard = async function() {
             try {
                 let dToday = new Date(new Date().getTime() + 9*60*60*1000); let todayStr = dToday.toISOString().slice(0,10);
                 try { const todaySnap = await window.getDoc(window.doc(window.db, "system_stats", todayStr)); document.getElementById('visitorCount').innerText = todaySnap.exists() ? todaySnap.data().visitors : 0; } catch(e) { document.getElementById('visitorCount').innerText = 0; }
                 const appSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중"))); document.getElementById('dashPendingApprove').innerText = appSnap.size + "건";
-                const querySnapshot = await window.getDocs(window.collection(window.db, "students"));
-                let totalBadges = 0, topAchievers = 0, pendingAlerts = 0; let badgeCounts = { S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0 }; let dynamicDeptCounts = {}; 
-                querySnapshot.forEach(doc => { 
-                    let d = doc.data(); if(!d.current_grade) return; let g = d.current_grade; let yData = d[`year_${g}`]; if(!yData) return; 
-                    let dept = d.department && d.department !== "-" ? d.department : "미지정"; if(!dynamicDeptCounts[dept]) dynamicDeptCounts[dept] = 0;
-                    if(yData.earned_badges >= 6) { topAchievers++; dynamicDeptCounts[dept]++; } 
-                    window.AREAS.forEach(a => { if(yData.pass && yData.pass[a]) { badgeCounts[a]++; totalBadges++; } if(yData.pass && yData.pass[a] === true && (!yData.delivery_status || yData.delivery_status[a] !== true)) { pendingAlerts++; } }); 
+                const qSnap = await window.getDocs(window.collection(window.db, "students"));
+                let totalBadges = 0, topAchievers = 0, pendingAlerts = 0; let badgeCounts = { S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0 }; let dyDeptCounts = {}; 
+                qSnap.forEach(doc => { 
+                    let d = doc.data(); if(!d.current_grade) return; let yD = d[`year_${d.current_grade}`]; if(!yD) return; 
+                    let dept = d.department && d.department !== "-" ? d.department : "미지정"; if(!dyDeptCounts[dept]) dyDeptCounts[dept] = 0;
+                    if(yD.earned_badges >= 6) { topAchievers++; dyDeptCounts[dept]++; } 
+                    window.AREAS.forEach(a => { if(yD.pass && yD.pass[a]) { badgeCounts[a]++; totalBadges++; } if(yD.pass && yD.pass[a] === true && (!yD.delivery_status || yD.delivery_status[a] !== true)) pendingAlerts++; }); 
                 });
                 document.getElementById('dashMonthlyBadges').innerText = totalBadges + "개"; document.getElementById('dashTopAchievers').innerText = topAchievers + "명"; document.getElementById('dashPendingAlert').innerText = pendingAlerts + "건";
-                if(dynamicDeptCounts["미지정"] === 0) delete dynamicDeptCounts["미지정"];
-                const chartLabels = Object.keys(dynamicDeptCounts).map(name => name.length > 5 ? [name.substring(0, 4), name.substring(4)] : name); const chartData = Object.values(dynamicDeptCounts);
-                const safeChartLabels = chartLabels.length > 0 ? chartLabels : ["데이터 없음"]; const safeChartData = chartData.length > 0 ? chartData : [0];
-                const ctxDept = document.getElementById('deptChart').getContext('2d'); if(window.myDeptChart) window.myDeptChart.destroy(); 
-                window.myDeptChart = new Chart(ctxDept, { type: 'bar', data: { labels: safeChartLabels, datasets: [{ label: '인증 달성자', data: safeChartData, backgroundColor: '#3498db' }] } });
-                const ctxBadge = document.getElementById('badgeChart').getContext('2d'); if(window.myBadgeChart) window.myBadgeChart.destroy(); 
-                window.myBadgeChart = new Chart(ctxBadge, { type: 'doughnut', data: { labels: window.AREAS.map(a => window.AREA_NAMES[a]), datasets: [{ data: window.AREAS.map(a => badgeCounts[a]), backgroundColor: ['#1abc9c', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c', '#2ecc71', '#95a5a6'] }] }, options: { plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } } } } });
-                let dates = []; let visitors = [];
+                if(dyDeptCounts["미지정"] === 0) delete dyDeptCounts["미지정"];
+                const cL = Object.keys(dyDeptCounts).map(n => n.length > 5 ? [n.substring(0, 4), n.substring(4)] : n), cD = Object.values(dyDeptCounts);
+                const safeCL = cL.length ? cL : ["없음"], safeCD = cD.length ? cD : [0];
+                const ctxD = document.getElementById('deptChart').getContext('2d'); if(window.myDeptChart) window.myDeptChart.destroy(); 
+                window.myDeptChart = new Chart(ctxD, { type: 'bar', data: { labels: safeCL, datasets: [{ label: '인증 달성자', data: safeCD, backgroundColor: '#3498db' }] } });
+                const ctxB = document.getElementById('badgeChart').getContext('2d'); if(window.myBadgeChart) window.myBadgeChart.destroy(); 
+                window.myBadgeChart = new Chart(ctxB, { type: 'doughnut', data: { labels: window.AREAS.map(a => window.AREA_NAMES[a]), datasets: [{ data: window.AREAS.map(a => badgeCounts[a]), backgroundColor: ['#1abc9c', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c', '#2ecc71', '#95a5a6'] }] }, options: { plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } } } } });
+                let dates = [], visitors = [];
                 for(let i=6; i>=0; i--) {
                     let d = new Date(new Date().getTime() + 9*60*60*1000 - (i*24*60*60*1000)); let dStr = d.toISOString().slice(0,10); dates.push(dStr.slice(5));
                     try { const snap = await window.getDoc(window.doc(window.db, "system_stats", dStr)); visitors.push(snap.exists() ? snap.data().visitors : 0); } catch(e) { visitors.push(0); }
                 }
-                const ctxVis = document.getElementById('visitorChart').getContext('2d'); if(window.myVisitorChart) window.myVisitorChart.destroy(); window.myVisitorChart = new Chart(ctxVis, { type: 'line', data: { labels: dates, datasets: [{ label: '방문자', data: visitors, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)', fill: true, tension: 0.3 }] }, options: { maintainAspectRatio: false } });
-            } catch(e) { console.error("대시보드 로드 오류:", e); }
+                const ctxV = document.getElementById('visitorChart').getContext('2d'); if(window.myVisitorChart) window.myVisitorChart.destroy(); window.myVisitorChart = new Chart(ctxV, { type: 'line', data: { labels: dates, datasets: [{ label: '방문자', data: visitors, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)', fill: true, tension: 0.3 }] }, options: { maintainAspectRatio: false } });
+            } catch(e) { console.error("대시보드 오류:", e); }
         };
 
-        window.loadLockStatus = async function() {
-            try { const docSnap = await window.getDoc(window.doc(window.db, "settings", "config")); if(docSnap.exists()) { window.isSystemLocked = docSnap.data().isLocked || false; updateLockButtonUI(); } } catch(e) { console.error("설정 로드 에러:", e); }
-        }
-
-        function updateLockButtonUI() {
-            const btn = document.getElementById("globalLockBtn");
-            if(window.isSystemLocked) { btn.className = "btn-lock lock-active"; btn.innerHTML = "🔒 시스템 마감됨 (해제하기)"; } else { btn.className = "btn-lock lock-inactive"; btn.innerHTML = "🔓 시스템 개방 중 (마감하기)"; }
-        }
-
-        window.toggleGlobalLock = async function() {
-            const actionText = window.isSystemLocked ? "마감을 해제하시겠습니까?" : "올해 평가를 마감하시겠습니까?";
-            if(!confirm(actionText)) return;
-            window.isSystemLocked = !window.isSystemLocked;
-            try { await window.setDoc(window.doc(window.db, "settings", "config"), { isLocked: window.isSystemLocked }, { merge: true }); updateLockButtonUI(); alert(`성공적으로 처리되었습니다.`); } catch(e) { console.error("잠금 토글 에러:", e); alert("DB 에러"); }
-        }
+        window.loadLockStatus = async function() { try { const snap = await window.getDoc(window.doc(window.db, "settings", "config")); if(snap.exists()) { window.isSystemLocked = snap.data().isLocked || false; updateLockButtonUI(); } } catch(e) {} }
+        function updateLockButtonUI() { const btn = document.getElementById("globalLockBtn"); if(window.isSystemLocked) { btn.className = "btn-lock lock-active"; btn.innerHTML = "🔒 마감됨"; } else { btn.className = "btn-lock lock-inactive"; btn.innerHTML = "🔓 개방 중"; } }
+        window.toggleGlobalLock = async function() { if(!confirm(window.isSystemLocked ? "마감을 해제할까요?" : "올해 평가를 마감할까요?")) return; window.isSystemLocked = !window.isSystemLocked; try { await window.setDoc(window.doc(window.db, "settings", "config"), { isLocked: window.isSystemLocked }, { merge: true }); updateLockButtonUI(); alert(`처리되었습니다.`); } catch(e) { alert("DB 에러"); } }
     </script>
 </body>
 </html>
