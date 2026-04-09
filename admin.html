@@ -1434,7 +1434,7 @@
             window.loadDashboard(); 
         };
 
-        // 🖨️ [완벽 재구성] 포트폴리오 출력 전용 로직
+        // 🖨️ [완벽 템플릿 복제] 포트폴리오 출력 전용 함수
         window.printCertificate = async function(studentId) {
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
@@ -1446,57 +1446,74 @@
                 let grandTotalScore = 0; let finalBadges = 0; let finalTier = "🌱 CITY 스타터";
                 let sumScores = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
                 let sumCaps = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
-                let timelineHtml = '';
                 
+                // 타임라인 생성 로직 (1~3학년)
+                const buildTimelineColumn = (grade, yearData) => {
+                    const titleMap = {
+                        1: "1학년 역량 기록",
+                        2: "2학년 역량 기록",
+                        3: "3학년 역량 기록"
+                    };
+
+                    const scores = yearData?.scores || {};
+                    const checkedItems = yearData?.checked_items || {};
+                    const listItems = [];
+
+                    // 체크항목 추출
+                    Object.keys(checkedItems).forEach(area => {
+                        const idxList = Array.isArray(checkedItems[area]) ? checkedItems[area] : [];
+                        idxList.forEach(idx => {
+                            const item = window.EVAL_ITEMS_BY_GRADE?.[grade]?.[area]?.[idx];
+                            if (item) {
+                                listItems.push(`
+                                    <div class="timeline-badge-item">
+                                        <div class="timeline-badge-code">${area}</div>
+                                        <div class="timeline-badge-text">${item.label.replace(/\(\d+점\)/g, '').trim()}</div>
+                                    </div>
+                                `);
+                            }
+                        });
+                    });
+
+                    // 빈 값 처리
+                    if (listItems.length === 0) {
+                        return `
+                            <div class="timeline-col">
+                                <div class="timeline-col-title">${titleMap[grade]}</div>
+                                <div class="timeline-empty">기록 없음</div>
+                            </div>
+                        `;
+                    }
+
+                    // 항목 있는 경우
+                    return `
+                        <div class="timeline-col">
+                            <div class="timeline-col-title">${titleMap[grade]}</div>
+                            <div class="timeline-badge-list">
+                                ${listItems.join("")}
+                            </div>
+                        </div>
+                    `;
+                };
+
+                let timelineHtml = `
+                    ${buildTimelineColumn(1, sData.year_1)}
+                    ${buildTimelineColumn(2, sData.year_2)}
+                    ${buildTimelineColumn(3, sData.year_3)}
+                `;
+
+                // 총점 및 레이다 데이터 계산
                 for (let grade = 1; grade <= 3; grade++) {
                     let yData = sData[`year_${grade}`];
-                    let gradeItemsHtml = '';
-
-                    // 해당 학년 데이터가 없거나 기록이 없는 경우
-                    if (!yData || !yData.checked_items || Object.keys(yData.checked_items).length === 0 || grade > studentGrade) {
-                        gradeItemsHtml = `<div class="timeline-empty">기록 없음</div>`;
-                    } else {
-                        window.AREAS.forEach(a => { sumCaps[a] += (window.CAPS[grade][a] || 0); if(yData.scores) sumScores[a] += (yData.scores[a] || 0); });
+                    if (yData && Object.keys(yData).length > 0 && grade <= studentGrade) {
+                        window.AREAS.forEach(a => {
+                            sumCaps[a] += (window.CAPS[grade][a] || 0);
+                            if(yData.scores) sumScores[a] += (yData.scores[a] || 0);
+                        });
                         if(yData.total_score !== undefined) grandTotalScore += yData.total_score;
                         if(yData.earned_badges !== undefined) finalBadges += yData.earned_badges;
                         if(grade === studentGrade && yData.title) finalTier = yData.title;
-
-                        let badgeListHtml = '';
-                        let hasSpec = false;
-                        
-                        if (yData.checked_items) {
-                            window.AREAS.forEach(area => {
-                                let checkedIndices = yData.checked_items[area] || [];
-                                if (checkedIndices.length > 0) {
-                                    hasSpec = true;
-                                    checkedIndices.forEach(idx => {
-                                        let rawLabel = window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label;
-                                        let label = rawLabel.split('(')[0].trim();
-                                        badgeListHtml += `
-                                            <div class="timeline-badge-item">
-                                                <div class="timeline-badge-code">${area}</div>
-                                                <div class="timeline-badge-text">${label}</div>
-                                            </div>
-                                        `;
-                                    });
-                                }
-                            });
-                        }
-                        
-                        if(hasSpec) {
-                            gradeItemsHtml = `<div class="timeline-badge-list">${badgeListHtml}</div>`;
-                        } else {
-                            gradeItemsHtml = `<div class="timeline-empty">기록 없음</div>`;
-                        }
                     }
-
-                    // 각 학년별 고정 템플릿 칸 생성
-                    timelineHtml += `
-                        <div class="timeline-col">
-                            <div class="timeline-col-title">${grade}학년 역량 기록</div>
-                            ${gradeItemsHtml}
-                        </div>
-                    `;
                 }
 
                 let radarData = [
@@ -1509,14 +1526,25 @@
                 ];
 
                 const printWindow = window.open('', '_blank', 'width=1000,height=1200');
-                const todayStr = new Date().toLocaleDateString('ko-KR');
-                const printDateStr = new Date().toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' }) + ' ' + new Date().toLocaleTimeString('ko-KR', { hour: 'numeric', minute: 'numeric' });
-                const photoUrl = sData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
                 
-                /* ==============================================================
-                   포트폴리오 출력용 HTML / CSS 템플릿 
-                   선생님께서 원하시는 사진 비율/모양을 100% 강제 고정한 영역입니다.
-                   ============================================================== */
+                // --- 🚨 해결 지점: 템플릿용 날짜 변수 일관 선언 🚨 ---
+                const now = new Date();
+                const yy = String(now.getFullYear()).slice(-2);
+                const mm = now.getMonth() + 1;
+                const dd = now.getDate();
+                const ampm = now.getHours() >= 12 ? '오후' : '오전';
+                const hh = now.getHours() % 12 || 12;
+                const min = String(now.getMinutes()).padStart(2, '0');
+
+                const printDateText = `${yy}. ${mm}. ${dd}. ${ampm} ${hh}:${min}`;
+                const baseDateText = `${now.getFullYear()}. ${mm}. ${dd}.`;
+                const todayStr = baseDateText; 
+                const photoUrl = sData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+                // --------------------------------------------------------
+
+                // ==========================================
+                // 🔥 사진과 100% 동일한 전용 템플릿 HTML/CSS 🔥
+                // ==========================================
                 printWindow.document.write(`
 <!DOCTYPE html>
 <html lang="ko">
@@ -1838,7 +1866,7 @@
       <div class="header-right">
         <div class="portfolio-title">SMART CITY PORTFOLIO</div>
         <div class="portfolio-sub">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
-        <div class="portfolio-sub">출력일: ${todayStr}</div>
+        <div class="portfolio-sub">출력일: ${baseDateText}</div>
       </div>
     </div>
 
@@ -1884,7 +1912,7 @@
                 backgroundColor: 'rgba(59, 113, 202, 0.25)',
                 borderColor: '#3b71ca',
                 borderWidth: 2,
-                pointRadius: 2,
+                pointRadius: 3,
                 pointBackgroundColor: '#2c3e50'
             }]
         },
@@ -1909,7 +1937,7 @@
         }
     });
 
-    setTimeout(() => { window.print(); }, 500);
+    setTimeout(() => { window.print(); }, 600);
   <\/script>
 </body>
 </html>
