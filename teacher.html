@@ -312,7 +312,10 @@
             <div class="table-panel">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h3 class="section-title" style="margin:0;">📋 담당 학급 학생 달성 현황 (올해 누적)</h3>
-                    <button id="btnHomeroomTop10" style="background:var(--dark-blue); color:white; border:none; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);">🏆 학년별 TOP 10 보기</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="btnClassPrint" style="background:#27ae60; color:white; border:none; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1); display: none;">🖨️ 학급 포트폴리오</button>
+                        <button id="btnHomeroomTop10" style="background:var(--dark-blue); color:white; border:none; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);">🏆 학년별 TOP 10 보기</button>
+                    </div>
                 </div>
                 
                 <div class="table-responsive">
@@ -634,7 +637,7 @@
             const contentBox = document.getElementById('proofContent');
             document.getElementById('proofModalTitle').innerText = `📄 제출된 증빙 자료`; 
             if(app.fileType === 'image') contentBox.innerHTML = `<img src="${app.fileData}" style="max-width:100%; max-height:55vh; border-radius:8px; object-fit:contain;">`;
-            else if(app.fileType === 'pdf') contentBox.innerHTML = `<iframe src="${app.fileData}" style="width:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
+            else if(app.fileType === 'pdf') contentBox.innerHTML = `<iframe src="${app.fileData}" stylewidth:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
             document.getElementById('proofModal').classList.add('active'); document.body.style.overflow = 'hidden';
         };
 
@@ -897,6 +900,129 @@
                     if (typeof window.loadHomeroomStudents === 'function') window.loadHomeroomStudents();
                 } catch (e) { alert("오류: " + e.message); } finally { fileInput.value = ""; }
             }; reader.readAsArrayBuffer(fileInput.files[0]);
+        };
+
+        // 🔥 [A4 가로 1장] 담임교사용 학급 전체 요약 포트폴리오 출력 함수
+        window.printClassSummary = async function() {
+            if (!window.homeroomGrade || !window.homeroomClass) return alert("담임 학급 정보가 없습니다.");
+            try {
+                const qSnap = await window.getDocs(window.collection(window.db, "students"));
+                let students = [];
+                qSnap.forEach(doc => {
+                    let data = doc.data();
+                    if(data.current_grade === window.homeroomGrade && parseInt(String(data.current_studentId).substring(1, 3)) === window.homeroomClass) {
+                        students.push(data);
+                    }
+                });
+
+                if(students.length === 0) return alert("출력할 학생 데이터가 없습니다.");
+                students.sort((a,b) => String(a.current_studentId).localeCompare(String(b.current_studentId)));
+
+                let cardsHtml = '';
+                let chartScripts = '';
+
+                students.forEach((sData, index) => {
+                    let grade = sData.current_grade;
+                    let yData = sData[`year_${grade}`] || {};
+                    let totalScore = yData.total_score || 0;
+                    let badges = yData.earned_badges || 0;
+                    let photoUrl = sData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+                    
+                    let sumScores = yData.scores || {};
+                    let sumCaps = window.CAPS[grade] || {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
+                    
+                    let radarData = [
+                        (sumCaps['M'] + sumCaps['T']) > 0 ? Math.min(100, Math.round(((sumScores['M']||0) + (sumScores['T']||0)) / (sumCaps['M'] + sumCaps['T']) * 100)) : 0,
+                        sumCaps['S'] > 0 ? Math.min(100, Math.round((sumScores['S']||0) / sumCaps['S'] * 100)) : 0,
+                        (sumCaps['C'] + sumCaps['R']) > 0 ? Math.min(100, Math.round(((sumScores['C']||0) + (sumScores['R']||0)) / (sumCaps['C'] + sumCaps['R']) * 100)) : 0,
+                        sumCaps['I'] > 0 ? Math.min(100, Math.round((sumScores['I']||0) / sumCaps['I'] * 100)) : 0,
+                        sumCaps['A'] > 0 ? Math.min(100, Math.round((sumScores['A']||0) / sumCaps['A'] * 100)) : 0,
+                        (sumCaps['Tr'] + sumCaps['Y']) > 0 ? Math.min(100, Math.round(((sumScores['Tr']||0) + (sumScores['Y']||0)) / (sumCaps['Tr'] + sumCaps['Y']) * 100)) : 0
+                    ];
+
+                    let canvasId = `radar_${index}`;
+
+                    cardsHtml += `
+                        <div class="student-card">
+                            <div class="card-header">
+                                <img src="${photoUrl}" class="mini-photo">
+                                <div class="mini-info">
+                                    <div class="mini-id">${sData.current_studentId}</div>
+                                    <div class="mini-name">${sData.name}</div>
+                                    <div class="mini-score">🏅배지 ${badges}개 / ⭐${totalScore}점</div>
+                                </div>
+                            </div>
+                            <div class="card-chart">
+                                <canvas id="${canvasId}"></canvas>
+                            </div>
+                        </div>
+                    `;
+
+                    chartScripts += `
+                        new Chart(document.getElementById('${canvasId}').getContext('2d'), {
+                            type: 'radar',
+                            data: {
+                                labels: ['전공', 'AI', '기초', '어학', '체력', '인성'],
+                                datasets: [{ data: [${radarData.join(',')}], backgroundColor: 'rgba(59, 113, 202, 0.3)', borderColor: '#3b71ca', borderWidth: 1, pointRadius: 0 }]
+                            },
+                            options: {
+                                responsive: true, maintainAspectRatio: false, animation: false,
+                                plugins: { legend: { display: false } },
+                                layout: { padding: 4 },
+                                scales: {
+                                    r: {
+                                        min: 0, max: 100, ticks: { display: false },
+                                        angleLines: { color: 'rgba(0,0,0,0.1)' },
+                                        grid: { color: 'rgba(0,0,0,0.1)', circular: false },
+                                        pointLabels: { color: '#1a252f', font: { size: 7, weight: 'bold', family: 'Pretendard' } }
+                                    }
+                                }
+                            }
+                        });
+                    `;
+                });
+
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <html><head><title>학급 전체 요약 포트폴리오</title>
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+                    <style>
+                        @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+                        @page { size: A4 landscape; margin: 10mm; }
+                        body { font-family: 'Pretendard', sans-serif; background: #fff; color: #1a252f; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .print-container { width: 100%; height: 100%; display: flex; flex-direction: column; }
+                        .print-header { text-align: center; margin-bottom: 10px; border-bottom: 2px solid #3b71ca; padding-bottom: 5px; }
+                        .print-header h1 { margin: 0; font-size: 18px; font-weight: 900; color: #1a252f; }
+                        .grid-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5mm; align-content: start; }
+                        .student-card { border: 1px solid #d8dee8; border-radius: 8px; padding: 6px; display: flex; flex-direction: column; background: #fdfdfe; page-break-inside: avoid; height: 42mm; }
+                        .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; border-bottom: 1px dashed #edf0f2; padding-bottom: 4px; }
+                        .mini-photo { width: 30px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #edf0f2; background: #eee;}
+                        .mini-info { flex: 1; }
+                        .mini-id { font-size: 8px; color: #7f8c8d; font-weight: bold; }
+                        .mini-name { font-size: 13px; font-weight: 900; color: #2c3e50; line-height: 1.2; }
+                        .mini-score { font-size: 9px; color: #e74c3c; font-weight: bold; margin-top: 2px;}
+                        .card-chart { flex: 1; position: relative; width: 100%; display: flex; justify-content: center; align-items: center; }
+                        .card-chart canvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
+                    </style>
+                    </head><body>
+                        <div class="print-container">
+                            <div class="print-header">
+                                <h1>🏆 ${window.homeroomGrade}학년 ${window.homeroomClass}반 스마트시티 역량 분포도</h1>
+                            </div>
+                            <div class="grid-container">
+                                ${cardsHtml}
+                            </div>
+                        </div>
+                        <script>
+                            window.onload = function() {
+                                ${chartScripts}
+                                setTimeout(() => { window.print(); }, 1000);
+                            };
+                        <\/script>
+                    </body></html>
+                `);
+                printWindow.document.close();
+            } catch(e) { alert("출력 에러: " + e.message); }
         };
 
         // 🔥 [A4 1장 핏 완벽 최적화] 3단 가로 누적 포트폴리오 (최신 버전 이식 완료)
@@ -1235,6 +1361,14 @@
                 window.homeroomGrade = parseInt(match[1]); window.homeroomClass = parseInt(match[2]);
                 const btnTop10 = document.getElementById('btnHomeroomTop10');
                 if(btnTop10) { btnTop10.innerText = `🏆 ${window.homeroomGrade}학년 TOP 10 보기`; btnTop10.onclick = function() { window.openTeacherRankModal(window.homeroomGrade); }; }
+                
+                // 🔥 "학급 포트폴리오" 출력 버튼을 자동으로 추가하는 로직
+                const printClassBtn = document.getElementById('btnClassPrint');
+                if(printClassBtn) {
+                    printClassBtn.style.display = "inline-block";
+                    printClassBtn.innerText = "🖨️ 학급 포트폴리오";
+                    printClassBtn.onclick = window.printClassSummary;
+                }
             }
 
             if(subjectStr === '체육' || subjectStr === '직업기초' || subjectStr === '영어1') {
@@ -1286,6 +1420,7 @@
                         
                         const isMyHomeroom = (window.homeroomGrade === grade && window.homeroomClass === parseInt(sid.substring(1,3)));
                         
+                        // 🔥 담임교사 외 포트폴리오 출력 버튼 숨김 로직
                         const printBtn = document.getElementById("btnTeacherPrint");
                         if(printBtn) {
                             printBtn.onclick = function() { window.printCertificate(sid); };
