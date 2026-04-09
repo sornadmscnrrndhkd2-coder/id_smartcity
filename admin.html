@@ -1434,155 +1434,7 @@
             window.loadDashboard(); 
         };
 
-        window.loadLogs = async function() {
-            const tbody = document.getElementById("logTableBody"); 
-            tbody.innerHTML = "<tr><td colspan='3'>불러오는 중...</td></tr>";
-            try { 
-                const querySnapshot = await window.getDocs(window.collection(window.db, "system_logs")); 
-                let logs = []; 
-                querySnapshot.forEach(doc => logs.push(doc.data())); 
-                logs.sort((a, b) => b.timestamp - a.timestamp); 
-                tbody.innerHTML = ""; 
-                logs.slice(0, 200).forEach(log => { 
-                    let userIcon = "👤"; 
-                    if(log.user.includes("학생")) userIcon = "🧑‍🎓"; 
-                    else if(log.user.includes("교사")) userIcon = "👨‍🏫"; 
-                    else if(log.user.includes("관리자") || log.user.includes("Admin")) userIcon = "👑"; 
-                    tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${userIcon} ${log.user}</td><td>${log.action}</td></tr>`; 
-                }); 
-                if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>활동 로그가 없습니다.</td></tr>"; 
-            } catch(e) { 
-                tbody.innerHTML = "<tr><td colspan='3'>오류</td></tr>"; 
-            }
-        };
-
-        window.updateTableHeaders = function() {
-            const grade = document.getElementById("filterGrade").value; 
-            const cutoffs = window.PASS_CUTOFF[grade];
-            let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="window.toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th>이름</th>`; 
-            window.AREAS.forEach(a => { headerHtml += `<th>[${a}]<br><span class="th-criteria">(${cutoffs[a]}점↑)</span></th>`; }); 
-            headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력(1장 압축)</th>`; 
-            document.getElementById("tableHeaderRow").innerHTML = headerHtml;
-        };
-
-        window.toggleAllCheckboxes = function(source) { 
-            const checkboxes = document.querySelectorAll('.student-checkbox'); 
-            checkboxes.forEach(cb => cb.checked = source.checked); 
-        };
-
-        window.loadData = async function() {
-            const tbody = document.getElementById("studentTableBody"); 
-            const filterGrade = document.getElementById("filterGrade").value; 
-            const filterDept = document.getElementById("filterDept").value; 
-            const filterClass = document.getElementById("filterClass").value; 
-            const filterCert = document.getElementById("filterCert").value;
-            tbody.innerHTML = "<tr><td colspan='17'>불러오는 중...</td></tr>";
-            try {
-                const querySnapshot = await window.getDocs(window.collection(window.db, "students")); 
-                let students = []; window.allStudentsData = []; let dbDepartments = new Set();
-
-                querySnapshot.forEach(doc => {
-                    let data = doc.data(); 
-                    if(data.department && data.department !== "-" && data.department !== "미지정") dbDepartments.add(data.department);
-                    let yearData = data[`year_${filterGrade}`] || {};
-                    if (data.current_grade == filterGrade && data[`year_${filterGrade}`]) {
-                        if (filterDept !== "ALL" && (data.department || "미지정") !== filterDept) return;
-                        let classNum = parseInt(String(data.current_studentId).substring(1, 3), 10); 
-                        if (filterClass !== "ALL" && !isNaN(classNum) && classNum !== Number(filterClass)) return;
-                        if (filterCert === 'PASS' && (yearData.earned_badges || 0) < 6) return;
-                        let sInfo = { docId: doc.id, id: data.current_studentId, name: data.name, dept: data.department || "-", photo: data.photoUrl || null, birthdate: data.birthdate, yearData: yearData, fullData: data };
-                        students.push(sInfo); window.allStudentsData.push(sInfo);
-                    }
-                });
-
-                const filterDeptEl = document.getElementById("filterDept"); 
-                const badgeFilterDeptEl = document.getElementById("badgeFilterDept"); 
-                const editDeptEl = document.getElementById("edit-Dept");
-                let currentFilter = filterDeptEl.value; 
-                let currentBadgeFilter = badgeFilterDeptEl.value;
-                let optionsHtml = `<option value="ALL">전체 학과</option>`; 
-                let editOptionsHtml = `<option value="미지정">미지정</option>`;
-                
-                Array.from(dbDepartments).sort().forEach(dept => { 
-                    optionsHtml += `<option value="${dept}">${dept}</option>`; 
-                    editOptionsHtml += `<option value="${dept}">${dept}</option>`; 
-                });
-                
-                filterDeptEl.innerHTML = optionsHtml; 
-                badgeFilterDeptEl.innerHTML = optionsHtml; 
-                editDeptEl.innerHTML = editOptionsHtml;
-                if(dbDepartments.has(currentFilter)) filterDeptEl.value = currentFilter; 
-                if(dbDepartments.has(currentBadgeFilter)) badgeFilterDeptEl.value = currentBadgeFilter;
-
-                students.sort((a,b) => String(a.id).localeCompare(String(b.id))); 
-                window.allStudentsData.sort((a,b) => String(a.id).localeCompare(String(b.id)));
-
-                tbody.innerHTML = students.length === 0 ? `<tr><td colspan='17' style='padding:30px;'>데이터가 없습니다.</td></tr>` : "";
-                
-                students.forEach(s => {
-                    let sc = s.yearData.scores || {}; let p = s.yearData.pass || {}; let d = s.yearData.delivery_status || {};
-                    let photoHtml = s.photo ? `<img src="${s.photo}" class="profile-img" onclick="window.openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
-                    let rowHtml = `<tr class="${(s.yearData.earned_badges || 0) >= 6 ? 'certified-row' : ''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}" data-name="${s.name}"></td><td style="white-space:nowrap;">${s.dept}</td><td>${s.id}</td><td style="text-align: left; display: flex; align-items: center; justify-content: space-between;"><div>${photoHtml} <strong>${s.name}</strong></div><div><span style="cursor:pointer; color:#f39c12; font-size:16px;" onclick="window.openEditModal('${s.docId}', ${filterGrade})" title="수정">✏️</span></div></td>`;
-                    
-                    window.AREAS.forEach(area => { 
-                        let isDone = d[area] === true; let scoreVal = sc[area] || 0; let cellContent = scoreVal; 
-                        if(p[area]) cellContent = `<span class="pass-star">★</span>${scoreVal}<br><span class="badge-status ${isDone?'status-done':'status-yet'}" onclick="window.toggleDelivery('${s.docId}', ${filterGrade}, '${area}', ${isDone})">${isDone?'지급완료':'미지급'}</span>`; 
-                        rowHtml += `<td class="score-cell">${cellContent}</td>`; 
-                    });
-                    
-                    let certBtn = (s.yearData.earned_badges || 0) >= 6 ? `<button class="btn ${filterGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="window.printCertificate('${s.id}')">🖨️</button>` : "-"; 
-                    rowHtml += `<td style="color:#2980b9; font-weight:bold;">${s.yearData.total_score || 0}점</td><td><strong>${s.yearData.earned_badges || 0}개</strong></td><td style="color:#27ae60; font-weight:bold; white-space:nowrap;">${s.yearData.title || '진행중'}</td><td>${certBtn}</td></tr>`;
-                    tbody.innerHTML += rowHtml;
-                });
-            } catch(e) { 
-                tbody.innerHTML = `<tr><td colspan='17' style='color:red; font-weight:bold;'>🚨 오류: ${e.message}</td></tr>`; 
-            }
-        };
-
-        // 🖨️ 현재 반 막대그래프 인쇄
-        window.printClassChart = function() {
-            const filterClass = document.getElementById("filterClass").value; 
-            const filterGrade = document.getElementById("filterGrade").value;
-            if (filterClass === "ALL") return alert("❗ '반'을 먼저 선택 후 [조회]를 눌러주세요.");
-            if (!window.allStudentsData || window.allStudentsData.length === 0) return alert("출력할 데이터가 없습니다.");
-            
-            const labels = []; const dataValues = []; 
-            window.allStudentsData.forEach(s => { labels.push(s.name); dataValues.push(s.yearData.earned_badges || 0); });
-            const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-            
-            const printWindow = window.open('', '_blank', 'width=1100,height=800');
-            printWindow.document.write(`
-                <html><head><title>우리 반 역량 현황 출력</title><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
-                <style>
-                    @page { size: landscape; margin: 0; } 
-                    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box; }
-                    body { display: flex; flex-direction: column; font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 3vh 3vw; background: white; justify-content: space-between; }
-                    .title-wrap { flex: 0 0 auto; margin-bottom: 2vh; }
-                    h1 { color: #2c3e50; font-size: 4vh; border-bottom: 0.4vh solid #3498db; padding-bottom: 1vh; margin: 0 0 1vh 0; display: inline-block; font-weight: 900;}
-                    .date-text { color: #7f8c8d; font-size: 2vh; font-weight: bold; }
-                    .chart-container { flex: 1 1 auto; position: relative; width: 100%; min-height: 0; padding: 1vh 0; }
-                    .footer { flex: 0 0 auto; font-size: 1.8vh; color: #7f8c8d; font-weight: bold; letter-spacing: 2px;}
-                </style>
-                </head>
-                <body>
-                    <div class="title-wrap">
-                        <h1>👑 ${filterGrade}학년 ${filterClass}반 스마트시티 배지 획득 현황</h1>
-                        <div class="date-text">[ ${todayStr} 기준 ]</div>
-                    </div>
-                    <div class="chart-container"><canvas id="classChart"></canvas></div>
-                    <div class="footer">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
-                    <script>
-                        const badgeLabelPlugin = { id: 'badgeLabels', afterDatasetsDraw(chart) { const { ctx } = chart; chart.data.datasets.forEach((dataset, i) => { const meta = chart.getDatasetMeta(i); meta.data.forEach((bar, index) => { const data = dataset.data[index]; ctx.fillStyle = '#c0392b'; ctx.font = 'bold 1.8vh "Malgun Gothic"'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(data + '개', bar.x, bar.y - 8); }); }); } }; 
-                        const ctx = document.getElementById('classChart').getContext('2d'); 
-                        new Chart(ctx, { type: 'bar', data: { labels: [${labels.map(l => `'${l}'`).join(',')}], datasets: [{ label: '획득 배지', data: [${dataValues.join(',')}], backgroundColor: 'rgba(52, 152, 219, 0.85)', borderColor: 'rgba(41, 128, 185, 1)', borderWidth: 2, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1000 }, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 9, ticks: { stepSize: 1, font: { size: 16, weight: 'bold' }, color: '#7f8c8d' }, grid: { color: '#ecf0f1' } }, x: { ticks: { font: { size: 15, weight: 'bold' }, color: '#2c3e50' }, grid: { display: false } } } }, plugins: [badgeLabelPlugin] }); 
-                        setTimeout(() => { window.print(); }, 1500);
-                    <\/script>
-                </body></html>
-            `); 
-            printWindow.document.close(); 
-        };
-
-        // 🖨️ [완벽 템플릿 복제] 포트폴리오 출력 전용 함수
+        // 🖨️ [완벽 재구성] 포트폴리오 출력 전용 로직
         window.printCertificate = async function(studentId) {
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
@@ -1594,74 +1446,57 @@
                 let grandTotalScore = 0; let finalBadges = 0; let finalTier = "🌱 CITY 스타터";
                 let sumScores = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
                 let sumCaps = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
+                let timelineHtml = '';
                 
-                // 타임라인 생성 로직 (1~3학년)
-                const buildTimelineColumn = (grade, yearData) => {
-                    const titleMap = {
-                        1: "1학년 역량 기록",
-                        2: "2학년 역량 기록",
-                        3: "3학년 역량 기록"
-                    };
-
-                    const scores = yearData?.scores || {};
-                    const checkedItems = yearData?.checked_items || {};
-                    const listItems = [];
-
-                    // 체크항목 추출
-                    Object.keys(checkedItems).forEach(area => {
-                        const idxList = Array.isArray(checkedItems[area]) ? checkedItems[area] : [];
-                        idxList.forEach(idx => {
-                            const item = window.EVAL_ITEMS_BY_GRADE?.[grade]?.[area]?.[idx];
-                            if (item) {
-                                listItems.push(`
-                                    <div class="timeline-badge-item">
-                                        <div class="timeline-badge-code">${area}</div>
-                                        <div class="timeline-badge-text">${item.label.replace(/\(\d+점\)/g, '').trim()}</div>
-                                    </div>
-                                `);
-                            }
-                        });
-                    });
-
-                    // 빈 값 처리
-                    if (listItems.length === 0) {
-                        return `
-                            <div class="timeline-col">
-                                <div class="timeline-col-title">${titleMap[grade]}</div>
-                                <div class="timeline-empty">기록 없음</div>
-                            </div>
-                        `;
-                    }
-
-                    // 항목 있는 경우
-                    return `
-                        <div class="timeline-col">
-                            <div class="timeline-col-title">${titleMap[grade]}</div>
-                            <div class="timeline-badge-list">
-                                ${listItems.join("")}
-                            </div>
-                        </div>
-                    `;
-                };
-
-                let timelineHtml = `
-                    ${buildTimelineColumn(1, sData.year_1)}
-                    ${buildTimelineColumn(2, sData.year_2)}
-                    ${buildTimelineColumn(3, sData.year_3)}
-                `;
-
-                // 총점 및 레이다 데이터 계산
                 for (let grade = 1; grade <= 3; grade++) {
                     let yData = sData[`year_${grade}`];
-                    if (yData && Object.keys(yData).length > 0 && grade <= studentGrade) {
-                        window.AREAS.forEach(a => {
-                            sumCaps[a] += (window.CAPS[grade][a] || 0);
-                            if(yData.scores) sumScores[a] += (yData.scores[a] || 0);
-                        });
+                    let gradeItemsHtml = '';
+
+                    // 해당 학년 데이터가 없거나 기록이 없는 경우
+                    if (!yData || !yData.checked_items || Object.keys(yData.checked_items).length === 0 || grade > studentGrade) {
+                        gradeItemsHtml = `<div class="timeline-empty">기록 없음</div>`;
+                    } else {
+                        window.AREAS.forEach(a => { sumCaps[a] += (window.CAPS[grade][a] || 0); if(yData.scores) sumScores[a] += (yData.scores[a] || 0); });
                         if(yData.total_score !== undefined) grandTotalScore += yData.total_score;
                         if(yData.earned_badges !== undefined) finalBadges += yData.earned_badges;
                         if(grade === studentGrade && yData.title) finalTier = yData.title;
+
+                        let badgeListHtml = '';
+                        let hasSpec = false;
+                        
+                        if (yData.checked_items) {
+                            window.AREAS.forEach(area => {
+                                let checkedIndices = yData.checked_items[area] || [];
+                                if (checkedIndices.length > 0) {
+                                    hasSpec = true;
+                                    checkedIndices.forEach(idx => {
+                                        let rawLabel = window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label;
+                                        let label = rawLabel.split('(')[0].trim();
+                                        badgeListHtml += `
+                                            <div class="timeline-badge-item">
+                                                <div class="timeline-badge-code">${area}</div>
+                                                <div class="timeline-badge-text">${label}</div>
+                                            </div>
+                                        `;
+                                    });
+                                }
+                            });
+                        }
+                        
+                        if(hasSpec) {
+                            gradeItemsHtml = `<div class="timeline-badge-list">${badgeListHtml}</div>`;
+                        } else {
+                            gradeItemsHtml = `<div class="timeline-empty">기록 없음</div>`;
+                        }
                     }
+
+                    // 각 학년별 고정 템플릿 칸 생성
+                    timelineHtml += `
+                        <div class="timeline-col">
+                            <div class="timeline-col-title">${grade}학년 역량 기록</div>
+                            ${gradeItemsHtml}
+                        </div>
+                    `;
                 }
 
                 let radarData = [
@@ -1674,25 +1509,14 @@
                 ];
 
                 const printWindow = window.open('', '_blank', 'width=1000,height=1200');
-                
-                // 날짜 포맷 (좌상단: YY. M. D. AM/PM h:mm)
-                const now = new Date();
-                const yy = String(now.getFullYear()).slice(-2);
-                const mm = now.getMonth() + 1;
-                const dd = now.getDate();
-                const ampm = now.getHours() >= 12 ? '오후' : '오전';
-                const hh = now.getHours() % 12 || 12;
-                const min = String(now.getMinutes()).padStart(2, '0');
-                const printDateText = `${yy}. ${mm}. ${dd}. ${ampm} ${hh}:${min}`;
-                
-                // 기준일 (우측: YYYY. M. D.)
-                const baseDateText = `${now.getFullYear()}. ${mm}. ${dd}.`;
-
+                const todayStr = new Date().toLocaleDateString('ko-KR');
+                const printDateStr = new Date().toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' }) + ' ' + new Date().toLocaleTimeString('ko-KR', { hour: 'numeric', minute: 'numeric' });
                 const photoUrl = sData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
                 
-                // ==========================================
-                // 🔥 사진과 100% 동일한 전용 템플릿 HTML/CSS 🔥
-                // ==========================================
+                /* ==============================================================
+                   포트폴리오 출력용 HTML / CSS 템플릿 
+                   선생님께서 원하시는 사진 비율/모양을 100% 강제 고정한 영역입니다.
+                   ============================================================== */
                 printWindow.document.write(`
 <!DOCTYPE html>
 <html lang="ko">
@@ -2014,7 +1838,7 @@
       <div class="header-right">
         <div class="portfolio-title">SMART CITY PORTFOLIO</div>
         <div class="portfolio-sub">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
-        <div class="portfolio-sub">출력일: ${baseDateText}</div>
+        <div class="portfolio-sub">출력일: ${todayStr}</div>
       </div>
     </div>
 
@@ -2060,7 +1884,7 @@
                 backgroundColor: 'rgba(59, 113, 202, 0.25)',
                 borderColor: '#3b71ca',
                 borderWidth: 2,
-                pointRadius: 3,
+                pointRadius: 2,
                 pointBackgroundColor: '#2c3e50'
             }]
         },
@@ -2073,19 +1897,19 @@
                 r: {
                     min: 0,
                     max: 100,
-                    ticks: { display: false, stepSize: 20 },
+                    ticks: { display: false, stepSize: 10 },
                     angleLines: { color: 'rgba(0,0,0,0.08)' },
                     grid: { color: 'rgba(0,0,0,0.08)' },
                     pointLabels: {
                         color: '#1a252f',
-                        font: { size: 10, weight: '800' }
+                        font: { size: 10, weight: '700' }
                     }
                 }
             }
         }
     });
 
-    setTimeout(() => { window.print(); }, 600);
+    setTimeout(() => { window.print(); }, 500);
   <\/script>
 </body>
 </html>
@@ -2094,6 +1918,111 @@
             } catch(e) { 
                 console.error("출력 오류:", e); 
                 alert("출력 중 오류가 발생했습니다."); 
+            }
+        };
+
+        window.loadLogs = async function() {
+            const tbody = document.getElementById("logTableBody"); 
+            tbody.innerHTML = "<tr><td colspan='3'>불러오는 중...</td></tr>";
+            try { 
+                const querySnapshot = await window.getDocs(window.collection(window.db, "system_logs")); 
+                let logs = []; 
+                querySnapshot.forEach(doc => logs.push(doc.data())); 
+                logs.sort((a, b) => b.timestamp - a.timestamp); 
+                tbody.innerHTML = ""; 
+                logs.slice(0, 200).forEach(log => { 
+                    let userIcon = "👤"; 
+                    if(log.user.includes("학생")) userIcon = "🧑‍🎓"; 
+                    else if(log.user.includes("교사")) userIcon = "👨‍🏫"; 
+                    else if(log.user.includes("관리자") || log.user.includes("Admin")) userIcon = "👑"; 
+                    tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${userIcon} ${log.user}</td><td>${log.action}</td></tr>`; 
+                }); 
+                if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>활동 로그가 없습니다.</td></tr>"; 
+            } catch(e) { 
+                tbody.innerHTML = "<tr><td colspan='3'>오류</td></tr>"; 
+            }
+        };
+
+        window.updateTableHeaders = function() {
+            const grade = document.getElementById("filterGrade").value; 
+            const cutoffs = window.PASS_CUTOFF[grade];
+            let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="window.toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th>이름</th>`; 
+            window.AREAS.forEach(a => { headerHtml += `<th>[${a}]<br><span class="th-criteria">(${cutoffs[a]}점↑)</span></th>`; }); 
+            headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력(1장 압축)</th>`; 
+            document.getElementById("tableHeaderRow").innerHTML = headerHtml;
+        };
+
+        window.toggleAllCheckboxes = function(source) { 
+            const checkboxes = document.querySelectorAll('.student-checkbox'); 
+            checkboxes.forEach(cb => cb.checked = source.checked); 
+        };
+
+        window.loadData = async function() {
+            const tbody = document.getElementById("studentTableBody"); 
+            const filterGrade = document.getElementById("filterGrade").value; 
+            const filterDept = document.getElementById("filterDept").value; 
+            const filterClass = document.getElementById("filterClass").value; 
+            const filterCert = document.getElementById("filterCert").value;
+            tbody.innerHTML = "<tr><td colspan='17'>불러오는 중...</td></tr>";
+            try {
+                const querySnapshot = await window.getDocs(window.collection(window.db, "students")); 
+                let students = []; window.allStudentsData = []; let dbDepartments = new Set();
+
+                querySnapshot.forEach(doc => {
+                    let data = doc.data(); 
+                    if(data.department && data.department !== "-" && data.department !== "미지정") dbDepartments.add(data.department);
+                    let yearData = data[`year_${filterGrade}`] || {};
+                    if (data.current_grade == filterGrade && data[`year_${filterGrade}`]) {
+                        if (filterDept !== "ALL" && (data.department || "미지정") !== filterDept) return;
+                        let classNum = parseInt(String(data.current_studentId).substring(1, 3), 10); 
+                        if (filterClass !== "ALL" && !isNaN(classNum) && classNum !== Number(filterClass)) return;
+                        if (filterCert === 'PASS' && (yearData.earned_badges || 0) < 6) return;
+                        let sInfo = { docId: doc.id, id: data.current_studentId, name: data.name, dept: data.department || "-", photo: data.photoUrl || null, birthdate: data.birthdate, yearData: yearData, fullData: data };
+                        students.push(sInfo); window.allStudentsData.push(sInfo);
+                    }
+                });
+
+                const filterDeptEl = document.getElementById("filterDept"); 
+                const badgeFilterDeptEl = document.getElementById("badgeFilterDept"); 
+                const editDeptEl = document.getElementById("edit-Dept");
+                let currentFilter = filterDeptEl.value; 
+                let currentBadgeFilter = badgeFilterDeptEl.value;
+                let optionsHtml = `<option value="ALL">전체 학과</option>`; 
+                let editOptionsHtml = `<option value="미지정">미지정</option>`;
+                
+                Array.from(dbDepartments).sort().forEach(dept => { 
+                    optionsHtml += `<option value="${dept}">${dept}</option>`; 
+                    editOptionsHtml += `<option value="${dept}">${dept}</option>`; 
+                });
+                
+                filterDeptEl.innerHTML = optionsHtml; 
+                badgeFilterDeptEl.innerHTML = optionsHtml; 
+                editDeptEl.innerHTML = editOptionsHtml;
+                if(dbDepartments.has(currentFilter)) filterDeptEl.value = currentFilter; 
+                if(dbDepartments.has(currentBadgeFilter)) badgeFilterDeptEl.value = currentBadgeFilter;
+
+                students.sort((a,b) => String(a.id).localeCompare(String(b.id))); 
+                window.allStudentsData.sort((a,b) => String(a.id).localeCompare(String(b.id)));
+
+                tbody.innerHTML = students.length === 0 ? `<tr><td colspan='17' style='padding:30px;'>데이터가 없습니다.</td></tr>` : "";
+                
+                students.forEach(s => {
+                    let sc = s.yearData.scores || {}; let p = s.yearData.pass || {}; let d = s.yearData.delivery_status || {};
+                    let photoHtml = s.photo ? `<img src="${s.photo}" class="profile-img" onclick="window.openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
+                    let rowHtml = `<tr class="${(s.yearData.earned_badges || 0) >= 6 ? 'certified-row' : ''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}" data-name="${s.name}"></td><td style="white-space:nowrap;">${s.dept}</td><td>${s.id}</td><td style="text-align: left; display: flex; align-items: center; justify-content: space-between;"><div>${photoHtml} <strong>${s.name}</strong></div><div><span style="cursor:pointer; color:#f39c12; font-size:16px;" onclick="window.openEditModal('${s.docId}', ${filterGrade})" title="수정">✏️</span></div></td>`;
+                    
+                    window.AREAS.forEach(area => { 
+                        let isDone = d[area] === true; let scoreVal = sc[area] || 0; let cellContent = scoreVal; 
+                        if(p[area]) cellContent = `<span class="pass-star">★</span>${scoreVal}<br><span class="badge-status ${isDone?'status-done':'status-yet'}" onclick="window.toggleDelivery('${s.docId}', ${filterGrade}, '${area}', ${isDone})">${isDone?'지급완료':'미지급'}</span>`; 
+                        rowHtml += `<td class="score-cell">${cellContent}</td>`; 
+                    });
+                    
+                    let certBtn = (s.yearData.earned_badges || 0) >= 6 ? `<button class="btn ${filterGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="window.printCertificate('${s.id}')">🖨️</button>` : "-"; 
+                    rowHtml += `<td style="color:#2980b9; font-weight:bold;">${s.yearData.total_score || 0}점</td><td><strong>${s.yearData.earned_badges || 0}개</strong></td><td style="color:#27ae60; font-weight:bold; white-space:nowrap;">${s.yearData.title || '진행중'}</td><td>${certBtn}</td></tr>`;
+                    tbody.innerHTML += rowHtml;
+                });
+            } catch(e) { 
+                tbody.innerHTML = `<tr><td colspan='17' style='color:red; font-weight:bold;'>🚨 오류: ${e.message}</td></tr>`; 
             }
         };
 
