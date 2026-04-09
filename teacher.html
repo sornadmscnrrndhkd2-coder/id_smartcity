@@ -196,7 +196,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"    
+  measurementId: "G-3SL84TXVHD"  
         };
     </script>
 
@@ -899,7 +899,7 @@
             }; reader.readAsArrayBuffer(fileInput.files[0]);
         };
 
-        // 🔥 [A4 1장 핏 완벽 최적화] 3단 가로 누적 포트폴리오
+        // 🔥 [A4 1장 핏 완벽 최적화] 3단 가로 누적 포트폴리오 (최신 버전 이식 완료)
         window.printCertificate = async function(studentId) {
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
@@ -918,7 +918,7 @@
                     let gradeItemsHtml = '';
 
                     if (!yData || Object.keys(yData).length === 0 || grade > studentGrade) {
-                        gradeItemsHtml = `<div class="empty-spec" style="text-align:center; color:#bdc3c7; font-size:13px; padding:30px 0;">기록 없음</div>`;
+                        gradeItemsHtml = `<div class="timeline-empty">기록 없음</div>`;
                     } else {
                         window.AREAS.forEach(a => {
                             sumCaps[a] += (window.CAPS[grade][a] || 0);
@@ -929,27 +929,37 @@
                         if(yData.earned_badges !== undefined) finalBadges += yData.earned_badges;
                         if(grade === studentGrade && yData.title) finalTier = yData.title;
 
+                        let badgeListHtml = '';
                         let hasSpec = false;
                         if (yData.checked_items) {
                             window.AREAS.forEach(area => {
                                 let checkedIndices = yData.checked_items[area] || [];
                                 if (checkedIndices.length > 0) {
                                     hasSpec = true;
-                                    let tags = checkedIndices.map(idx => {
-                                        return window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label.split('(')[0].trim();
+                                    checkedIndices.forEach(idx => {
+                                        let rawLabel = window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label;
+                                        let label = rawLabel.split('(')[0].trim();
+                                        badgeListHtml += `
+                                            <div class="timeline-badge-item">
+                                                <div class="timeline-badge-code">${area}</div>
+                                                <div class="timeline-badge-text">${label}</div>
+                                            </div>
+                                        `;
                                     });
-                                    let tagsHtml = tags.map(tag => `<span class="spec-tag">${tag}</span>`).join('');
-                                    gradeItemsHtml += `<div class="spec-row"><div class="spec-area-badge">${area}</div><div class="spec-tags-container">${tagsHtml}</div></div>`;
                                 }
                             });
                         }
-                        if(!hasSpec) gradeItemsHtml = `<div class="empty-spec" style="text-align:center; color:#bdc3c7; font-size:13px; padding:30px 0;">세부 달성 스펙이 없습니다.</div>`;
+                        if(hasSpec) {
+                            gradeItemsHtml = `<div class="timeline-badge-list">${badgeListHtml}</div>`;
+                        } else {
+                            gradeItemsHtml = `<div class="timeline-empty">기록 없음</div>`;
+                        }
                     }
 
                     timelineHtml += `
-                        <div class="timeline-item">
-                            <h3 class="timeline-grade">${grade}학년 역량 기록</h3>
-                            <div class="spec-box">${gradeItemsHtml}</div>
+                        <div class="timeline-col">
+                            <div class="timeline-col-title">${grade}학년 역량 기록</div>
+                            ${gradeItemsHtml}
                         </div>
                     `;
                 }
@@ -963,108 +973,184 @@
                     (sumCaps['Tr'] + sumCaps['Y']) > 0 ? Math.min(100, Math.round(((sumScores['Tr'] + sumScores['Y']) / (sumCaps['Tr'] + sumCaps['Y'])) * 100)) : 0
                 ];
 
-                const printWindow = window.open('', '_blank', 'width=1000,height=800');
-                const todayStr = new Date().toLocaleDateString('ko-KR');
+                const printWindow = window.open('', '_blank', 'width=1000,height=1200');
+                
+                const now = new Date();
+                const yy = String(now.getFullYear()).slice(-2);
+                const mm = now.getMonth() + 1;
+                const dd = now.getDate();
+                const ampm = now.getHours() >= 12 ? '오후' : '오전';
+                const hh = now.getHours() % 12 || 12;
+                const min = String(now.getMinutes()).padStart(2, '0');
+                
+                const printDateText = `${yy}. ${mm}. ${dd}. ${ampm} ${hh}:${min}`;
+                const baseDateText = `${now.getFullYear()}. ${mm}. ${dd}.`;
                 const photoUrl = sData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
                 
                 printWindow.document.write(`
-                    <html><head><title>${sData.name}_포트폴리오</title>
-                    <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
-                    <style>
-                        @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
-                        body { font-family: 'Pretendard', sans-serif; background-color: #fff; margin: 0; padding: 20px; color: #2c3e50; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                        .portfolio-container { max-width: 1000px; margin: 0 auto; padding: 0; }
-                        .header-profile { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf0f2; padding-bottom: 10px; margin-bottom: 15px; }
-                        .profile-left { display: flex; align-items: center; gap: 15px; }
-                        .profile-img { width: 70px; height: 90px; border-radius: 12px; object-fit: cover; border: 1px solid #edf0f2; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-                        .profile-info h1 { margin: 0 0 5px 0; font-size: 24px; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;}
-                        .profile-info p { margin: 0; font-size: 13px; color: #7f8c8d; font-weight: 600; }
-                        .tier-badge { background: linear-gradient(135deg, #1a252f, #2c3e50); color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold;}
-                        .school-brand { text-align: right; }
-                        .school-brand h2 { margin: 0 0 4px 0; color: #3b71ca; font-size: 16px; font-weight: 900; }
-                        .school-brand p { margin: 0; font-size: 10px; color: #95a5a6; font-weight: bold; }
-                        .hero-stats-container { display: flex; gap: 15px; margin-bottom: 20px; align-items: stretch; }
-                        .summary-cards { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-                        .dash-card { background: #f8f9fa; border-radius: 12px; padding: 15px; text-align: center; border: 1px solid #edf0f2; }
-                        .dash-card p { margin: 0 0 6px 0; font-size: 12px; color: #7f8c8d; font-weight: 700; }
-                        .dash-card h3 { margin: 0; font-size: 24px; font-weight: 900; color: #3b71ca; }
-                        .dash-card h3 span { font-size: 14px; color: #2c3e50; }
-                        .radar-container { flex: 1.5; background: #fff; border-radius: 12px; padding: 10px; border: 1px solid #edf0f2; display: flex; justify-content: center; align-items: center; height: 180px; }
-                        .radar-container canvas { max-height: 100%; max-width: 100%; }
-                        
-                        /* 🔥 A4 1장에 쏙 들어가는 3단 가로 그리드! */
-                        .timeline-title { font-size: 16px; font-weight: 900; color: #1a252f; border-left: 4px solid #3b71ca; padding-left: 8px; margin-bottom: 10px; }
-                        .timeline-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; height: 500px; }
-                        .timeline-item { background: #f8f9fa; border: 1px solid #edf0f2; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; }
-                        .timeline-grade { margin: 0 0 10px 0; font-size: 14px; font-weight: 900; color: #1a252f; text-align: center; border-bottom: 1px dashed #d6e1f5; padding-bottom: 6px; }
-                        .spec-box { display: flex; flex-direction: column; gap: 6px; flex: 1; overflow: hidden;}
-                        .spec-row { display: flex; align-items: center; gap: 6px; background: white; padding: 6px; border-radius: 8px; border: 1px solid #e0e6ed; flex-wrap: wrap;}
-                        .spec-area-badge { background: #eef2fb; color: #3b71ca; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; }
-                        .spec-tags-container { display: flex; flex-wrap: wrap; gap: 3px; }
-                        .spec-tag { background: #f1f2f6; color: #2c3e50; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; border: 1px solid #dfe6e9; }
-                        
-                        .footer-sign { margin-top: 15px; text-align: center; border-top: 1px solid #edf0f2; padding-top: 15px; }
-                        .footer-sign p { margin: 0 0 5px 0; color: #7f8c8d; font-size: 12px; font-weight: bold; }
-                        .footer-sign h2 { margin: 0; color: #1a252f; font-size: 18px; font-weight: 900; letter-spacing: 5px;}
-                        
-                        @media print { 
-                            @page { size: A4 portrait; margin: 10mm; }
-                            body { padding: 0; } 
-                            .portfolio-container { width: 100%; padding: 0; } 
-                            .timeline-item { page-break-inside: avoid; border: 1px solid #edf0f2; }
-                        }
-                    </style>
-                    </head><body>
-                        <div class="portfolio-container">
-                            <div class="header-profile">
-                                <div class="profile-left">
-                                    <img src="${photoUrl}" class="profile-img" alt="학생사진">
-                                    <div class="profile-info">
-                                        <h1>${sData.name} <span class="tier-badge">${finalTier}</span></h1>
-                                        <p>${sData.department} | 학번: ${sData.current_studentId}</p>
-                                    </div>
-                                </div>
-                                <div class="school-brand">
-                                    <h2>SMART CITY PORTFOLIO</h2>
-                                    <p>INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</p>
-                                    <p style="margin-top:4px; font-size:10px; color:#bdc3c7;">출력일: ${todayStr}</p>
-                                </div>
-                            </div>
-                            <div class="hero-stats-container">
-                                <div class="summary-cards">
-                                    <div class="dash-card">
-                                        <p>3년 누적 총점</p>
-                                        <h3>${grandTotalScore}<span>점</span></h3>
-                                    </div>
-                                    <div class="dash-card">
-                                        <p>3년 누적 배지</p>
-                                        <h3>${finalBadges}<span>개</span></h3>
-                                    </div>
-                                </div>
-                                <div class="radar-container">
-                                    <canvas id="printRadarChart"></canvas>
-                                </div>
-                            </div>
-                            <div class="timeline-title">📈 학년별 역량 성장 타임라인</div>
-                            <div class="timeline-container">${timelineHtml}</div>
-                            <div class="footer-sign">
-                                <p>위 학생은 본교의 스마트시티 역량 인증 과정을 성실히 이수하였음을 증명함.</p>
-                                <h2>인덕과학기술고등학교장</h2>
-                            </div>
-                        </div>
-                        <script>
-                            const ctx = document.getElementById('printRadarChart').getContext('2d');
-                            new Chart(ctx, {
-                                type: 'radar',
-                                data: {
-                                    labels: ['전공', 'AI', '기초', '어학', '체력', '인성'],
-                                    datasets: [{ data: [${radarData.join(',')}], backgroundColor: 'rgba(59, 113, 202, 0.3)', borderColor: '#3b71ca', pointRadius: 0, borderWidth: 2 }]
-                                },
-                                options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100, angleLines: { color: 'rgba(0,0,0,0.1)' }, grid: { color: 'rgba(0,0,0,0.1)' }, pointLabels: { color: '#1a252f', font: { size: 9, family: 'Pretendard', weight: '900' } }, ticks: { display: false } } }, plugins: { legend: { display: false } }, animation: false }
-                            });
-                            setTimeout(() => { window.print(); }, 800); 
-                        <\/script>
-                    </body></html>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>${sData.name}_포트폴리오</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+  <style>
+    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+    
+    @page { size: A4 portrait; margin: 8mm; }
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0; padding: 0; background: #fff;
+      font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+      color: #1f2937; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    .portfolio-page {
+      width: 194mm; height: 281mm; margin: 0 auto; padding: 5mm 6mm 4mm 6mm;
+      display: grid; grid-template-rows: auto auto auto 1fr auto; row-gap: 3.5mm; background: #fff;
+    }
+
+    .top-meta { font-size: 10px; color: #222; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1mm; }
+    .doc-title { text-align: center; font-size: 10px; font-weight: 700; margin-top: -1mm; margin-bottom: 1mm; }
+
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      height: 38mm; padding: 8mm 4mm 8mm 4mm;
+      border-top: 1px solid #d9dee7; border-bottom: 1px solid #d9dee7;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .photo { width: 75px; height: 95px; border-radius: 10px; border: 1px solid #d8dee8; object-fit: cover; background: #eef2f7; flex-shrink: 0; }
+    .student-info { display: flex; flex-direction: column; gap: 3px; }
+    .name-row { display: flex; align-items: center; gap: 8px; }
+    .student-name { font-size: 26px; font-weight: 800; line-height: 1; }
+    .title-badge { display: inline-flex; align-items: center; justify-content: center; padding: 6px 14px; border-radius: 999px; background: #273f69; color: #f1c40f; font-size: 14px; font-weight: 800; line-height: 1; }
+    .student-sub { font-size: 11px; color: #5b6472; font-weight: 600; }
+    .header-right { text-align: right; }
+    .portfolio-title { font-size: 20px; font-weight: 900; color: #2f67d8; line-height: 1.05; }
+    .portfolio-sub { font-size: 9px; color: #97a3b6; font-weight: 700; margin-top: 2px; }
+
+    .summary-wrap {
+      display: grid; grid-template-columns: 54mm 1fr; gap: 7mm; align-items: stretch;
+      height: 75mm; margin-top: 5mm; margin-bottom: 5mm;
+    }
+    .summary-left { display: flex; flex-direction: column; justify-content: center; gap: 8mm; }
+    .score-box, .badge-box { background: #f8f9fa; border: 1px solid #edf0f2; border-radius: 12px; height: 25mm; padding: 4mm 2mm; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .box-label { font-size: 10px; color: #7a8594; font-weight: 700; margin-bottom: 5px; }
+    .box-value { color: #2f67d8; font-weight: 800; line-height: 1; display: flex; align-items: baseline; }
+    .box-value strong { font-size: 32px; line-height: 1; letter-spacing: -0.5px; }
+    .box-value span { font-size: 14px; margin-left: 2px; color: #2c3e50; }
+    
+    .chart-col { display: flex; align-items: stretch; justify-content: stretch; }
+    .radar-frame { width: 100%; height: 100%; background: #fff; border: 1px solid #edf0f2; border-radius: 12px; padding: 5mm; display: flex; align-items: center; justify-content: center; }
+    .radar-frame canvas { width: 100% !important; height: 100% !important; }
+
+    .timeline-title { font-size: 13px; font-weight: 800; color: #111827; padding-bottom: 2mm; border-bottom: 2px solid #3b6edc; margin-top: 0; display: inline-block; width: fit-content; }
+    
+    .timeline-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; flex: 1; min-height: 0; }
+    .timeline-col { background: #fafbfc; border: 1px solid #edf0f2; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; }
+    .timeline-col-title { text-align: center; font-size: 12px; font-weight: 800; color: #111827; padding-bottom: 6px; border-bottom: 1px dashed #d8dee8; margin-bottom: 8px; flex-shrink: 0; }
+    .timeline-empty { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding-top: 18px; color: #bdc3c7; font-size: 11px; font-weight: 700; }
+    
+    .timeline-badge-list { display: flex; flex-direction: column; justify-content: space-evenly; flex: 1; overflow: hidden; }
+    .timeline-badge-item { display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 7px; min-height: 20px; border: 1px solid #edf0f2; border-radius: 8px; background: #fff; padding: 0 7px; }
+    .timeline-badge-code { width: 20px; height: 20px; border-radius: 4px; background: #eef3ff; color: #3b6edc; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+    .timeline-badge-text { font-size: 10px; font-weight: 700; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .footer { text-align: center; padding-top: 2mm; }
+    .proof-text { font-size: 9px; color: #7b8794; margin-bottom: 1.5mm; }
+    .principal { font-size: 16px; font-weight: 800; letter-spacing: 2px; color: #1a252f; }
+  </style>
+</head>
+<body>
+  <div class="portfolio-page">
+    <div class="top-meta">
+      <div>${printDateText}</div>
+      <div>${sData.name}_포트폴리오</div>
+    </div>
+    <div class="doc-title">${sData.name} 학생 스펙 포트폴리오</div>
+    <div class="header">
+      <div class="header-left">
+        <img class="photo" src="${photoUrl}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png';" />
+        <div class="student-info">
+          <div class="name-row">
+            <div class="student-name">${sData.name}</div>
+            <div class="title-badge">🏆 ${finalTier.replace('🏆 ', '')}</div>
+          </div>
+          <div class="student-sub">${sData.department} | 학번: ${sData.current_studentId}</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="portfolio-title">SMART CITY PORTFOLIO</div>
+        <div class="portfolio-sub">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
+        <div class="portfolio-sub">출력일: ${baseDateText}</div>
+      </div>
+    </div>
+    <div class="summary-wrap">
+      <div class="summary-left">
+        <div class="score-box">
+          <div class="box-label">현재 누적 총점</div>
+          <div class="box-value"><strong>${grandTotalScore}</strong><span>점</span></div>
+        </div>
+        <div class="badge-box">
+          <div class="box-label">획득 핵심 배지</div>
+          <div class="box-value"><strong>${finalBadges}</strong><span>개</span></div>
+        </div>
+      </div>
+      <div class="chart-col">
+        <div class="radar-frame">
+          <canvas id="printRadarChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="timeline-title">📈 성장 타임라인</div>
+    <div class="timeline-grid">
+      ${timelineHtml}
+    </div>
+    <div class="footer">
+      <div class="proof-text">위 학생은 본교의 스마트시티 역량 인증 과정을 성실히 이수하였음을 증명함.</div>
+      <div class="principal">인덕과학기술고등학교장</div>
+    </div>
+  </div>
+  <script>
+    const ctx = document.getElementById('printRadarChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
+            datasets: [{
+                data: [${radarData.join(',')}],
+                backgroundColor: 'rgba(59, 113, 202, 0.25)',
+                borderColor: '#3b71ca',
+                borderWidth: 2,
+                pointRadius: 2,
+                pointBackgroundColor: '#2c3e50'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: { legend: { display: false } },
+            layout: {
+                padding: { top: 20, right: 8, bottom: 20, left: 8 }
+            },
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    ticks: { display: false, stepSize: 10 },
+                    angleLines: { color: 'rgba(0,0,0,0.08)' },
+                    grid: { color: 'rgba(0,0,0,0.08)', circular: false },
+                    pointLabels: { color: '#1a252f', font: { size: 10, weight: '700' } }
+                }
+            }
+        }
+    });
+    setTimeout(() => { window.print(); }, 500);
+  <\/script>
+</body>
+</html>
                 `);
                 printWindow.document.close();
             } catch(e) { console.error("출력 오류:", e); alert("출력 중 오류가 발생했습니다."); }
