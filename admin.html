@@ -1598,7 +1598,10 @@
     .timeline-badge-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      /* 🚀 gap을 지우고 아래 속성들 추가 */
+      justify-content: space-evenly; /* 항목 사이의 여백을 균등하게 나눔 */
+      flex: 1;                       /* 부모 틀 안에서 남은 세로 공간을 꽉 채움 */
+      overflow: hidden;              /* 인쇄 밖으로 삐져나가는 항목 숨김 */
     }
     .timeline-badge-item {
       display: grid;
