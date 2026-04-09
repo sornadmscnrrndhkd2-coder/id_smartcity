@@ -1403,22 +1403,25 @@
       margin-bottom: 1mm;
     }
 
+    /* 🔥 수정된 부분: 헤더 높이 확장 및 여백 확보 🔥 */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 3mm 0 4mm 0;
+      height: 28mm; /* 🚀 기존 20mm -> 28mm로 시원하게 확장 */
+      padding: 3mm 4mm 4mm 4mm; /* 🚀 좌우 내부 여백도 살짝 추가 */
       border-top: 1px solid #d9dee7;
       border-bottom: 1px solid #d9dee7;
     }
     .header-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px; /* 🚀 사진과 글씨 사이 간격 살짝 확대 */
     }
+    /* 🔥 수정된 부분: 사진 크기 확대 🔥 */
     .photo {
-      width: 60px;
-      height: 75px;
+      width: 70px; /* 🚀 기존 60px -> 70px 확대 */
+      height: 88px; /* 🚀 기존 75px -> 88px 확대 (헤더 비율 맞춤) */
       border-radius: 10px;
       border: 1px solid #d8dee8;
       object-fit: cover;
@@ -1428,7 +1431,7 @@
     .student-info {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px; /* 🚀 글씨 줄 간격 살짝 확대 */
     }
     .name-row {
       display: flex;
@@ -1473,28 +1476,29 @@
       margin-top: 2px;
     }
 
-    /* 🔥 수정된 부분: 육각형 비율, 상하단 폭, 박스 비율 🔥 */
+    /* 🔥 골격 유지: Grid 구조는 건드리지 않음 🔥 */
     .summary-wrap {
       display: grid;
-      grid-template-columns: 54mm 1fr; /* 왼쪽 박스 가로 넓이 축소 */
+      grid-template-columns: 54mm 1fr;
       gap: 7mm;
       align-items: stretch;
-      height: 100mm; /* 전체 높이를 늘려 육각형은 늘리고 하단 타임라인은 줄임 */
+      /* 🔥 수정된 부분: 헤더가 넓어진 만큼 육각형 세로를 줄여 비율 맞춤 🔥 */
+      height: 92mm; /* 🚀 기존 100mm -> 92mm로 살짝 축소 (직사각형 유지) */
       margin-top: 5mm;
       margin-bottom: 5mm;
     }
     .summary-left {
       display: flex;
       flex-direction: column;
-      justify-content: center; /* 박스들을 세로 중앙에 모음 */
-      gap: 8mm; /* 박스 사이 간격 */
+      justify-content: center;
+      gap: 8mm;
     }
     .score-box,
     .badge-box {
       background: #f8f9fa;
       border: 1px solid #edf0f2;
       border-radius: 12px;
-      height: 32mm; /* 🚀 고정 높이 할당! (세로로 길어지지 않게) */
+      height: 32mm; /* 박스 세로 길이는 꽉 차지 않게 유지 */
       padding: 4mm 2mm;
       display: flex;
       flex-direction: column;
@@ -1515,7 +1519,7 @@
       align-items: baseline;
     }
     .box-value strong {
-      font-size: 32px; /* 🚀 파란색 굵은 글씨 복원 */
+      font-size: 32px;
       line-height: 1;
       letter-spacing: -0.5px;
     }
@@ -1532,7 +1536,7 @@
     }
     .radar-frame {
       width: 100%;
-      height: 100%; /* 🚀 1:1 강제 비율 삭제, 세로가 더 긴 직사각형 꽉 차게 */
+      height: 100%;
       background: #fff;
       border: 1px solid #edf0f2;
       border-radius: 12px;
@@ -1559,8 +1563,8 @@
     .timeline-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 5mm; /* 상단 박스 여백과 비율 맞춤 */
-      flex: 1; /* 🚀 타임라인이 남은 공간만 차지하도록 */
+      gap: 5mm;
+      flex: 1;
       min-height: 0;
     }
     .timeline-col {
@@ -1568,7 +1572,7 @@
       border: 1px solid #edf0f2;
       border-radius: 10px;
       padding: 8px;
-      height: 100%; /* 🚀 꽉 차도록 */
+      height: 100%;
       display: flex;
       flex-direction: column;
     }
@@ -1726,12 +1730,7 @@
             animation: false,
             plugins: { legend: { display: false } },
             layout: {
-                padding: {
-                    top: 4,
-                    right: 8,
-                    bottom: 4,
-                    left: 8
-                }
+                padding: { top: 4, right: 8, bottom: 4, left: 8 }
             },
             scales: {
                 r: {
@@ -1739,7 +1738,7 @@
                     max: 100,
                     ticks: { 
                         display: false, 
-                        stepSize: 10 /* 🚀 10개 줄 복원! */
+                        stepSize: 10 
                     },
                     angleLines: { color: 'rgba(0,0,0,0.08)' },
                     grid: { 
