@@ -1564,7 +1564,9 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 5mm;
-      height: 102mm;
+      /* height: 102mm; <-- 이 부분을 삭제하세요! */
+      flex: 1; /* 🚀 다시 추가: A4 용지의 남는 공간을 모두 타임라인에 할당 */
+      min-height: 0; /* flex 버그 방지용 */
     }
     .timeline-col {
       background: #fafbfc;
@@ -1608,7 +1610,8 @@
       grid-template-columns: 20px 1fr;
       align-items: center;
       gap: 7px;
-      min-height: 26px;
+      /* 🚀 기존 26px -> 20px 로 줄임 (항목들의 세로 높이 축소) */
+      min-height: 20px; 
       border: 1px solid #edf0f2;
       border-radius: 8px;
       background: #fff;
