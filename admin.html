@@ -199,7 +199,7 @@
                 'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_ncs' }, { label: '평균 2등급(40점)', score: 40, group: 'c_ncs' }, { label: '평균 3등급(30점)', score: 30, group: 'c_ncs' }],
                 'I': [{ label: '토익 600점 등 공인어학(50점)', score: 50, group: 'i_total' }, { label: 'JLPT N4 등 공인어학(50점)', score: 50, group: 'i_total' }, { label: '2학년 공인어학시험 등급 보유(10점)', score: 10, group: 'i_total' }],
                 'Tr': [{ label: '3년 개근(60점)', score: 60, group: 'tr_att' }, { label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
-                'Y': [{ label: '봉사 24시간+독서 6권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 20시간+독서 5권이상(20점)', score: 20, group: 'y_set' }]
+                'Y': [{ label: '봉사 24시간+독서 5권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 20시간+독서 4권이상(20점)', score: 20, group: 'y_set' }]
             }
         };
     </script>
@@ -548,15 +548,18 @@
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, updatePassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, writeBatch, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // 1. 기본 앱 초기화
         const app = !getApps().length ? initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG) : getApp();
         const auth = getAuth(app);
         const db = getFirestore(app);
         
+        // 2. 계정 생성 전용 섀도우 앱
         let shadowApp;
         try { shadowApp = getApp("ShadowApp"); } 
         catch(e) { shadowApp = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG, "ShadowApp"); }
         const shadowAuth = getAuth(shadowApp);
 
+        // 3. 전역 변수 할당
         window.db = db; 
         window.authV10 = auth; 
         window.shadowAuth = shadowAuth;
@@ -1277,8 +1280,7 @@
             printWindow.document.close(); 
         };
 
-        // 🔥 [A4 1장 핏 완벽 최적화] 3단 가로 누적 포트폴리오
-        // 2:5:3 황금비율 적용 및 하단 칸(3단) 세로 길이 고정
+        // 🔥 [A4 1장 핏 완벽 최적화] 사진과 완벽히 동일한 비율 및 타임라인 칸 고정
         window.printCertificate = async function(studentId) {
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
@@ -1325,6 +1327,7 @@
                         if(!hasSpec) gradeItemsHtml = `<div class="empty-spec" style="text-align:center; color:#bdc3c7; font-size:12px; margin-top:20px; font-weight:bold;">세부 스펙이 없습니다.</div>`;
                     }
 
+                    // 1개만 있어도 높이가 고정되도록 .spec-box 안에 꽉 차는 flex 레이아웃 유지
                     timelineHtml += `
                         <div class="timeline-item">
                             <h3 class="timeline-grade">${grade}학년 역량 기록</h3>
@@ -1353,43 +1356,48 @@
                         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
                         body { font-family: 'Pretendard', sans-serif; background-color: #fff; margin: 0; padding: 0; color: #2c3e50; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                         @page { size: A4 portrait; margin: 10mm; }
+                        
+                        /* A4 높이에 꽉 차게 비율 고정 (2:5:3) */
                         .page-container { height: 277mm; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; }
                         
-                        /* 비율 분할: 상단 프로필(12%), 차트/점수(48%), 하단 타임라인(35%), 서명(5%) */
-                        .header-profile { flex: 0 0 12%; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf0f2; padding-bottom: 10px; }
+                        /* 상단 프로필 (20%) */
+                        .header-profile { flex: 0 0 15%; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #edf0f2; padding-bottom: 10px; }
                         .profile-left { display: flex; align-items: center; gap: 15px; }
-                        .profile-img { width: 70px; height: 90px; border-radius: 12px; object-fit: cover; border: 1px solid #edf0f2; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-                        .profile-info h1 { margin: 0 0 5px 0; font-size: 24px; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;}
-                        .profile-info p { margin: 0; font-size: 13px; color: #7f8c8d; font-weight: 600; }
-                        .tier-badge { background: linear-gradient(135deg, #1a252f, #2c3e50); color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold;}
+                        .profile-img { width: 90px; height: 110px; border-radius: 12px; object-fit: cover; border: 1px solid #edf0f2; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+                        .profile-info h1 { margin: 0 0 5px 0; font-size: 26px; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;}
+                        .profile-info p { margin: 0; font-size: 14px; color: #7f8c8d; font-weight: 600; }
+                        .tier-badge { background: linear-gradient(135deg, #1a252f, #2c3e50); color: white; padding: 4px 10px; border-radius: 15px; font-size: 13px; font-weight: bold;}
                         .school-brand { text-align: right; }
-                        .school-brand h2 { margin: 0 0 4px 0; color: #3b71ca; font-size: 16px; font-weight: 900; }
-                        .school-brand p { margin: 0; font-size: 10px; color: #95a5a6; font-weight: bold; }
+                        .school-brand h2 { margin: 0 0 4px 0; color: #3b71ca; font-size: 18px; font-weight: 900; }
+                        .school-brand p { margin: 0; font-size: 11px; color: #95a5a6; font-weight: bold; }
                         
-                        /* 가운데 큼지막한 영역 */
-                        .hero-stats-container { flex: 0 0 42%; display: flex; gap: 15px; align-items: stretch; margin-top: 15px; }
-                        .summary-cards { flex: 1; display: flex; flex-direction: column; gap: 15px; }
-                        .dash-card { background: #f8f9fa; border-radius: 12px; padding: 15px; text-align: center; border: 1px solid #edf0f2; flex: 1; display: flex; flex-direction: column; justify-content: center;}
-                        .dash-card p { margin: 0 0 6px 0; font-size: 13px; color: #7f8c8d; font-weight: 700; }
-                        .dash-card h3 { margin: 0; font-size: 32px; font-weight: 900; color: #3b71ca; }
-                        .dash-card h3 span { font-size: 16px; color: #2c3e50; }
-                        .radar-container { flex: 1.5; background: #fff; border-radius: 12px; padding: 10px; border: 1px solid #edf0f2; display: flex; justify-content: center; align-items: center; }
+                        /* 중간 요약 및 차트 (50%) */
+                        .hero-stats-container { flex: 0 0 45%; display: flex; gap: 20px; align-items: stretch; margin-top: 15px; }
+                        .summary-cards { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+                        .dash-card { background: #f8f9fa; border-radius: 12px; padding: 20px; text-align: center; border: 1px solid #edf0f2; flex: 1; display: flex; flex-direction: column; justify-content: center;}
+                        .dash-card p { margin: 0 0 6px 0; font-size: 15px; color: #7f8c8d; font-weight: 700; }
+                        .dash-card h3 { margin: 0; font-size: 40px; font-weight: 900; color: #3b71ca; }
+                        .dash-card h3 span { font-size: 18px; color: #2c3e50; }
+                        .radar-container { flex: 1.5; background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #edf0f2; display: flex; justify-content: center; align-items: center; }
                         .radar-container canvas { max-height: 100%; max-width: 100%; }
                         
-                        /* 타임라인 섹션 (틀 고정) */
-                        .timeline-section { flex: 0 0 35%; display: flex; flex-direction: column; margin-top: 15px; }
-                        .timeline-title { font-size: 16px; font-weight: 900; color: #1a252f; border-left: 4px solid #3b71ca; padding-left: 8px; margin-bottom: 10px; flex-shrink: 0;}
-                        .timeline-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex: 1; min-height: 0; }
-                        .timeline-item { background: #f8f9fa; border: 1px solid #edf0f2; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box;}
-                        .timeline-grade { margin: 0 0 10px 0; font-size: 14px; font-weight: 900; color: #1a252f; text-align: center; border-bottom: 1px dashed #d6e1f5; padding-bottom: 6px; flex-shrink: 0;}
-                        .spec-box { display: flex; flex-direction: column; gap: 6px; flex: 1; overflow: hidden; }
-                        .spec-row { display: flex; align-items: center; gap: 6px; background: white; padding: 6px; border-radius: 8px; border: 1px solid #e0e6ed; flex-wrap: wrap;}
-                        .spec-area-badge { background: #eef2fb; color: #3b71ca; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; }
-                        .spec-tags-container { display: flex; flex-wrap: wrap; gap: 3px; }
-                        .spec-tag { background: #f1f2f6; color: #2c3e50; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; border: 1px solid #dfe6e9; }
+                        /* 하단 타임라인 (30%) - 3단 박스 높이 무조건 고정 */
+                        .timeline-section { flex: 1; display: flex; flex-direction: column; margin-top: 20px; min-height: 0;}
+                        .timeline-title { font-size: 17px; font-weight: 900; color: #1a252f; border-left: 4px solid #3b71ca; padding-left: 8px; margin-bottom: 12px; flex-shrink: 0;}
+                        .timeline-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; flex: 1; min-height: 0; }
                         
-                        /* 하단 서명 */
-                        .footer-sign { flex: 0 0 6%; margin-top: 10px; text-align: center; border-top: 2px solid #edf0f2; padding-top: 15px; display: flex; flex-direction: column; justify-content: center;}
+                        /* 타임라인 박스 내부 레이아웃 고정 */
+                        .timeline-item { background: #f8f9fa; border: 1px solid #edf0f2; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box;}
+                        .timeline-grade { margin: 0 0 10px 0; font-size: 15px; font-weight: 900; color: #1a252f; text-align: center; border-bottom: 1px dashed #d6e1f5; padding-bottom: 8px; flex-shrink: 0;}
+                        .spec-box { display: flex; flex-direction: column; gap: 8px; flex: 1; overflow: hidden; align-content: flex-start; justify-content: flex-start;}
+                        
+                        .spec-row { display: flex; align-items: center; gap: 6px; background: white; padding: 8px; border-radius: 8px; border: 1px solid #e0e6ed; flex-wrap: wrap;}
+                        .spec-area-badge { background: #eef2fb; color: #3b71ca; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 900; }
+                        .spec-tags-container { display: flex; flex-wrap: wrap; gap: 3px; }
+                        .spec-tag { background: #f1f2f6; color: #2c3e50; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; border: 1px solid #dfe6e9; }
+                        
+                        /* 맨 하단 서명 (고정) */
+                        .footer-sign { flex: 0 0 5%; margin-top: 15px; text-align: center; border-top: 2px solid #edf0f2; padding-top: 15px; display: flex; flex-direction: column; justify-content: center;}
                         .footer-sign p { margin: 0 0 5px 0; color: #7f8c8d; font-size: 12px; font-weight: bold; }
                         .footer-sign h2 { margin: 0; color: #1a252f; font-size: 18px; font-weight: 900; letter-spacing: 5px;}
                     </style>
@@ -1413,11 +1421,11 @@
                             <div class="hero-stats-container">
                                 <div class="summary-cards">
                                     <div class="dash-card">
-                                        <p>3년 누적 총점</p>
+                                        <p>현재 누적 총점</p>
                                         <h3>${grandTotalScore}<span>점</span></h3>
                                     </div>
                                     <div class="dash-card">
-                                        <p>3년 누적 핵심 배지</p>
+                                        <p>획득 핵심 배지</p>
                                         <h3>${finalBadges}<span>개</span></h3>
                                     </div>
                                 </div>
@@ -1427,7 +1435,7 @@
                             </div>
                             
                             <div class="timeline-section">
-                                <div class="timeline-title">📈 학년별 역량 성장 타임라인</div>
+                                <div class="timeline-title">📈 Growth Timeline</div>
                                 <div class="timeline-container">${timelineHtml}</div>
                             </div>
                             
@@ -1441,10 +1449,10 @@
                             new Chart(ctx, {
                                 type: 'radar',
                                 data: {
-                                    labels: ['전공', 'AI', '기초', '어학', '체력', '인성'],
-                                    datasets: [{ data: [${radarData.join(',')}], backgroundColor: 'rgba(59, 113, 202, 0.3)', borderColor: '#3b71ca', pointRadius: 0, borderWidth: 2 }]
+                                    labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
+                                    datasets: [{ data: [${radarData.join(',')}], backgroundColor: 'rgba(59, 113, 202, 0.3)', borderColor: '#3b71ca', pointRadius: 4, pointBackgroundColor: '#2c3e50', borderWidth: 2 }]
                                 },
-                                options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100, angleLines: { color: 'rgba(0,0,0,0.1)' }, grid: { color: 'rgba(0,0,0,0.1)' }, pointLabels: { color: '#1a252f', font: { size: 11, family: 'Pretendard', weight: '900' } }, ticks: { display: false } } }, plugins: { legend: { display: false } }, animation: false }
+                                options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100, angleLines: { color: 'rgba(0,0,0,0.1)' }, grid: { color: 'rgba(0,0,0,0.1)' }, pointLabels: { color: '#1a252f', font: { size: 12, family: 'Pretendard', weight: '900' } }, ticks: { display: false } } }, plugins: { legend: { display: false } }, animation: false }
                             });
                             setTimeout(() => { window.print(); }, 800); 
                         <\/script>
