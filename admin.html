@@ -814,17 +814,9 @@
         window.updatePassword = updatePassword;
         window.signOut = signOut;
 
-        window.collection = collection; 
-        window.getDocs = getDocs; 
-        window.doc = doc; 
-        window.setDoc = setDoc;
-        window.getDoc = getDoc; 
-        window.updateDoc = updateDoc; 
-        window.deleteDoc = deleteDoc; 
-        window.query = query;
-        window.where = where; 
-        window.writeBatch = writeBatch; 
-        window.serverTimestamp = serverTimestamp;
+        window.collection = collection; window.getDocs = getDocs; window.doc = doc; window.setDoc = setDoc;
+        window.getDoc = getDoc; window.updateDoc = updateDoc; window.deleteDoc = deleteDoc; window.query = query;
+        window.where = where; window.writeBatch = writeBatch; window.serverTimestamp = serverTimestamp;
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -859,10 +851,7 @@
                 if(activeNav) activeNav.classList.add('menu-active');
                 
                 if(id === 'dashboard' && typeof window.loadDashboard === 'function') window.loadDashboard();
-                if(id === 'studentList') { 
-                    if(typeof window.updateTableHeaders === 'function') window.updateTableHeaders(); 
-                    if(typeof window.loadData === 'function') window.loadData(); 
-                }
+                if(id === 'studentList') { if(typeof window.updateTableHeaders === 'function') window.updateTableHeaders(); if(typeof window.loadData === 'function') window.loadData(); }
                 if(id === 'teacherManage' && typeof window.loadTeachers === 'function') window.loadTeachers();
                 if(id === 'systemLog' && typeof window.loadLogs === 'function') window.loadLogs();
                 if(id === 'badgeManagement' && typeof window.loadBadgeData === 'function') window.loadBadgeData();
@@ -1689,6 +1678,542 @@
             window.loadDashboard(); 
         };
 
+        // 🖨️ [수정된 포트폴리오 출력 전용 로직] 🖨️
+        window.printCertificate = async function(studentId) {
+            try {
+                const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
+                if(qSnap.empty) return alert("학생 데이터를 찾을 수 없습니다.");
+                
+                const sData = qSnap.docs[0].data();
+                const studentGrade = sData.current_grade || 1; 
+                
+                let grandTotalScore = 0; let finalBadges = 0; let finalTier = "🌱 CITY 스타터";
+                let sumScores = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
+                let sumCaps = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
+                
+                // 타임라인 생성 로직 (1~3학년)
+                const buildTimelineColumn = (grade, yearData) => {
+                    const titleMap = {
+                        1: "1학년 역량 기록",
+                        2: "2학년 역량 기록",
+                        3: "3학년 역량 기록"
+                    };
+
+                    const scores = yearData?.scores || {};
+                    const checkedItems = yearData?.checked_items || {};
+                    const listItems = [];
+
+                    // 체크항목 추출
+                    Object.keys(checkedItems).forEach(area => {
+                        const idxList = Array.isArray(checkedItems[area]) ? checkedItems[area] : [];
+                        idxList.forEach(idx => {
+                            const item = window.EVAL_ITEMS_BY_GRADE?.[grade]?.[area]?.[idx];
+                            if (item) {
+                                listItems.push(`
+                                    <div class="timeline-badge-item">
+                                        <div class="timeline-badge-code">${area}</div>
+                                        <div class="timeline-badge-text">${item.label.replace(/\(\d+점\)/g, '').trim()}</div>
+                                    </div>
+                                `);
+                            }
+                        });
+                    });
+
+                    // 빈 값 처리
+                    if (listItems.length === 0) {
+                        return `
+                            <div class="timeline-col">
+                                <div class="timeline-col-title">${titleMap[grade]}</div>
+                                <div class="timeline-empty">기록 없음</div>
+                            </div>
+                        `;
+                    }
+
+                    // 항목 있는 경우
+                    return `
+                        <div class="timeline-col">
+                            <div class="timeline-col-title">${titleMap[grade]}</div>
+                            <div class="timeline-badge-list">
+                                ${listItems.join("")}
+                            </div>
+                        </div>
+                    `;
+                };
+
+                let timelineHtml = `
+                    ${buildTimelineColumn(1, sData.year_1)}
+                    ${buildTimelineColumn(2, sData.year_2)}
+                    ${buildTimelineColumn(3, sData.year_3)}
+                `;
+
+                // 총점 및 레이다 데이터 계산
+                for (let grade = 1; grade <= 3; grade++) {
+                    let yData = sData[`year_${grade}`];
+                    if (yData && Object.keys(yData).length > 0 && grade <= studentGrade) {
+                        window.AREAS.forEach(a => {
+                            sumCaps[a] += (window.CAPS[grade][a] || 0);
+                            if(yData.scores) sumScores[a] += (yData.scores[a] || 0);
+                        });
+                        if(yData.total_score !== undefined) grandTotalScore += yData.total_score;
+                        if(yData.earned_badges !== undefined) finalBadges += yData.earned_badges;
+                        if(grade === studentGrade && yData.title) finalTier = yData.title;
+                    }
+                }
+
+                let radarData = [
+                    (sumCaps['M'] + sumCaps['T']) > 0 ? Math.min(100, Math.round(((sumScores['M'] + sumScores['T']) / (sumCaps['M'] + sumCaps['T'])) * 100)) : 0,
+                    sumCaps['S'] > 0 ? Math.min(100, Math.round((sumScores['S'] / sumCaps['S']) * 100)) : 0,
+                    (sumCaps['C'] + sumCaps['R']) > 0 ? Math.min(100, Math.round(((sumScores['C'] + sumScores['R']) / (sumCaps['C'] + sumCaps['R'])) * 100)) : 0,
+                    sumCaps['I'] > 0 ? Math.min(100, Math.round((sumScores['I'] / sumCaps['I']) * 100)) : 0,
+                    sumCaps['A'] > 0 ? Math.min(100, Math.round((sumScores['A'] / sumCaps['A']) * 100)) : 0,
+                    (sumCaps['Tr'] + sumCaps['Y']) > 0 ? Math.min(100, Math.round(((sumScores['Tr'] + sumScores['Y']) / (sumCaps['Tr'] + sumCaps['Y'])) * 100)) : 0
+                ];
+
+                const printWindow = window.open('', '_blank', 'width=1000,height=1200');
+                const now = new Date();
+                const yy = String(now.getFullYear()).slice(-2);
+                const mm = now.getMonth() + 1;
+                const dd = now.getDate();
+                const ampm = now.getHours() >= 12 ? '오후' : '오전';
+                const hh = now.getHours() % 12 || 12;
+                const min = String(now.getMinutes()).padStart(2, '0');
+                
+                const printDateText = `${yy}. ${mm}. ${dd}. ${ampm} ${hh}:${min}`;
+                const baseDateText = `${now.getFullYear()}. ${mm}. ${dd}.`;
+                const photoUrl = sData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
+                /* ==============================================================
+                   🔥 [수정됨] 포트폴리오 출력용 HTML / CSS 템플릿 🔥
+                   ============================================================== */
+                printWindow.document.write(`
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>${sData.name}_포트폴리오</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+  <style>
+    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+    
+    @page {
+      size: A4 portrait;
+      margin: 8mm;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+      color: #1f2937;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* A4 한 장에 꽉 차게 5개의 Row(행)으로 그리드 고정 */
+    .portfolio-page {
+      width: 194mm;
+      height: 281mm;
+      margin: 0 auto;
+      padding: 5mm 6mm 4mm 6mm;
+      display: grid;
+      grid-template-rows: auto auto auto 1fr auto;
+      row-gap: 3.5mm;
+      background: #fff;
+    }
+
+    /* 1. 최상단 메타 정보 */
+    .top-meta {
+      font-size: 10px;
+      color: #222;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1mm;
+    }
+    .doc-title {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: -1mm;
+      margin-bottom: 1mm;
+    }
+
+    /* 2. 헤더: 프로필 + 학교 로고 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3mm 0 4mm 0;
+      border-top: 1px solid #d9dee7;
+      border-bottom: 1px solid #d9dee7;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .photo {
+      width: 60px;
+      height: 75px;
+      border-radius: 10px;
+      border: 1px solid #d8dee8;
+      object-fit: cover;
+      background: #eef2f7;
+      flex-shrink: 0;
+    }
+    .student-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .student-name {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .title-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #273f69;
+      color: #f1c40f;
+      font-size: 9px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .student-sub {
+      font-size: 11px;
+      color: #5b6472;
+      font-weight: 600;
+    }
+    .header-right {
+      text-align: right;
+    }
+    .portfolio-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: #2f67d8;
+      line-height: 1.05;
+    }
+    .portfolio-sub {
+      font-size: 9px;
+      color: #97a3b6;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* 🚨 3. 중앙 서머리 (폭 및 비율 재조정) 🚨 */
+    .summary-wrap {
+      display: grid;
+      /* 왼쪽:오른쪽 비율을 타임라인 폭과 맞추기 위해 조정 */
+      grid-template-columns: 36% 64%; 
+      gap: 12px;
+      align-items: stretch;
+      width: 100%;
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+    .summary-left {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 12px;
+      align-self: stretch;
+    }
+    .score-box,
+    .badge-box {
+      background: #f3f5f7;
+      border: 1px solid #dfe5ec;
+      border-radius: 14px;
+      min-height: 86px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+    }
+    .box-label {
+      font-size: 10px;
+      color: #7a8594;
+      font-weight: 700;
+      margin-bottom: 6px;
+      line-height: 1.2;
+      letter-spacing: -0.1px;
+    }
+    .box-value {
+      color: #2f67d8;
+      font-weight: 800;
+      line-height: 1;
+      display: flex;
+      align-items: baseline;
+    }
+    .box-value strong {
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+    .box-value span {
+      font-size: 13px;
+      margin-left: 2px;
+      color: #2c3e50;
+    }
+    
+    .chart-col {
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+    }
+    .radar-frame {
+      width: 100%;
+      height: 100%;
+      min-height: 184px;
+      background: #fff;
+      border: 1px solid #dfe5ec;
+      border-radius: 14px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .radar-frame canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* 4. 성장 타임라인 */
+    .timeline-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #111827;
+      padding-bottom: 2mm;
+      border-bottom: 2px solid #3b6edc;
+      margin-top: 0;
+      display: inline-block;
+      width: fit-content;
+    }
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px; /* summary-wrap의 gap과 일치시킴 */
+      width: 100%;
+      align-items: stretch;
+      min-height: 0;
+    }
+    .timeline-col {
+      background: #fafbfc;
+      border: 1px solid #edf0f2;
+      border-radius: 10px;
+      padding: 8px;
+      min-height: 88mm;
+      display: flex;
+      flex-direction: column;
+    }
+    .timeline-col-title {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: #111827;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed #d8dee8;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+    .timeline-empty {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 18px;
+      color: #bdc3c7;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .timeline-badge-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .timeline-badge-item {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      align-items: center;
+      gap: 7px;
+      min-height: 26px;
+      border: 1px solid #edf0f2;
+      border-radius: 8px;
+      background: #fff;
+      padding: 0 7px;
+    }
+    .timeline-badge-code {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background: #eef3ff;
+      color: #3b6edc;
+      font-size: 10px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .timeline-badge-text {
+      font-size: 10px;
+      font-weight: 700;
+      color: #2c3e50;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 5. 하단 서명란 */
+    .footer {
+      text-align: center;
+      padding-top: 2mm;
+    }
+    .proof-text {
+      font-size: 9px;
+      color: #7b8794;
+      margin-bottom: 1.5mm;
+    }
+    .principal {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #1a252f;
+    }
+  </style>
+</head>
+<body>
+  <div class="portfolio-page">
+    <div class="top-meta">
+      <div>${printDateText}</div>
+      <div>${sData.name}_포트폴리오</div>
+    </div>
+
+    <div class="doc-title">${sData.name} 학생 스펙 포트폴리오</div>
+
+    <div class="header">
+      <div class="header-left">
+        <img class="photo" src="${photoUrl}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png';" />
+        <div class="student-info">
+          <div class="name-row">
+            <div class="student-name">${sData.name}</div>
+            <div class="title-badge">🏆 ${finalTier.replace('🏆 ', '')}</div>
+          </div>
+          <div class="student-sub">${sData.department} | 학번: ${sData.current_studentId}</div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="portfolio-title">SMART CITY PORTFOLIO</div>
+        <div class="portfolio-sub">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
+        <div class="portfolio-sub">출력일: ${baseDateText}</div>
+      </div>
+    </div>
+
+    <div class="summary-wrap">
+      <div class="summary-left">
+        <div class="score-box">
+          <div class="box-label">현재 누적 총점</div>
+          <div class="box-value"><strong>${grandTotalScore}</strong><span>점</span></div>
+        </div>
+        <div class="badge-box">
+          <div class="box-label">획득 핵심 배지</div>
+          <div class="box-value"><strong>${finalBadges}</strong><span>개</span></div>
+        </div>
+      </div>
+
+      <div class="chart-col">
+        <div class="radar-frame">
+          <canvas id="printRadarChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-title">📈 성장 타임라인</div>
+
+    <div class="timeline-grid">
+      ${timelineHtml}
+    </div>
+
+    <div class="footer">
+      <div class="proof-text">위 학생은 본교의 스마트시티 역량 인증 과정을 성실히 이수하였음을 증명함.</div>
+      <div class="principal">인덕과학기술고등학교장</div>
+    </div>
+  </div>
+  
+  <script>
+    const ctx = document.getElementById('printRadarChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
+            datasets: [{
+                data: [${radarData.join(',')}],
+                backgroundColor: 'rgba(59, 113, 202, 0.25)',
+                borderColor: '#3b71ca',
+                borderWidth: 2,
+                pointRadius: 2,
+                pointBackgroundColor: '#2c3e50'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: { legend: { display: false } },
+            layout: {
+                padding: {
+                    top: 4,
+                    right: 8,
+                    bottom: 4,
+                    left: 8
+                }
+            },
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    ticks: { 
+                        display: false, 
+                        stepSize: 10 
+                    },
+                    angleLines: { color: 'rgba(0,0,0,0.08)' },
+                    grid: { 
+                        color: 'rgba(0,0,0,0.08)', 
+                        circular: false 
+                    },
+                    pointLabels: {
+                        color: '#1a252f',
+                        font: { size: 10, weight: '700' }
+                    }
+                }
+            }
+        }
+    });
+
+    setTimeout(() => { window.print(); }, 500);
+  <\/script>
+</body>
+</html>
+                `);
+                printWindow.document.close();
+            } catch(e) { 
+                console.error("출력 오류:", e); 
+                alert("출력 중 오류가 발생했습니다."); 
+            }
+        };
+
         window.loadLogs = async function() {
             const tbody = document.getElementById("logTableBody"); 
             tbody.innerHTML = "<tr><td colspan='3'>불러오는 중...</td></tr>";
@@ -1791,569 +2316,6 @@
                 });
             } catch(e) { 
                 tbody.innerHTML = `<tr><td colspan='17' style='color:red; font-weight:bold;'>🚨 오류: ${e.message}</td></tr>`; 
-            }
-        };
-
-        // 🖨️ 현재 반 막대그래프 인쇄
-        window.printClassChart = function() {
-            const filterClass = document.getElementById("filterClass").value; 
-            const filterGrade = document.getElementById("filterGrade").value;
-            if (filterClass === "ALL") return alert("❗ '반'을 먼저 선택 후 [조회]를 눌러주세요.");
-            if (!window.allStudentsData || window.allStudentsData.length === 0) return alert("출력할 데이터가 없습니다.");
-            
-            const labels = []; const dataValues = []; 
-            window.allStudentsData.forEach(s => { labels.push(s.name); dataValues.push(s.yearData.earned_badges || 0); });
-            const todayStr = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-            
-            const printWindow = window.open('', '_blank', 'width=1100,height=800');
-            printWindow.document.write(`
-                <html><head><title>우리 반 역량 현황 출력</title><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
-                <style>
-                    @page { size: landscape; margin: 0; } 
-                    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box; }
-                    body { display: flex; flex-direction: column; font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 3vh 3vw; background: white; justify-content: space-between; }
-                    .title-wrap { flex: 0 0 auto; margin-bottom: 2vh; }
-                    h1 { color: #2c3e50; font-size: 4vh; border-bottom: 0.4vh solid #3498db; padding-bottom: 1vh; margin: 0 0 1vh 0; display: inline-block; font-weight: 900;}
-                    .date-text { color: #7f8c8d; font-size: 2vh; font-weight: bold; }
-                    .chart-container { flex: 1 1 auto; position: relative; width: 100%; min-height: 0; padding: 1vh 0; }
-                    .footer { flex: 0 0 auto; font-size: 1.8vh; color: #7f8c8d; font-weight: bold; letter-spacing: 2px;}
-                </style>
-                </head>
-                <body>
-                    <div class="title-wrap">
-                        <h1>👑 ${filterGrade}학년 ${filterClass}반 스마트시티 배지 획득 현황</h1>
-                        <div class="date-text">[ ${todayStr} 기준 ]</div>
-                    </div>
-                    <div class="chart-container"><canvas id="classChart"></canvas></div>
-                    <div class="footer">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
-                    <script>
-                        const badgeLabelPlugin = { id: 'badgeLabels', afterDatasetsDraw(chart) { const { ctx } = chart; chart.data.datasets.forEach((dataset, i) => { const meta = chart.getDatasetMeta(i); meta.data.forEach((bar, index) => { const data = dataset.data[index]; ctx.fillStyle = '#c0392b'; ctx.font = 'bold 1.8vh "Malgun Gothic"'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(data + '개', bar.x, bar.y - 8); }); }); } }; 
-                        const ctx = document.getElementById('classChart').getContext('2d'); 
-                        new Chart(ctx, { type: 'bar', data: { labels: [${labels.map(l => `'${l}'`).join(',')}], datasets: [{ label: '획득 배지', data: [${dataValues.join(',')}], backgroundColor: 'rgba(52, 152, 219, 0.85)', borderColor: 'rgba(41, 128, 185, 1)', borderWidth: 2, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1000 }, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 9, ticks: { stepSize: 1, font: { size: 16, weight: 'bold' }, color: '#7f8c8d' }, grid: { color: '#ecf0f1' } }, x: { ticks: { font: { size: 15, weight: 'bold' }, color: '#2c3e50' }, grid: { display: false } } } }, plugins: [badgeLabelPlugin] }); 
-                        setTimeout(() => { window.print(); }, 1500);
-                    <\/script>
-                </body></html>
-            `); 
-            printWindow.document.close(); 
-        };
-
-        // 🖨️ [완벽 재구성] 포트폴리오 출력 전용 로직
-        window.printCertificate = async function(studentId) {
-            try {
-                const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
-                if(qSnap.empty) return alert("학생 데이터를 찾을 수 없습니다.");
-                
-                const sData = qSnap.docs[0].data();
-                const studentGrade = sData.current_grade || 1; 
-                
-                let grandTotalScore = 0; let finalBadges = 0; let finalTier = "🌱 CITY 스타터";
-                let sumScores = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
-                let sumCaps = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
-                let timelineHtml = '';
-                
-                for (let grade = 1; grade <= 3; grade++) {
-                    let yData = sData[`year_${grade}`];
-                    let gradeItemsHtml = '';
-
-                    if (!yData || !yData.checked_items || Object.keys(yData.checked_items).length === 0 || grade > studentGrade) {
-                        gradeItemsHtml = `<div class="timeline-empty">기록 없음</div>`;
-                    } else {
-                        window.AREAS.forEach(a => {
-                            sumCaps[a] += (window.CAPS[grade][a] || 0);
-                            if(yData.scores) sumScores[a] += (yData.scores[a] || 0);
-                        });
-
-                        if(yData.total_score !== undefined) grandTotalScore += yData.total_score;
-                        if(yData.earned_badges !== undefined) finalBadges += yData.earned_badges;
-                        if(grade === studentGrade && yData.title) finalTier = yData.title;
-
-                        let hasSpec = false;
-                        let badgeListHtml = '';
-                        
-                        if (yData.checked_items) {
-                            window.AREAS.forEach(area => {
-                                let checkedIndices = yData.checked_items[area] || [];
-                                if (checkedIndices.length > 0) {
-                                    hasSpec = true;
-                                    checkedIndices.forEach(idx => {
-                                        let rawLabel = window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label;
-                                        let label = rawLabel.split('(')[0].trim();
-                                        badgeListHtml += `
-                                            <div class="timeline-badge-item">
-                                                <div class="timeline-badge-code">${area}</div>
-                                                <div class="timeline-badge-text">${label}</div>
-                                            </div>
-                                        `;
-                                    });
-                                }
-                            });
-                        }
-                        
-                        if(hasSpec) {
-                            gradeItemsHtml = `<div class="timeline-badge-list">${badgeListHtml}</div>`;
-                        } else {
-                            gradeItemsHtml = `<div class="timeline-empty">기록 없음</div>`;
-                        }
-                    }
-
-                    timelineHtml += `
-                        <div class="timeline-col">
-                            <div class="timeline-col-title">${grade}학년 역량 기록</div>
-                            ${gradeItemsHtml}
-                        </div>
-                    `;
-                }
-
-                let radarData = [
-                    (sumCaps['M'] + sumCaps['T']) > 0 ? Math.min(100, Math.round(((sumScores['M'] + sumScores['T']) / (sumCaps['M'] + sumCaps['T'])) * 100)) : 0,
-                    sumCaps['S'] > 0 ? Math.min(100, Math.round((sumScores['S'] / sumCaps['S']) * 100)) : 0,
-                    (sumCaps['C'] + sumCaps['R']) > 0 ? Math.min(100, Math.round(((sumScores['C'] + sumScores['R']) / (sumCaps['C'] + sumCaps['R'])) * 100)) : 0,
-                    sumCaps['I'] > 0 ? Math.min(100, Math.round((sumScores['I'] / sumCaps['I']) * 100)) : 0,
-                    sumCaps['A'] > 0 ? Math.min(100, Math.round((sumScores['A'] / sumCaps['A']) * 100)) : 0,
-                    (sumCaps['Tr'] + sumCaps['Y']) > 0 ? Math.min(100, Math.round(((sumScores['Tr'] + sumScores['Y']) / (sumCaps['Tr'] + sumCaps['Y'])) * 100)) : 0
-                ];
-
-                const printWindow = window.open('', '_blank', 'width=1000,height=1200');
-                
-                // 날짜 포맷 (좌상단: YY. M. D. AM/PM h:mm)
-                const now = new Date();
-                const yy = String(now.getFullYear()).slice(-2);
-                const mm = now.getMonth() + 1;
-                const dd = now.getDate();
-                const ampm = now.getHours() >= 12 ? '오후' : '오전';
-                const hh = now.getHours() % 12 || 12;
-                const min = String(now.getMinutes()).padStart(2, '0');
-                const printDateText = `${yy}. ${mm}. ${dd}. ${ampm} ${hh}:${min}`;
-                
-                // 기준일 (우측: YYYY. M. D.)
-                const baseDateText = `${now.getFullYear()}. ${mm}. ${dd}.`;
-
-                const photoUrl = sData.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-                
-                // ==========================================
-                // 🔥 100% 비율 매칭 포트폴리오 전용 템플릿 🔥
-                // ==========================================
-                printWindow.document.write(`
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <title>${sData.name}_포트폴리오</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
-  <style>
-    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
-    
-    @page {
-      size: A4 portrait;
-      margin: 8mm;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      padding: 0;
-      background: #fff;
-      font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
-      color: #1f2937;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-
-    /* A4 한 장에 꽉 차게 5개의 Row(행)으로 그리드 고정 */
-    .portfolio-page {
-      width: 194mm;
-      height: 281mm;
-      margin: 0 auto;
-      padding: 5mm 6mm 4mm 6mm;
-      display: grid;
-      grid-template-rows: auto auto auto 1fr auto;
-      row-gap: 3.5mm;
-      background: #fff;
-    }
-
-    /* 1. 최상단 작은 글씨 메타 정보 */
-    .top-meta {
-      font-size: 10px;
-      color: #222;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1mm;
-    }
-    .doc-title {
-      text-align: center;
-      font-size: 10px;
-      font-weight: 700;
-      margin-top: -1mm;
-      margin-bottom: 1mm;
-    }
-
-    /* 2. 헤더: 프로필 + 학교 로고 */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 3mm 0 4mm 0;
-      border-top: 1px solid #d9dee7;
-      border-bottom: 1px solid #d9dee7;
-    }
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .photo {
-      width: 60px;
-      height: 75px;
-      border-radius: 10px;
-      border: 1px solid #d8dee8;
-      object-fit: cover;
-      background: #eef2f7;
-      flex-shrink: 0;
-    }
-    .student-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .name-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .student-name {
-      font-size: 18px;
-      font-weight: 800;
-      line-height: 1;
-    }
-    .title-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #273f69;
-      color: #f1c40f;
-      font-size: 9px;
-      font-weight: 800;
-      line-height: 1;
-    }
-    .student-sub {
-      font-size: 11px;
-      color: #5b6472;
-      font-weight: 600;
-    }
-    .header-right {
-      text-align: right;
-    }
-    .portfolio-title {
-      font-size: 20px;
-      font-weight: 900;
-      color: #2f67d8;
-      line-height: 1.05;
-    }
-    .portfolio-sub {
-      font-size: 9px;
-      color: #97a3b6;
-      font-weight: 700;
-      margin-top: 2px;
-    }
-
-    /* 3. 중앙 서머리 (요청하신 36% 64% 비율 분할) */
-    .summary-wrap {
-      display: grid;
-      grid-template-columns: 36% 64%;
-      gap: 12px;
-      align-items: stretch;
-      width: 100%;
-      margin-top: 8px;
-      margin-bottom: 12px;
-    }
-    .summary-left {
-      display: grid;
-      grid-template-rows: 1fr 1fr;
-      gap: 12px;
-      align-self: stretch;
-    }
-    .score-box,
-    .badge-box {
-      background: #f3f5f7;
-      border: 1px solid #dfe5ec;
-      border-radius: 14px;
-      min-height: 86px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
-    }
-    .box-label {
-      font-size: 10px;
-      color: #7a8594;
-      font-weight: 700;
-      margin-bottom: 6px;
-      line-height: 1.2;
-      letter-spacing: -0.1px;
-    }
-    .box-value {
-      color: #2f67d8;
-      font-weight: 800;
-      line-height: 1;
-    }
-    .box-value strong {
-      font-size: 22px;
-      line-height: 1;
-      letter-spacing: -0.5px;
-    }
-    .box-value span {
-      font-size: 13px;
-      margin-left: 2px;
-      font-weight: 700;
-    }
-    
-    .chart-col {
-      display: flex;
-      align-items: stretch;
-      justify-content: stretch;
-    }
-    .radar-frame {
-      width: 100%;
-      height: 100%;
-      min-height: 184px;
-      background: #fff;
-      border: 1px solid #dfe5ec;
-      border-radius: 14px;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .radar-frame canvas {
-      width: 100% !important;
-      height: 100% !important;
-    }
-
-    /* 4. 성장 타임라인 */
-    .timeline-title {
-      font-size: 13px;
-      font-weight: 800;
-      color: #111827;
-      padding-bottom: 2mm;
-      border-bottom: 2px solid #3b6edc;
-      margin-top: 0;
-      display: inline-block;
-      width: fit-content;
-    }
-    .timeline-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      width: 100%;
-      align-items: stretch;
-    }
-    .timeline-col {
-      background: #fafbfc;
-      border: 1px solid #edf0f2;
-      border-radius: 10px;
-      padding: 8px;
-      min-height: 88mm;
-      display: flex;
-      flex-direction: column;
-    }
-    .timeline-col-title {
-      text-align: center;
-      font-size: 12px;
-      font-weight: 800;
-      color: #111827;
-      padding-bottom: 6px;
-      border-bottom: 1px dashed #d8dee8;
-      margin-bottom: 8px;
-    }
-    .timeline-empty {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding-top: 18px;
-      color: #bdc3c7;
-      font-size: 11px;
-      font-weight: 700;
-    }
-    .timeline-badge-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .timeline-badge-item {
-      display: grid;
-      grid-template-columns: 20px 1fr;
-      align-items: center;
-      gap: 7px;
-      min-height: 26px;
-      border: 1px solid #edf0f2;
-      border-radius: 8px;
-      background: #fff;
-      padding: 0 7px;
-    }
-    .timeline-badge-code {
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
-      background: #eef3ff;
-      color: #3b6edc;
-      font-size: 10px;
-      font-weight: 900;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .timeline-badge-text {
-      font-size: 10px;
-      font-weight: 700;
-      color: #2c3e50;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* 5. 하단 서명란 */
-    .footer {
-      text-align: center;
-      padding-top: 2mm;
-    }
-    .proof-text {
-      font-size: 9px;
-      color: #7b8794;
-      margin-bottom: 1.5mm;
-    }
-    .principal {
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      color: #1a252f;
-    }
-  </style>
-</head>
-<body>
-  <div class="portfolio-page">
-    <div class="top-meta">
-      <div>${printDateText}</div>
-      <div>${sData.name}_포트폴리오</div>
-    </div>
-
-    <div class="doc-title">${sData.name} 학생 스펙 포트폴리오</div>
-
-    <div class="header">
-      <div class="header-left">
-        <img class="photo" src="${photoUrl}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png';" />
-        <div class="student-info">
-          <div class="name-row">
-            <div class="student-name">${sData.name}</div>
-            <div class="title-badge">🏆 ${finalTier.replace('🏆 ', '')}</div>
-          </div>
-          <div class="student-sub">${sData.department} | 학번: ${sData.current_studentId}</div>
-        </div>
-      </div>
-
-      <div class="header-right">
-        <div class="portfolio-title">SMART CITY PORTFOLIO</div>
-        <div class="portfolio-sub">INDUK SCIENCE & TECHNOLOGY HIGH SCHOOL</div>
-        <div class="portfolio-sub">기준일: ${baseDateText}</div>
-      </div>
-    </div>
-
-    <div class="summary-wrap">
-      <div class="summary-left">
-        <div class="score-box">
-          <div class="box-label">현재 누적 총점</div>
-          <div class="box-value"><strong>${grandTotalScore}</strong><span>점</span></div>
-        </div>
-        <div class="badge-box">
-          <div class="box-label">획득 핵심 배지</div>
-          <div class="box-value"><strong>${finalBadges}</strong><span>개</span></div>
-        </div>
-      </div>
-
-      <div class="chart-col">
-        <div class="radar-frame">
-          <canvas id="printRadarChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="timeline-title">📈 성장 타임라인</div>
-
-    <div class="timeline-grid">
-      ${timelineHtml}
-    </div>
-
-    <div class="footer">
-      <div class="proof-text">위 학생은 본교의 스마트시티 역량 인증 과정을 성실히 이수하였음을 증명함.</div>
-      <div class="principal">인덕과학기술고등학교장</div>
-    </div>
-  </div>
-  
-  <script>
-    const ctx = document.getElementById('printRadarChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
-            datasets: [{
-                data: [${radarData.join(',')}],
-                backgroundColor: 'rgba(59, 113, 202, 0.25)',
-                borderColor: '#3b71ca',
-                borderWidth: 2,
-                pointRadius: 2,
-                pointBackgroundColor: '#2c3e50'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            plugins: { legend: { display: false } },
-            layout: {
-                padding: {
-                    top: 4,
-                    right: 8,
-                    bottom: 4,
-                    left: 8
-                }
-            },
-            scales: {
-                r: {
-                    min: 0,
-                    max: 100,
-                    ticks: { 
-                        display: false, 
-                        stepSize: 10 
-                    },
-                    angleLines: { color: 'rgba(0,0,0,0.08)' },
-                    grid: { 
-                        color: 'rgba(0,0,0,0.08)', 
-                        circular: false 
-                    },
-                    pointLabels: {
-                        color: '#1a252f',
-                        font: { size: 10, weight: '700' }
-                    }
-                }
-            }
-        }
-    });
-
-    setTimeout(() => { window.print(); }, 600);
-  <\/script>
-</body>
-</html>
-                `);
-                printWindow.document.close();
-            } catch(e) { 
-                console.error("출력 오류:", e); 
-                alert("출력 중 오류가 발생했습니다."); 
             }
         };
 
