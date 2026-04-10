@@ -206,7 +206,7 @@
         window.AREA_NAMES = { S: '정보화', M: '전공성적', A: '예체능', R: '한국사', T: '전공자격', C: '직업기초', I: '외국어', Tr: '성실', Y: '인성' };
         
         window.CAPS = { 
-            1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 
+            1: { S:50, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 
             2: { S:50, M:50, A:30, R:40, T:80, C:50, I:40, Tr:50, Y:30 }, 
             3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 }  
         };
@@ -219,7 +219,7 @@
 
         window.EVAL_ITEMS_BY_GRADE = {
             1: {
-                'S': [{ label: 'ITQ 2과목 합격(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목 합격(20점) (등급 무관)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'S': [{ label: '컴활 2급 이상 합격(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 2과목 합격(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목 합격(20점) (등급 무관)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
                 'M': [{ label: '전공 A 4개(50점)', score: 50, group: 'm_grade' }, { label: '전공 A 3개(40점)', score: 40, group: 'm_grade' }, { label: '전공 A 2개(20점)', score: 20, group: 'm_grade' }, { label: '전공 B 2개(10점)', score: 10, group: 'm_grade' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
                 'A': [{ label: 'PAPS 전체 1등급(30점)', score: 30, group: 'paps' }, { label: 'PAPS 전체 2등급(20점)', score: 20, group: 'paps' }, { label: 'PAPS 전체 3등급(10점)', score: 10, group: 'paps' }, { label: '학교스포츠클럽 대회 입상 (20점)', score: 20, group: 'sp_contest' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'sp_part' }],
                 'R': [{ label: '한능검 3급(30점)', score: 30, group: 'r_his' }, { label: '한능검 4급(20점)', score: 20, group: 'r_his' }, { label: '한능검 5~6급(10점)', score: 10, group: 'r_his' }],
@@ -230,7 +230,7 @@
                 'Y': [{ label: '봉사 16시간+독서 3권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 12시간+독서 2권이상(20점)', score: 20, group: 'y_set' }]
             },
             2: {
-                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'S': [{ label: '컴활 2급 이상 또는 ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
                 'M': [{ label: '전공 A 4개 이상(50점)', score: 50, group: 'm_grade' }, { label: '전공 A 3개(30점)', score: 30, group: 'm_grade' }, { label: '전공 A 2개(10점)', score: 10, group: 'm_grade' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
                 'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'paps' }, { label: 'PAPS 전체 3등급(5점)', score: 5, group: 'paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'sp_contest' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'sp_part' }],
                 'R': [{ label: '한능검 1급(40점)', score: 40, group: 'r_his' }, { label: '한능검 2급(30점)', score: 30, group: 'r_his' }, { label: '한능검 3급(20점)', score: 20, group: 'r_his' }, { label: '한능검 4급(10점)', score: 10, group: 'r_his' }],
@@ -241,7 +241,7 @@
                 'Y': [{ label: '봉사 20시간+독서 4권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 16시간+독서 3권이상(20점)', score: 20, group: 'y_set' }]
             },
             3: {
-                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'S': [{ label: '컴활 2급 이상 또는 ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
                 'M': [{ label: '전공 A 6개(60점)', score: 60, group: 'm_grade' }, { label: '전공 A 4개(40점)', score: 40, group: 'm_grade' }, { label: '캡스톤 디자인 작품 전시 및 발표(40점)', score: 40, group: 'm_capstone' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
                 'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'sp_contest' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'sp_part' }],
                 'R': [{ label: '한능검 1급(30점)', score: 30, group: 'r_his' }, { label: '한능검 2급(20점)', score: 20, group: 'r_his' }, { label: '한능검 3급(10점)', score: 10, group: 'r_his' }],
@@ -639,8 +639,17 @@
             if(!app || !app.fileData) return alert("자료가 없습니다.");
             const contentBox = document.getElementById('proofContent');
             document.getElementById('proofModalTitle').innerText = `📄 제출된 증빙 자료`; 
-            if(app.fileType === 'image') contentBox.innerHTML = `<img src="${app.fileData}" style="max-width:100%; max-height:55vh; border-radius:8px; object-fit:contain;">`;
-            else if(app.fileType === 'pdf') contentBox.innerHTML = `<iframe src="${app.fileData}" style="width:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
+
+            // 🔥 다운로드 버튼 및 파일명 생성 로직 추가
+            let ext = app.fileType === 'pdf' ? 'pdf' : 'jpg';
+            let fileName = `${app.grade}학년_${app.studentName}_${app.area}영역_증빙.${ext}`;
+            let downloadBtn = `<div style="width:100%; text-align:right; margin-bottom:10px; padding-right:10px; box-sizing:border-box;">
+                                 <a href="${app.fileData}" download="${fileName}" style="background:#3b71ca; color:white; text-decoration:none; padding:8px 15px; border-radius:6px; font-size:13px; font-weight:bold; display:inline-block; box-shadow:0 2px 5px rgba(0,0,0,0.1);">💾 증빙자료 다운로드</a>
+                               </div>`;
+
+            if(app.fileType === 'image') contentBox.innerHTML = downloadBtn + `<img src="${app.fileData}" style="max-width:100%; max-height:50vh; border-radius:8px; object-fit:contain;">`;
+            else if(app.fileType === 'pdf') contentBox.innerHTML = downloadBtn + `<iframe src="${app.fileData}" style="width:100%; height:50vh; border:none; border-radius:8px;"></iframe>`;
+            
             document.getElementById('proofModal').classList.add('active'); document.body.style.overflow = 'hidden';
         };
 
