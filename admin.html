@@ -462,6 +462,7 @@
                     <h2>📋 학생별 역량 현황</h2>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button onclick="document.getElementById('addStudentBox').style.display='block'" class="btn btn-orange" style="font-size: 14px; padding: 10px 15px;">➕ 개별 학생 추가</button>
+                        <button onclick="window.printClassSummary()" class="btn btn-green" style="font-size: 14px; padding: 10px 15px;">🖨️ 학급 포트폴리오</button>
                         <button onclick="window.downloadExcelReport('studentTable', '스마트시티_전체데이터_보고서')" class="btn btn-dark" style="font-size: 14px; padding: 10px 15px;">⬇️ 표 엑셀 다운로드</button>
                     </div>
                 </div>
@@ -497,15 +498,8 @@
                     <button onclick="window.loadData()" class="btn btn-green" style="padding: 8px 20px;">🔄 조회</button>
                     
                     <div class="action-group">
+                        <button onclick="window.toggleEditMode()" class="btn btn-orange" id="btnEditMode">✏️ 수동 점수 수정</button>
                         <button onclick="window.deleteSelectedStudents()" class="btn btn-red">🗑️ 선택 삭제</button>
-                    </div>
-                </div>
-                
-                <div class="section-title">
-                    <span>📋 학생 평가 세부 데이터</span>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn btn-green" id="btnGroupPrint" onclick="window.printClassSummary()">🖨️ 학급 포트폴리오</button>
-                        <button class="btn btn-orange" id="btnEditMode" onclick="window.toggleEditMode()">✏️ 수동 점수 수정</button>
                     </div>
                 </div>
                 
@@ -1084,6 +1078,37 @@
             } catch(e) { alert("에러"); }
         };
 
+        document.getElementById("uploadTeacherExcelBtn").addEventListener("click", async () => {
+            const fileInput = document.getElementById("teacherExcelInput"); if (!fileInput.files[0]) return alert("파일 선택");
+            const btn = document.getElementById("uploadTeacherExcelBtn"); btn.innerText = "⏳ 생성 중..."; btn.disabled = true;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                let successCount = 0; let failCount = 0;
+                try {
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' }); 
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { raw: false });
+                    for (const row of jsonData) {
+                        const keys = Object.keys(row);
+                        const tName = keys.find(k=>k.includes("성함")||k.includes("이름")) ? String(row[keys.find(k=>k.includes("성함")||k.includes("이름"))]).trim() : ""; 
+                        const tId = keys.find(k=>k.includes("아이디")||k.includes("ID")) ? String(row[keys.find(k=>k.includes("아이디")||k.includes("ID"))]).trim() : "";
+                        let rawRoom = keys.find(k=>k.includes("학급")||k.includes("반")) ? String(row[keys.find(k=>k.includes("학급")||k.includes("반"))]).trim() : ""; 
+                        let rawSubj = keys.find(k=>k.includes("권한")||k.includes("과목")) ? String(row[keys.find(k=>k.includes("권한")||k.includes("과목"))]).trim() : "일반";
+                        if (!tName || !tId) { failCount++; continue; }
+                        let tHomeroom = "";
+                        if (rawRoom && rawRoom !== "비담임" && rawRoom !== "없음" && rawRoom !== "-") { let match = rawRoom.match(/(\d+)[^\d]+(\d+)/); if(match) tHomeroom = `${match[1]}-${match[2]}`; else if(/^\d{2}$/.test(rawRoom)) tHomeroom = `${rawRoom.charAt(0)}-${rawRoom.charAt(1)}`; else tHomeroom = rawRoom; }
+                        let tSubject = "일반"; if (rawSubj.includes("체육")) tSubject = "체육"; else if (rawSubj.includes("직업")||rawSubj.includes("기초")) tSubject = "직업기초"; else if (rawSubj.includes("영어")) tSubject = "영어1";
+                        const authEmail = `${tId}@induk.hs.kr`;
+                        try { 
+                            const cred = await window.createUserWithEmailAndPassword(window.shadowAuth, authEmail, "9022060"); 
+                            await window.setDoc(window.doc(window.db, "teachers", cred.user.uid), { name: tName, userId: tId, email: authEmail, role: "teacher", homeroom: tHomeroom || null, subject: tSubject, createdAt: new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10) }); 
+                            successCount++; 
+                        } catch (err) { failCount++; } finally { try { await window.signOut(window.shadowAuth); } catch (_) {} }
+                    }
+                    alert(`✅ 완료 (성공:${successCount}, 실패:${failCount})\n(초기비밀번호: 9022060)`); fileInput.value = ""; window.loadTeachers();
+                } catch (e) { alert("오류"); } finally { btn.innerText = "🚀 업로드 실행"; btn.disabled = false; }
+            }; reader.readAsArrayBuffer(fileInput.files[0]);
+        });
+
         window.addTeacher = async function() {
             const tName = document.getElementById("tName").value.trim(); const tId = document.getElementById("tId").value.trim();
             const tHomeroom = document.getElementById("tHomeroom").value; const tSubject = document.getElementById("tSubject").value;
@@ -1341,22 +1366,21 @@
             } catch(e) { alert("저장 에러: " + e.message); }
         };
 
-        // 🔥 [A4 가로 반응형] 관리자용 그룹 포트폴리오 출력 함수 (체크박스 연동)
+        // 🔥 [A4 가로 반응형] 관리자용 학급 전체 그룹 포트폴리오 (체크박스 하이브리드) 🔥
         window.printClassSummary = async function() {
             const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
             let targetStudentIds = [];
             
             if(checkedBoxes.length > 0) {
                 checkedBoxes.forEach(cb => {
-                    // 테이블 행 구조에 따라 학번(ID) 찾기
                     const row = cb.closest('tr');
-                    // data-table 구조에서 학번은 3번째 <td> (인덱스 2)에 위치합니다. (체크박스, 학과, 학번)
+                    // 학번은 3번째 td (index 2)
                     let sid = row.cells[2].innerText.trim();
                     targetStudentIds.push(sid);
                 });
             } else {
-                if(!window.currentData || window.currentData.length === 0) return alert("출력할 데이터가 없습니다.");
-                window.currentData.forEach(s => targetStudentIds.push(String(s.current_studentId || s.id)));
+                if(!window.allStudentsData || window.allStudentsData.length === 0) return alert("출력할 데이터가 없습니다.");
+                window.allStudentsData.forEach(s => targetStudentIds.push(String(s.id)));
             }
 
             if(targetStudentIds.length === 0) return alert("출력할 대상을 찾을 수 없습니다.");
@@ -1444,7 +1468,7 @@
 
                 const printWindow = window.open('', '_blank');
                 printWindow.document.write(`
-                    <html><head><title>학급 포트폴리오</title>
+                    <html><head><title>그룹 포트폴리오</title>
                     <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
                     <style>
                         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
@@ -1531,7 +1555,7 @@
             } catch(e) { alert("출력 에러: " + e.message); }
         };
 
-        // 🔥 개별 학생 누적 포트폴리오 출력
+        // 🔥 [A4 1장 핏 완벽 최적화] 3단 가로 개인 누적 포트폴리오
         window.printCertificate = async function(studentId) {
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
@@ -1816,6 +1840,59 @@
             const dateStr = new Date().toISOString().slice(0,10).replace(/-/g, "");
             XLSX.writeFile(wb, `${filename}_${dateStr}.xlsx`);
         };
+
+        window.loadDashboard = async function() {
+            try {
+                let dToday = new Date(new Date().getTime() + 9*60*60*1000); let todayStr = dToday.toISOString().slice(0,10);
+                try { const todaySnap = await window.getDoc(window.doc(window.db, "system_stats", todayStr)); document.getElementById('visitorCount').innerText = todaySnap.exists() ? todaySnap.data().visitors : 0; } catch(e) { document.getElementById('visitorCount').innerText = 0; }
+                const appSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중"))); document.getElementById('dashPendingApprove').innerText = appSnap.size + "건";
+
+                const querySnapshot = await window.getDocs(window.collection(window.db, "students"));
+                let totalBadges = 0, topAchievers = 0, pendingAlerts = 0; let badgeCounts = { S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0 }; let dynamicDeptCounts = {}; 
+                
+                querySnapshot.forEach(doc => { 
+                    let d = doc.data(); if(!d.current_grade) return; let g = d.current_grade; let yData = d[`year_${g}`]; if(!yData) return; 
+                    let dept = d.department && d.department !== "-" ? d.department : "미지정"; if(!dynamicDeptCounts[dept]) dynamicDeptCounts[dept] = 0;
+                    if(yData.earned_badges >= 6) { topAchievers++; dynamicDeptCounts[dept]++; } 
+                    window.AREAS.forEach(a => { if(yData.pass && yData.pass[a]) { badgeCounts[a]++; totalBadges++; } if(yData.pass && yData.pass[a] === true && (!yData.delivery_status || yData.delivery_status[a] !== true)) { pendingAlerts++; } }); 
+                });
+                
+                document.getElementById('dashMonthlyBadges').innerText = totalBadges + "개"; document.getElementById('dashTopAchievers').innerText = topAchievers + "명"; document.getElementById('dashPendingAlert').innerText = pendingAlerts + "건";
+                if(dynamicDeptCounts["미지정"] === 0) delete dynamicDeptCounts["미지정"];
+
+                const chartLabels = Object.keys(dynamicDeptCounts).map(name => name.length > 5 ? [name.substring(0, 4), name.substring(4)] : name); const chartData = Object.values(dynamicDeptCounts);
+                const safeChartLabels = chartLabels.length > 0 ? chartLabels : ["데이터 없음"]; const safeChartData = chartData.length > 0 ? chartData : [0];
+
+                const ctxDept = document.getElementById('deptChart').getContext('2d'); if(window.myDeptChart) window.myDeptChart.destroy(); 
+                window.myDeptChart = new Chart(ctxDept, { type: 'bar', data: { labels: safeChartLabels, datasets: [{ label: '인증 달성자', data: safeChartData, backgroundColor: '#3498db' }] } });
+
+                const ctxBadge = document.getElementById('badgeChart').getContext('2d'); if(window.myBadgeChart) window.myBadgeChart.destroy(); 
+                window.myBadgeChart = new Chart(ctxBadge, { type: 'doughnut', data: { labels: window.AREAS.map(a => window.AREA_NAMES[a]), datasets: [{ data: window.AREAS.map(a => badgeCounts[a]), backgroundColor: ['#1abc9c', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c', '#2ecc71', '#95a5a6'] }] }, options: { plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } } } } });
+
+                let dates = []; let visitors = [];
+                for(let i=6; i>=0; i--) {
+                    let d = new Date(new Date().getTime() + 9*60*60*1000 - (i*24*60*60*1000)); let dStr = d.toISOString().slice(0,10); dates.push(dStr.slice(5));
+                    try { const snap = await window.getDoc(window.doc(window.db, "system_stats", dStr)); visitors.push(snap.exists() ? snap.data().visitors : 0); } catch(e) { visitors.push(0); }
+                }
+                const ctxVis = document.getElementById('visitorChart').getContext('2d'); if(window.myVisitorChart) window.myVisitorChart.destroy(); window.myVisitorChart = new Chart(ctxVis, { type: 'line', data: { labels: dates, datasets: [{ label: '방문자', data: visitors, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)', fill: true, tension: 0.3 }] }, options: { maintainAspectRatio: false } });
+            } catch(e) { console.error("대시보드 로드 오류:", e); }
+        };
+
+        window.loadLockStatus = async function() {
+            try { const docSnap = await window.getDoc(window.doc(window.db, "settings", "config")); if(docSnap.exists()) { window.isSystemLocked = docSnap.data().isLocked || false; updateLockButtonUI(); } } catch(e) { console.error("설정 로드 에러:", e); }
+        }
+
+        function updateLockButtonUI() {
+            const btn = document.getElementById("globalLockBtn");
+            if(window.isSystemLocked) { btn.className = "btn-lock lock-active"; btn.innerHTML = "🔒 시스템 마감됨 (해제하기)"; } else { btn.className = "btn-lock lock-inactive"; btn.innerHTML = "🔓 시스템 개방 중 (마감하기)"; }
+        }
+
+        window.toggleGlobalLock = async function() {
+            const actionText = window.isSystemLocked ? "마감을 해제하시겠습니까?" : "올해 평가를 마감하시겠습니까?";
+            if(!confirm(actionText)) return;
+            window.isSystemLocked = !window.isSystemLocked;
+            try { await window.setDoc(window.doc(window.db, "settings", "config"), { isLocked: window.isSystemLocked }, { merge: true }); updateLockButtonUI(); alert(`성공적으로 처리되었습니다.`); } catch(e) { console.error("잠금 토글 에러:", e); alert("DB 에러"); }
+        }
     </script>
 </body>
 </html>
