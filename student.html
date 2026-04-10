@@ -339,6 +339,64 @@
         };
     </script>
 
+    <script>
+        // 🔥 2026년 최신 개편 학년별 기준표 (컴활 50점 신설 및 라벨 변경 완벽 동기화) 🔥
+        window.AREAS = ['S', 'M', 'A', 'R', 'T', 'C', 'I', 'Tr', 'Y'];
+        window.AREA_NAMES = { S: '정보화', M: '전공성적', A: '예체능', R: '한국사', T: '전공자격', C: '직업기초', I: '외국어', Tr: '성실', Y: '인성' };
+        
+        window.CAPS = { 
+            // 🔥 1학년 S 40 -> 50 변경
+            1: { S:50, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 
+            2: { S:50, M:50, A:30, R:40, T:80, C:50, I:40, Tr:50, Y:30 }, 
+            3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 }  
+        };
+        
+        window.PASS_CUTOFF = { 
+            1: { S:20, M:20, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 }, 
+            2: { S:20, M:20, A:20, R:20, T:30, C:30, I:30, Tr:30, Y:20 }, 
+            3: { S:20, M:40, A:20, R:20, T:30, C:30, I:20, Tr:30, Y:20 } 
+        };
+
+        window.EVAL_ITEMS_BY_GRADE = {
+            1: {
+                // 🔥 컴활 추가
+                'S': [{ label: '컴활 2급 이상 합격(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 2과목 합격(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목 합격(20점) (등급 무관)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'M': [{ label: '전공 A 4개(50점)', score: 50, group: 'm_grade' }, { label: '전공 A 3개(40점)', score: 40, group: 'm_grade' }, { label: '전공 A 2개(20점)', score: 20, group: 'm_grade' }, { label: '전공 B 2개(10점)', score: 10, group: 'm_grade' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
+                'A': [{ label: 'PAPS 전체 1등급(30점)', score: 30, group: 'a_paps' }, { label: 'PAPS 전체 2등급(20점)', score: 20, group: 'a_paps' }, { label: 'PAPS 전체 3등급(10점)', score: 10, group: 'a_paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'a_sports_c' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'a_sports_p' }],
+                'R': [{ label: '한능검 3급(30점)', score: 30, group: 'r_his' }, { label: '한능검 4급(20점)', score: 20, group: 'r_his' }, { label: '한능검 5~6급(10점)', score: 10, group: 'r_his' }],
+                'T': [{ label: '기능사 자격증 취득(60점)', score: 60, group: 't_now' }, { label: '민간자격증 취득(40점)', score: 40, group: 't_now' }, { label: '국가/민간 필기합격(30점)', score: 30, group: 't_now' }],
+                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_ncs' }, { label: '평균 2등급(40점)', score: 40, group: 'c_ncs' }, { label: '평균 3등급(30점)', score: 30, group: 'c_ncs' }],
+                'I': [{ label: '영어 교과 성취도 A 이상(40점)', score: 40, group: 'i_total' }, { label: '영어 교과 성취도 B 이상(30점)', score: 30, group: 'i_total' }, { label: '교내 영어 관련 대회 입상(30점)', score: 30, group: 'i_total' }],
+                'Tr': [{ label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
+                'Y': [{ label: '봉사 16시간+독서 4권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 12시간+독서 3권이상(20점)', score: 20, group: 'y_set' }]
+            },
+            2: {
+                // 🔥 라벨 변경
+                'S': [{ label: '컴활 2급 이상 또는 ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'M': [{ label: '전공 A 4개 이상(50점)', score: 50, group: 'm_grade' }, { label: '전공 A 3개(30점)', score: 30, group: 'm_grade' }, { label: '전공 A 2개(10점)', score: 10, group: 'm_grade' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
+                'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'a_paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'a_paps' }, { label: 'PAPS 전체 3등급(5점)', score: 5, group: 'a_paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'a_sports_c' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'a_sports_p' }],
+                'R': [{ label: '한능검 1급(40점)', score: 40, group: 'r_his' }, { label: '한능검 2급(30점)', score: 30, group: 'r_his' }, { label: '한능검 3급(20점)', score: 20, group: 'r_his' }, { label: '한능검 4급(10점)', score: 10, group: 'r_his' }],
+                'T': [{ label: '(당해연도)기능사 1개 취득(60점)', score: 60, group: 't_now_f' }, { label: '(당해연도)민간 자격증 1개 취득(40점)', score: 40, group: 't_now_p' }, { label: '(당해연도)국가/민간 필기합격(20점)', score: 20, group: 't_now_w' }, { label: '(이전학년)기능사 1개 보유(10점)', score: 10, group: 't_prev_f' }, { label: '(이전학년)민간 자격증 1개 보유(5점)', score: 5, group: 't_prev_p' }],
+                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_ncs' }, { label: '평균 2등급(40점)', score: 40, group: 'c_ncs' }, { label: '평균 3등급(30점)', score: 30, group: 'c_ncs' }],
+                'I': [{ label: '영어/일어 교과 성취도 A(40점)', score: 40, group: 'i_total' }, { label: '영어/일어 교과 성취도 B(30점)', score: 30, group: 'i_total' }, { label: '토익 500점 등 공인어학(40점)', score: 40, group: 'i_total' }, { label: 'JLPT N5 등 공인어학(40점)', score: 40, group: 'i_total' }],
+                'Tr': [{ label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
+                'Y': [{ label: '봉사 20시간+독서 4권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 16시간+독서 3권이상(20점)', score: 20, group: 'y_set' }]
+            },
+            3: {
+                // 🔥 라벨 변경
+                'S': [{ label: '컴활 2급 이상 또는 ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(해당학년취득)AI관련 (추가) 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'M': [{ label: '전공 A 6개(60점)', score: 60, group: 'm_grade' }, { label: '전공 A 4개(40점)', score: 40, group: 'm_grade' }, { label: '캡스톤 디자인 작품 전시 및 발표(40점)', score: 40, group: 'm_caps' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
+                'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'a_paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'a_paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'a_sports_c' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'a_sports_p' }],
+                'R': [{ label: '한능검 1급(30점)', score: 30, group: 'r_his' }, { label: '한능검 2급(20점)', score: 20, group: 'r_his' }, { label: '한능검 3급(10점)', score: 10, group: 'r_his' }],
+                'T': [{ label: '(해당학년)기능사 1개 취득(60점)', score: 60, group: 't_now_func' }, { label: '(해당학년)민간 자격증 1개 취득(40점)', score: 40, group: 't_now_priv' }, { label: '(해당학년)국가/민간 필기합격(10점)', score: 10, group: 't_now_written' }, { label: '(누적보유)기능사 3개(60점)', score: 60, group: 't_prev_func' }, { label: '(누적보유)기능사 2개(30점)', score: 30, group: 't_prev_func' }, { label: '(누적보유)기능사 1개(10점)', score: 10, group: 't_prev_func' }, { label: '(누적보유)민간 3개(30점)', score: 30, group: 't_prev_p' }, { label: '(누적보유)민간 2개(20점)', score: 20, group: 't_prev_p' }, { label: '(누적보유)민간 1개(5점)', score: 5, group: 't_prev_p' }],
+                'C': [{ label: '평균 1등급(50점)', score: 50, group: 'c_grade' }, { label: '평균 2등급(40점)', score: 40, group: 'c_grade' }, { label: '평균 3등급(30점)', score: 30, group: 'c_grade' }],
+                'I': [{ label: '토익 600점 등 공인어학(50점)', score: 50, group: 'i_total' }, { label: 'JLPT N4 등 공인어학(50점)', score: 50, group: 'i_total' }, { label: '2학년 공인어학시험 등급 보유(10점)', score: 10, group: 'i_total' }],
+                'Tr': [{ label: '3년 개근(60점)', score: 60, group: 'tr_att' }, { label: '1년 개근(50점)', score: 50, group: 'tr_att' }, { label: '1년 정근(30점)', score: 30, group: 'tr_att' }],
+                'Y': [{ label: '봉사 24시간+독서 6권이상(30점)', score: 30, group: 'y_act' }, { label: '봉사 20시간+독서 5권이상(20점)', score: 20, group: 'y_act' }]
+            }
+        };
+    </script>
+
     <header class="header">
         <div class="header-left">
             <div class="header-icon">🏫</div>
@@ -522,17 +580,199 @@
             <div class="ranking-list" id="rankModalList"></div>
         </div>
     </div>
+    <header class="header">
+        <div class="header-left">
+            <div class="header-icon">🏫</div>
+            <div class="header-title">
+                <h1>스마트시티</h1>
+                <p>역량 인증제 평가시스템</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <span>인덕과학기술고등학교</span>
+            <button class="btn-logout" id="btnLogout" onclick="sessionStorage.clear(); location.href='index.html';">로그아웃</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="hero-banner">
+            <div class="hero-top">
+                <div class="user-profile-section">
+                    <div class="user-profile">
+                        <div class="user-info">
+                            <p id="classDisplay">학년 반 로딩중...</p>
+                            <h2 id="userNameDisplay">학생</h2>
+                        </div>
+                    </div>
+                    <div class="tier-badge-wrapper">
+                        <div class="badge-pill" id="tierDisplay">🌱 로딩중...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="score-summary-horizontal">
+                <div class="score-box">
+                    <p>✨ 총점</p>
+                    <h3><span id="displayTotalScore">0</span><span>점</span></h3>
+                </div>
+                <div class="score-box rank-clickable" onclick="window.openRankModal()">
+                    <p>🥈 현재 순위</p>
+                    <h3 class="rank-display">계산중...<span class="rank-text"></span></h3>
+                </div>
+            </div>
+            
+            <div class="hero-bottom">
+                <div class="exp-text-container">
+                    <span style="opacity:0.9;">🚀 나의 인증 달성률</span>
+                    <span id="expText" style="font-size:12px;">계산중...</span>
+                </div>
+                <div class="exp-bar-container">
+                    <div class="exp-bar-fill" id="expBar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            
+            <div class="left-panel box-badges">
+                <div class="panel-bg">
+                    <div class="section-header">
+                        <h3 class="section-title">📚 SMARTCITY 9대 역량 배지</h3>
+                        <button class="btn-apply-inline" onclick="window.openApplyModal()">➕ 인증 신청</button>
+                    </div>
+                    <div class="badge-grid" id="badgeGridContainer"></div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="panel-bg box-ranking">
+                    <div class="section-header" style="margin-bottom: 25px;">
+                        <h3 class="section-title" id="hofTitle">🏆 명예의 전당</h3>
+                    </div>
+                    <div class="ranking-list" id="hofList"></div>
+                </div>
+
+                <div class="panel-bg box-apps">
+                    <div class="section-header">
+                        <h3 class="section-title">📝 나의 인증 신청 내역</h3>
+                    </div>
+                    <div id="myApplyList" style="font-size: 12px;">
+                        <div style="text-align:center; padding:20px; color:var(--text-gray);">불러오는 중...</div>
+                    </div>
+                </div>
+                
+                <div class="panel-bg box-radar">
+                    <div class="section-header" style="margin-bottom: 10px;">
+                        <h3 class="section-title">📊 나의 역량 분포도</h3>
+                    </div>
+                    <div class="radar-chart-container" style="margin: 0 auto; width: 100%; display: flex; justify-content: center; align-items: center;">
+                        <div style="width: 250px; height: 250px; position: relative;">
+                            <canvas id="myRadarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="panel-bg info-links-container" style="margin-top: 20px;">
+            <h3 class="section-title">🔗 스마트시티 역량 인증 필수 사이트</h3>
+            <div class="links-grid">
+                <a href="https://license.kpc.or.kr/" target="_blank" class="link-card">
+                    <div class="link-icon-text">🖥️ ITQ 정보화</div>
+                    <div class="link-desc">KPC 자격 공식 홈페이지</div>
+                </a>
+                <a href="https://www.historyexam.go.kr/" target="_blank" class="link-card">
+                    <div class="link-icon-text">🇰🇷 한국사능력검정</div>
+                    <div class="link-desc">국사편찬위원회 홈페이지</div>
+                </a>
+                <a href="https://www.q-net.or.kr/" target="_blank" class="link-card">
+                    <div class="link-icon-text">🛠️ Q-Net 자격</div>
+                    <div class="link-desc">국가기술자격 원서접수</div>
+                </a>
+                <a href="https://www.ncs.go.kr/" target="_blank" class="link-card">
+                    <div class="link-icon-text">🤝 직업기초능력</div>
+                    <div class="link-desc">NCS 국가직무능력표준</div>
+                </a>
+                <a href="img/paps.pdf" target="_blank" class="link-card">
+                    <div class="link-icon-text">🏃 PAPS 평가 안내</div>
+                    <div class="link-desc">PAPS 측정 방법 및 기준</div>
+                </a>
+                <a href="https://exam.toeic.co.kr/" target="_blank" class="link-card">
+                    <div class="link-icon-text">🌐 외국어 (토익 등)</div>
+                    <div class="link-desc">어학시험 접수센터</div>
+                </a>
+                <a href="https://www.1365.go.kr/" target="_blank" class="link-card">
+                    <div class="link-icon-text">🧡 1365 자원봉사</div>
+                    <div class="link-desc">자원봉사포털 실적 확인</div>
+                </a>
+                <a href="https://www.work24.go.kr/" target="_blank" class="link-card">
+                    <div class="link-icon-text">💼 고용24 (진로)</div>
+                    <div class="link-desc">청년 진로 및 취업 정보</div>
+                </a>
+            </div>
+        </div>
+    </div> 
+
+    <div id="applyModal" class="modal-overlay" onclick="window.closeOutside(event, 'applyModal')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✨ 역량 배지 인증 신청</h3>
+                <button class="close-btn" onclick="window.closeApplyModal()">✕</button>
+            </div>
+            
+            <div class="form-group">
+                <label>1. 취득하신 외부 자격증을 선택하세요</label>
+                <select class="form-select" id="areaSelect" onchange="window.renderStudentCheckboxes()">
+                    <option value="">-- 자격증 영역 선택 --</option>
+                    <option value="S">[S] 정보화 역량 (컴활/ITQ 등)</option>
+                    <option value="R">[R] 한국사 역량</option>
+                    <option value="T">[T] 전공자격 역량 (기능사 등)</option>
+                    <option value="I">[I] 외국어 역량 (토익 등)</option>
+                </select>
+                <p style="font-size:11px; color:var(--text-gray); margin-top:5px; line-height:1.4;">※ 교내 성적, 예체능, 직업기초, 출결, 봉사는 교과/담임 선생님이 일괄 입력합니다.</p>
+            </div>
+
+            <div id="dynamicLogicSection" style="display: none;">
+                <div class="form-group">
+                    <label>2. 달성한 항목을 모두 체크하세요 (자동계산 적용)</label>
+                    <div id="checkboxContainer" class="checkbox-group"></div>
+                </div>
+                
+                <div class="calc-result" id="calcResultBox">
+                    현재 신청 포인트: <span id="currentPoint">0</span> 점
+                </div>
+
+                <div class="form-group">
+                    <label>3. 증빙 자료 첨부 (사진/PDF)</label>
+                    <input type="file" id="applyFileInput" class="form-input" accept="image/*, .pdf">
+                    <p style="font-size:10px; color:#e74c3c; margin-top:5px;">※ 사진은 자동으로 용량이 압축되어 전송됩니다.</p>
+                </div>
+
+                <button class="modal-submit-btn" id="btnSubmitApply" onclick="window.submitApplication()">해당 점수로 제출하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rankModal" class="modal-overlay" onclick="window.closeOutside(event, 'rankModal')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="rankModalTitle">🏆 명예의 전당 TOP 10</h3>
+                <button class="close-btn" onclick="window.closeRankModal()">✕</button>
+            </div>
+            <div class="ranking-list" id="rankModalList"></div>
+        </div>
+    </div>
+    
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, deleteDoc, updateDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         
-        // 1. 기본 앱 초기화 (중복 에러 방어)
         const app = !getApps().length ? initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG) : getApp();
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 2. 전역 객체에 안전하게 할당
         window.db = db; 
         window.authV10 = auth; 
         window.collection = collection; window.getDocs = getDocs; window.doc = doc; window.setDoc = setDoc;
@@ -920,51 +1160,74 @@
             }
         };
 
+        // 🔥 에러 방어 로직이 100% 적용된 완벽한 뱃지 렌더링 함수
         window.renderDashboardBadges = function() {
-            const container = document.getElementById('badgeGridContainer'); 
+            const container = document.getElementById('badgeGridContainer');
+            if (!container) return;
             container.innerHTML = '';
-            
-            window.AREAS.forEach(area => {
-                const passed = window.myPassData && window.myPassData[area] === true;
-                const score = (window.myScoreData || {})[area] || 0;
-                let tooltipText = BADGE_TOOLTIPS[window.CURRENT_GRADE][area];
+
+            const safeAreas = Array.isArray(window.AREAS) ? window.AREAS : [];
+            const grade = Number(window.CURRENT_GRADE) || 1;
+            const safeGradeItems = (window.EVAL_ITEMS_BY_GRADE && window.EVAL_ITEMS_BY_GRADE[grade]) ? window.EVAL_ITEMS_BY_GRADE[grade] : {};
+            const safeAreaNames = window.AREA_KOR_NAMES || window.AREA_NAMES || {};
+
+            safeAreas.forEach(area => {
+                const passed = !!(window.myPassData && window.myPassData[area] === true);
+                const score = Number((window.myScoreData || {})[area] || 0);
+
+                const itemsList = Array.isArray(safeGradeItems[area]) ? safeGradeItems[area] : [];
                 
-                let earnedText = "";
-                if (window.myCheckedItems && window.myCheckedItems[area]) {
-                    const itemsList = EVAL_ITEMS_BY_GRADE[window.CURRENT_GRADE][area] || [];
-                    let earnedLabels = [];
-                    const areaChecks = window.myCheckedItems[area];
-                    
-                    for (let key in areaChecks) {
-                        let val = areaChecks[key];
-                        let idx = parseInt(val);
-                        
+                // 툴팁 텍스트 자동 생성 (아이템 리스트 기준)
+                let tooltipText = itemsList.length > 0 ? itemsList.map(item => `• ${item.label}`).join('<br>') : `${safeAreaNames[area] || area} 영역`;
+
+                let earnedLabels = [];
+                const areaChecks = (window.myCheckedItems && window.myCheckedItems[area]) ? window.myCheckedItems[area] : null;
+
+                // Firebase에서 넘어온 데이터가 배열이든 객체든 완벽하게 처리
+                if (Array.isArray(areaChecks)) {
+                    areaChecks.forEach(val => {
+                        const idx = parseInt(val, 10);
+                        if (!isNaN(idx) && itemsList[idx]) {
+                            earnedLabels.push("✅ " + itemsList[idx].label);
+                        }
+                    });
+                } else if (areaChecks && typeof areaChecks === 'object') {
+                    for (const key in areaChecks) {
+                        const idx = parseInt(areaChecks[key], 10);
                         if (!isNaN(idx) && itemsList[idx]) {
                             earnedLabels.push("✅ " + itemsList[idx].label);
                         }
                     }
-                    
-                    if (earnedLabels.length > 0) {
-                        earnedText = "<div style='margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.2); text-align:left; font-size:12px;'><span style='color:#f1c40f; font-weight:900;'>[나의 획득 내역]</span><br>" + earnedLabels.join("<br>") + "</div>";
-                    } else {
-                        earnedText = "<div style='margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.2); text-align:left; font-size:11px; color:#aaa;'>[획득 내역 없음]</div>";
-                    }
-                } else {
-                    earnedText = "<div style='margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.2); text-align:left; font-size:11px; color:#aaa;'>[획득 내역 없음]</div>";
                 }
-                
-                const finalTooltip = `<div style="font-size:14px; margin-bottom:6px; color:#fff;"><b>현재 점수: <span style="color:#f1c40f">${score}점</span></b></div>` + 
-                                     `<div style="text-align:left; color:#ddd; font-size:11px; margin-bottom:8px; word-break:keep-all;">${tooltipText}</div>` + 
-                                     earnedText;
+
+                let earnedText = "";
+                if (earnedLabels.length > 0) {
+                    earnedText =
+                        "<div style='margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.2); text-align:left; font-size:12px;'>" +
+                        "<span style='color:#f1c40f; font-weight:900;'>[나의 획득 내역]</span><br>" +
+                        earnedLabels.join("<br>") +
+                        "</div>";
+                } else {
+                    earnedText =
+                        "<div style='margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.2); text-align:left; font-size:11px; color:#aaa;'>" +
+                        "[획득 내역 없음]</div>";
+                }
+
+                const finalTooltip =
+                    `<div style="font-size:14px; margin-bottom:6px; color:#fff;"><b>현재 점수: <span style="color:#f1c40f">${score}점</span></b></div>` +
+                    `<div style="text-align:left; color:#ddd; font-size:11px; margin-bottom:8px; word-break:keep-all;">${tooltipText}</div>` +
+                    earnedText;
 
                 container.innerHTML += `
                     <div class="badge-card ${passed ? 'active' : 'inactive'}">
                         <div class="badge-icon-wrapper">
-                            <img src="img/icon_${area.toLowerCase()}.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2942/2942784.png'">
+                            <img src="img/icon_${String(area).toLowerCase()}.png"
+                                 alt="${safeAreaNames[area] || area}"
+                                 onerror="this.src='https://cdn-icons-png.flaticon.com/512/2942/2942784.png'">
                             ${passed ? '<div class="check-mark">✔</div>' : ''}
                         </div>
                         <div class="badge-letter">[${area}]</div>
-                        <div class="badge-name">${AREA_KOR_NAMES[area]}</div>
+                        <div class="badge-name">${safeAreaNames[area] || area}</div>
                         <div class="badge-score">${score}점</div>
                         <div class="badge-tooltip">${finalTooltip}</div>
                     </div>
@@ -1020,7 +1283,6 @@
             });
             
             let currentSelectedArea = document.getElementById('areaSelect').value;
-            // 🔥 학생 신청 시에도 만점 상한선(CAPS) 강력 적용 (뻥튀기 원천 차단)
             let finalScore = Math.min(total, window.CAPS[window.CURRENT_GRADE][currentSelectedArea]);
             
             document.getElementById('currentPoint').innerText = finalScore;
@@ -1058,7 +1320,6 @@
                     reader.onerror = reject;
                 });
 
-                // 🔥 학생 신청 시 선택한 항목의 index들을 같이 저장함 (나중에 교사가 볼 수 있도록)
                 let checkedIndices = [];
                 document.querySelectorAll('#checkboxContainer input:checked').forEach(box => { 
                     checkedIndices.push(parseInt(box.dataset.index));
@@ -1072,7 +1333,7 @@
                     classNum: parseInt(window.myStudentId.substring(1,3)),
                     area: area,
                     score: score,
-                    checkedIndices: checkedIndices, // 체크 항목 전송
+                    checkedIndices: checkedIndices, 
                     fileData: reader.result,
                     fileType: fileType,
                     status: "대기중",
