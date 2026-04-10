@@ -622,7 +622,11 @@
                 });
                 apps.sort((a, b) => a.timestamp - b.timestamp); window.currentPendingApps = apps; 
                 document.getElementById('pendingCount').innerText = apps.length; 
-                if(apps.length === 0) { listEl.innerHTML = "<div style='text-align:center; padding:40px;'>🎉 승인 대기 중인 요청이 없습니다.</div>"; return; }
+                if(apps.length === 0) { 
+                    // 🔥 서류함 신청 내역 없을 때 흰색 네모 프레임 유지
+                    listEl.innerHTML = "<div style='text-align:center; padding:40px; color: var(--text-gray); font-weight: bold; background: white; border-radius: 16px; border: 1px solid #edf0f2;'>🎉 승인 대기 중인 요청이 없습니다.</div>"; 
+                    return; 
+                }
                 listEl.innerHTML = '';
                 apps.forEach(app => {
                     let dStr = new Date(app.timestamp).toISOString().slice(0,10);
@@ -637,7 +641,7 @@
             const contentBox = document.getElementById('proofContent');
             document.getElementById('proofModalTitle').innerText = `📄 제출된 증빙 자료`; 
             if(app.fileType === 'image') contentBox.innerHTML = `<img src="${app.fileData}" style="max-width:100%; max-height:55vh; border-radius:8px; object-fit:contain;">`;
-            else if(app.fileType === 'pdf') contentBox.innerHTML = `<iframe src="${app.fileData}" stylewidth:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
+            else if(app.fileType === 'pdf') contentBox.innerHTML = `<iframe src="${app.fileData}" style="width:100%; height:55vh; border:none; border-radius:8px;"></iframe>`;
             document.getElementById('proofModal').classList.add('active'); document.body.style.overflow = 'hidden';
         };
 
@@ -902,7 +906,7 @@
             }; reader.readAsArrayBuffer(fileInput.files[0]);
         };
 
-        // 🔥 [A4 가로 1장] 담임교사용 학급 전체 요약 포트폴리오 출력 함수
+        // 🔥 [A4 가로 반응형] 담임교사용 학급 전체 포트폴리오 출력 함수
         window.printClassSummary = async function() {
             if (!window.homeroomGrade || !window.homeroomClass) return alert("담임 학급 정보가 없습니다.");
             try {
@@ -984,30 +988,44 @@
 
                 const printWindow = window.open('', '_blank');
                 printWindow.document.write(`
-                    <html><head><title>학급 전체 요약 포트폴리오</title>
+                    <html><head><title>학급 포트폴리오</title>
                     <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
                     <style>
                         @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
-                        @page { size: A4 landscape; margin: 10mm; }
-                        body { font-family: 'Pretendard', sans-serif; background: #fff; color: #1a252f; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                        .print-container { width: 100%; height: 100%; display: flex; flex-direction: column; }
-                        .print-header { text-align: center; margin-bottom: 10px; border-bottom: 2px solid #3b71ca; padding-bottom: 5px; }
-                        .print-header h1 { margin: 0; font-size: 18px; font-weight: 900; color: #1a252f; }
-                        .grid-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5mm; align-content: start; }
-                        .student-card { border: 1px solid #d8dee8; border-radius: 8px; padding: 6px; display: flex; flex-direction: column; background: #fdfdfe; page-break-inside: avoid; height: 42mm; }
-                        .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; border-bottom: 1px dashed #edf0f2; padding-bottom: 4px; }
-                        .mini-photo { width: 30px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #edf0f2; background: #eee;}
-                        .mini-info { flex: 1; }
-                        .mini-id { font-size: 8px; color: #7f8c8d; font-weight: bold; }
-                        .mini-name { font-size: 13px; font-weight: 900; color: #2c3e50; line-height: 1.2; }
-                        .mini-score { font-size: 9px; color: #e74c3c; font-weight: bold; margin-top: 2px;}
-                        .card-chart { flex: 1; position: relative; width: 100%; display: flex; justify-content: center; align-items: center; }
+                        /* 🚀 A4, A3 용지에 관계없이 가로 방향으로 꽉 차게 반응형 비율 적용 */
+                        @page { size: landscape; margin: 8mm; } 
+                        html, body { width: 100%; height: 100%; margin: 0; padding: 0; background: #fff; }
+                        body { font-family: 'Pretendard', sans-serif; color: #1a252f; -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: hidden; }
+                        .print-container { width: 100%; height: 100%; display: flex; flex-direction: column; padding: 2mm; box-sizing: border-box;}
+                        
+                        .print-header { text-align: center; margin-bottom: 2vh; border-bottom: 2px solid #3b71ca; padding-bottom: 1vh; flex-shrink: 0; }
+                        .print-header h1 { margin: 0; font-size: 3vh; font-weight: 900; color: #1a252f; }
+                        
+                        /* 🚀 4줄 5칸 그리드. 남은 공간을 꽉 채우고 절대 다음 장으로 넘어가지 않음 */
+                        .grid-container { 
+                            display: grid; 
+                            grid-template-columns: repeat(5, 1fr); 
+                            grid-template-rows: repeat(4, 1fr); 
+                            gap: 1.5vh 1.5vw; 
+                            flex: 1; 
+                            min-height: 0;
+                        }
+                        
+                        .student-card { border: 1px solid #d8dee8; border-radius: 8px; padding: 1vh; display: flex; flex-direction: column; background: #fdfdfe; box-sizing: border-box; overflow: hidden; }
+                        .card-header { display: flex; align-items: center; gap: 0.8vw; margin-bottom: 0.5vh; border-bottom: 1px dashed #edf0f2; padding-bottom: 0.5vh; flex-shrink: 0; }
+                        .mini-photo { width: 3vw; height: 4vw; border-radius: 4px; object-fit: cover; border: 1px solid #edf0f2; background: #eee;}
+                        .mini-info { flex: 1; min-width: 0;}
+                        .mini-id { font-size: 1.3vh; color: #7f8c8d; font-weight: bold; line-height: 1; }
+                        .mini-name { font-size: 1.8vh; font-weight: 900; color: #2c3e50; line-height: 1.2; margin-top: 0.2vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+                        .mini-score { font-size: 1.4vh; color: #e74c3c; font-weight: bold; margin-top: 0.4vh;}
+                        
+                        .card-chart { flex: 1; position: relative; width: 100%; display: flex; justify-content: center; align-items: center; min-height: 0; }
                         .card-chart canvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
                     </style>
                     </head><body>
                         <div class="print-container">
                             <div class="print-header">
-                                <h1>🏆 ${window.homeroomGrade}학년 ${window.homeroomClass}반 스마트시티 역량 분포도</h1>
+                                <h1>🏆 ${window.homeroomGrade}학년 ${window.homeroomClass}반 스마트시티 학급 포트폴리오</h1>
                             </div>
                             <div class="grid-container">
                                 ${cardsHtml}
@@ -1025,7 +1043,7 @@
             } catch(e) { alert("출력 에러: " + e.message); }
         };
 
-        // 🔥 [A4 1장 핏 완벽 최적화] 3단 가로 누적 포트폴리오 (최신 버전 이식 완료)
+        // 🔥 [A4 1장 핏 완벽 최적화] 3단 가로 누적 포트폴리오
         window.printCertificate = async function(studentId) {
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
@@ -1362,7 +1380,7 @@
                 const btnTop10 = document.getElementById('btnHomeroomTop10');
                 if(btnTop10) { btnTop10.innerText = `🏆 ${window.homeroomGrade}학년 TOP 10 보기`; btnTop10.onclick = function() { window.openTeacherRankModal(window.homeroomGrade); }; }
                 
-                // 🔥 "학급 포트폴리오" 출력 버튼을 자동으로 추가하는 로직
+                // 🔥 "학급 포트폴리오" 출력 버튼 표시 로직
                 const printClassBtn = document.getElementById('btnClassPrint');
                 if(printClassBtn) {
                     printClassBtn.style.display = "inline-block";
