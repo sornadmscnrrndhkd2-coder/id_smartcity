@@ -335,7 +335,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"
+  measurementId: "G-3SL84TXVHD" 
         };
     </script>
 
@@ -1360,11 +1360,7 @@
                     finalFileData = reader.result;
                 }
 
-                // 학생이 체크한 항목 번호들 수집
-                let checkedIndices = [];
-                document.querySelectorAll('#checkboxContainer input:checked').forEach(box => { 
-                    checkedIndices.push(parseInt(box.dataset.index));
-                });
+            
 
                 // 파이어베이스(DB)로 전송
                 await window.addDoc(window.collection(window.db, "applications"), {
@@ -1375,7 +1371,6 @@
                     classNum: parseInt(window.myStudentId.substring(1,3)),
                     area: area,
                     score: score,
-                    checkedIndices: checkedIndices, 
                     fileData: finalFileData,    // 🔥 압축된 데이터(finalFileData)를 전송!
                     fileType: fileType,
                     status: "대기중",
