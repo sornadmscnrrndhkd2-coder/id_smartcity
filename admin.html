@@ -306,7 +306,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"   
+  measurementId: "G-3SL84TXVHD"
         };
     </script>
 
@@ -316,7 +316,7 @@
         window.AREA_NAMES = { S: '정보화', M: '전공성적', A: '예체능', R: '한국사', T: '전공자격', C: '직업기초', I: '외국어', Tr: '성실', Y: '인성' };
         
         window.CAPS = { 
-            1: { S:40, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 
+            1: { S:50, M:50, A:30, R:30, T:60, C:50, I:40, Tr:50, Y:30 }, 
             2: { S:50, M:50, A:30, R:40, T:80, C:50, I:40, Tr:50, Y:30 }, 
             3: { S:50, M:60, A:30, R:30, T:90, C:50, I:50, Tr:60, Y:30 }  
         };
@@ -329,7 +329,7 @@
 
         window.EVAL_ITEMS_BY_GRADE = {
             1: {
-                'S': [{ label: 'ITQ 2과목 합격(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목 합격(20점) (등급 무관)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'S': [{ label: '컴활 2급 이상 합격(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 2과목 합격(40점)', score: 40, group: 's_itq' }, { label: 'ITQ 1과목 합격(20점) (등급 무관)', score: 20, group: 's_itq' }, { label: 'AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
                 'M': [{ label: '전공 A 4개(50점)', score: 50, group: 'm_grade' }, { label: '전공 A 3개(40점)', score: 40, group: 'm_grade' }, { label: '전공 A 2개(20점)', score: 20, group: 'm_grade' }, { label: '전공 B 2개(10점)', score: 10, group: 'm_grade' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
                 'A': [{ label: 'PAPS 전체 1등급(30점)', score: 30, group: 'a_paps' }, { label: 'PAPS 전체 2등급(20점)', score: 20, group: 'a_paps' }, { label: 'PAPS 전체 3등급(10점)', score: 10, group: 'a_paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'a_sports_c' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'a_sports_p' }],
                 'R': [{ label: '한능검 3급(30점)', score: 30, group: 'r_his' }, { label: '한능검 4급(20점)', score: 20, group: 'r_his' }, { label: '한능검 5~6급(10점)', score: 10, group: 'r_his' }],
@@ -340,7 +340,7 @@
                 'Y': [{ label: '봉사 16시간+독서 4권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 12시간+독서 3권이상(20점)', score: 20, group: 'y_set' }]
             },
             2: {
-                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'S': [{ label: '컴활2급 이상 또는 ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(30점)', score: 30, group: 's_itq' }, { label: 'ITQ 2과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
                 'M': [{ label: '전공 A 4개 이상(50점)', score: 50, group: 'm_grade' }, { label: '전공 A 3개(30점)', score: 30, group: 'm_grade' }, { label: '전공 A 2개(10점)', score: 10, group: 'm_grade' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
                 'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'a_paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'a_paps' }, { label: 'PAPS 전체 3등급(5점)', score: 5, group: 'a_paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'a_sports_c' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'a_sports_p' }],
                 'R': [{ label: '한능검 1급(40점)', score: 40, group: 'r_his' }, { label: '한능검 2급(30점)', score: 30, group: 'r_his' }, { label: '한능검 3급(20점)', score: 20, group: 'r_his' }, { label: '한능검 4급(10점)', score: 10, group: 'r_his' }],
@@ -351,7 +351,7 @@
                 'Y': [{ label: '봉사 20시간+독서 4권이상(30점)', score: 30, group: 'y_set' }, { label: '봉사 16시간+독서 3권이상(20점)', score: 20, group: 'y_set' }]
             },
             3: {
-                'S': [{ label: 'ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
+                'S': [{ label: '컴활2급 이상 또는 ITQ 마스터(3종A)(50점)', score: 50, group: 's_itq' }, { label: 'ITQ 3과목 합격(10점)', score: 10, group: 's_itq' }, { label: '(당해연도)AI관련 자격증 취득(20점)', score: 20, group: 's_ai' }],
                 'M': [{ label: '전공 A 6개(60점)', score: 60, group: 'm_grade' }, { label: '전공 A 4개(40점)', score: 40, group: 'm_grade' }, { label: '캡스톤 디자인 작품 전시 및 발표(40점)', score: 40, group: 'm_caps' }, { label: '전공 관련 교외대회(공모전) 입상(30점)', score: 30, group: 'm_contest' }],
                 'A': [{ label: 'PAPS 전체 1등급(20점)', score: 20, group: 'a_paps' }, { label: 'PAPS 전체 2등급(10점)', score: 10, group: 'a_paps' }, { label: '학교스포츠클럽 대회 입상(20점)', score: 20, group: 'a_sports_c' }, { label: '학교스포츠클럽 활동 성실 참여(10점)', score: 10, group: 'a_sports_p' }],
                 'R': [{ label: '한능검 1급(30점)', score: 30, group: 'r_his' }, { label: '한능검 2급(20점)', score: 20, group: 'r_his' }, { label: '한능검 3급(10점)', score: 10, group: 'r_his' }],
@@ -498,7 +498,6 @@
                     <button onclick="window.loadData()" class="btn btn-green" style="padding: 8px 20px;">🔄 조회</button>
                     
                     <div class="action-group">
-                        <button onclick="window.toggleEditMode()" class="btn btn-orange" id="btnEditMode">✏️ 수동 점수 수정</button>
                         <button onclick="window.deleteSelectedStudents()" class="btn btn-red">🗑️ 선택 삭제</button>
                     </div>
                 </div>
@@ -594,9 +593,9 @@
                             
                             <select id="tHomeroom" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
                                 <option value="">비담임</option>
-                                <option value="1-1">1-1</option><option value="1-2">1-2</option><option value="1-3">1-3</option><option value="1-4">1-4</option><option value="1-5">1-5</option><option value="1-6">1-6</option>
-                                <option value="2-1">2-1</option><option value="2-2">2-2</option><option value="2-3">2-3</option><option value="2-4">2-4</option><option value="2-5">2-5</option><option value="2-6">2-6</option>
-                                <option value="3-1">3-1</option><option value="3-2">3-2</option><option value="3-3">3-3</option><option value="3-4">3-4</option><option value="3-5">3-5</option><option value="3-6">3-6</option>
+                                <option value="1-1">1-1</option><option value="1-2">1-2</option><option value="1-3">1-3</option><option value="1-4">1-4</option><option value="1-5">1-5</option><option value="1-6">1-6</option><option value="1-7">1-7</option><option value="1-8">1-8</option><option value="1-9">1-9</option><option value="1-10">1-10</option>
+                                <option value="2-1">2-1</option><option value="2-2">2-2</option><option value="2-3">2-3</option><option value="2-4">2-4</option><option value="2-5">2-5</option><option value="2-6">2-6</option><option value="2-7">2-7</option><option value="2-8">2-8</option><option value="2-9">2-9</option><option value="2-10">2-10</option>
+                                <option value="3-1">3-1</option><option value="3-2">3-2</option><option value="3-3">3-3</option><option value="3-4">3-4</option><option value="3-5">3-5</option><option value="3-6">3-6</option><option value="3-7">3-7</option><option value="3-8">3-8</option><option value="3-9">3-9</option><option value="3-10">3-10</option>
                             </select>
 
                             <select id="tSubject" style="padding:10px; border:1px solid #ccc; border-radius:5px; background-color: #ebf5fb;">
@@ -736,9 +735,9 @@
                     <label style="font-size: 11px; color: #7f8c8d; font-weight: bold; display: block; margin-bottom: 4px;">담임 학급 설정</label>
                     <select id="edit-tHomeroom" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
                         <option value="">비담임</option>
-                        <option value="1-1">1-1</option><option value="1-2">1-2</option><option value="1-3">1-3</option><option value="1-4">1-4</option><option value="1-5">1-5</option><option value="1-6">1-6</option>
-                        <option value="2-1">2-1</option><option value="2-2">2-2</option><option value="2-3">2-3</option><option value="2-4">2-4</option><option value="2-5">2-5</option><option value="2-6">2-6</option>
-                        <option value="3-1">3-1</option><option value="3-2">3-2</option><option value="3-3">3-3</option><option value="3-4">3-4</option><option value="3-5">3-5</option><option value="3-6">3-6</option>
+                        <option value="1-1">1-1</option><option value="1-2">1-2</option><option value="1-3">1-3</option><option value="1-4">1-4</option><option value="1-5">1-5</option><option value="1-6">1-6</option><option value="1-7">1-7</option><option value="1-8">1-8</option><option value="1-9">1-9</option><option value="1-10">1-10</option>
+                        <option value="2-1">2-1</option><option value="2-2">2-2</option><option value="2-3">2-3</option><option value="2-4">2-4</option><option value="2-5">2-5</option><option value="2-6">2-6</option><option value="2-7">2-7</option><option value="2-8">2-8</option><option value="2-9">2-9</option><option value="2-10">2-10</option>
+                        <option value="3-1">3-1</option><option value="3-2">3-2</option><option value="3-3">3-3</option><option value="3-4">3-4</option><option value="3-5">3-5</option><option value="3-6">3-6</option><option value="3-7">3-7</option><option value="3-8">3-8</option><option value="3-9">3-9</option><option value="3-10">3-10</option>
                     </select>
                 </div>
                 <div>
