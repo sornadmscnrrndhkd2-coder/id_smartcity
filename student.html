@@ -329,13 +329,7 @@
     <script>
         // 🚨 실제 API 키를 입력하세요.
         window.MY_GLOBAL_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
-  authDomain: "induk-smartcity.firebaseapp.com",
-  projectId: "induk-smartcity",
-  storageBucket: "induk-smartcity.firebasestorage.app",
-  messagingSenderId: "836222545739",
-  appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD" 
+        
         };
     </script>
 
@@ -1306,25 +1300,67 @@
 
             const btn = document.getElementById('btnSubmitApply');
             btn.disabled = true;
-            btn.innerText = "⏳ 신청 중...";
+            btn.innerText = "⏳ 압축 및 신청 중...";
 
             try {
                 const file = fileInput.files[0];
                 const fileType = file.type.startsWith('application/pdf') ? 'pdf' : 'image';
                 
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                
-                await new Promise((resolve, reject) => {
-                    reader.onload = resolve;
-                    reader.onerror = reject;
-                });
+                let finalFileData = ""; // 🔥 압축된 최종 데이터를 담을 빈 그릇
 
+                // 🔥 1. 이미지일 경우: 스마트폰 사진을 1000px 사이즈, 60% 화질로 강력 압축
+                if (fileType === 'image') {
+                    finalFileData = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = new Image();
+                            img.onload = function() {
+                                const canvas = document.createElement('canvas');
+                                let width = img.width;
+                                let height = img.height;
+                                const MAX_SIZE = 1000; // 가로세로 최대 1000픽셀로 축소
+
+                                if (width > height && width > MAX_SIZE) {
+                                    height *= MAX_SIZE / width;
+                                    width = MAX_SIZE;
+                                } else if (height > MAX_SIZE) {
+                                    width *= MAX_SIZE / height;
+                                    height = MAX_SIZE;
+                                }
+
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, width, height);
+
+                                // JPEG 포맷으로 화질 60% 압축 적용하여 반환
+                                resolve(canvas.toDataURL('image/jpeg', 0.6));
+                            };
+                            img.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                } 
+                // 🔥 2. PDF일 경우: 압축이 어려우므로 용량 제한(800KB)만 확인
+                else {
+                    if (file.size > 800 * 1024) {
+                        alert("PDF 파일 용량이 너무 큽니다 (최대 800KB). 스크린샷(사진)으로 찍어서 올려주세요.");
+                        btn.disabled = false; btn.innerText = "해당 점수로 제출하기";
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    await new Promise(resolve => { reader.onload = resolve; });
+                    finalFileData = reader.result;
+                }
+
+                // 학생이 체크한 항목 번호들 수집
                 let checkedIndices = [];
                 document.querySelectorAll('#checkboxContainer input:checked').forEach(box => { 
                     checkedIndices.push(parseInt(box.dataset.index));
                 });
 
+                // 파이어베이스(DB)로 전송
                 await window.addDoc(window.collection(window.db, "applications"), {
                     studentUid: window.myAuthUid,
                     studentId: window.myStudentId,
@@ -1333,7 +1369,8 @@
                     classNum: parseInt(window.myStudentId.substring(1,3)),
                     area: area,
                     score: score,
-                    fileData: reader.result,
+                    checkedIndices: checkedIndices, 
+                    fileData: finalFileData,    // 🔥 압축된 데이터(finalFileData)를 전송!
                     fileType: fileType,
                     status: "대기중",
                     timestamp: Date.now()
