@@ -896,8 +896,8 @@
                             const targetDocId = qSnap.docs[0].id; const existingData = qSnap.docs[0].data();
                             const oldDirSnap = await window.getDoc(window.doc(window.db, "directory", oldId));
                             let prefix = calculateAdmissionPrefix(newGrade); 
-                            if(oldDirSnap.exists()) { let match = oldDirSnap.data().authEmail.match(/stu(\d+)_/); if(match) prefix = match[1]; }
-                            let newAuthEmail = `stu${prefix}_${newId}@induk.hs.kr`;
+                            // 🔥 [핵심 수정] 기존 directory(장부)에 이메일이 존재하면 그 '평생 고정 이메일'을 그대로 유지하고, 없으면 새로 만듭니다.
+                            let newAuthEmail = oldDirSnap.exists() && oldDirSnap.data().authEmail ? oldDirSnap.data().authEmail : `stu${prefix}_${newId}@induk.hs.kr`;
                             let y1 = existingData.year_1 || {}; let y1s = y1.scores || {}; let y1c = y1.checked_items || {};
                             let y2 = existingData.year_2 || {}; let y2s = y2.scores || {}; let y2c = y2.checked_items || {};
                             let g1_R = y1s.R || 0; let g1_T = y1s.T || 0; let g2_R = y2s.R || 0; let g2_T = y2s.T || 0; let g2_I = y2s.I || 0;
