@@ -226,7 +226,7 @@
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"    // API KEY 등 복붙!
+  measurementId: "G-3SL84TXVHD" // API KEY 등 복붙!
         };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app); 
@@ -281,57 +281,38 @@
             try {
                 await setPersistence(auth, isAutoLogin ? browserLocalPersistence : browserSessionPersistence);
                 
-                let emailsToTry = [idVal];
+                let finalLoginEmail = idVal;
 
-                // 이메일 형식이 아닐 때만 포맷 자동 생성
+                // 이메일 형식이 아닐 때만 아이디 변환 및 탐색
                 if (!idVal.includes('@')) {
-                    if (/^\d{5}$/.test(idVal)) {
-                        // 학생 학번인 경우 (연도별 스마트 식별자 생성)
-                        const grade = parseInt(idVal.charAt(0));
-                        const today = new Date();
-                        let currentYear = today.getFullYear();
-                        let currentMonth = today.getMonth() + 1;
-                        let academicYear = currentMonth <= 2 ? currentYear - 1 : currentYear;
-                        let admissionYear = academicYear - grade + 1;
-                        let prefix = String(admissionYear).slice(-2);
-
-                        // 💡 핵심: 최신 아이디부터 옛날 아이디까지 3번 연속으로 찔러봅니다! (학생은 모름)
-                        emailsToTry = [
-                            `stu${prefix}_${idVal}@induk.hs.kr`, // 1순위: 최신 (stu26_10101)
-                            `stu_${idVal}@induk.hs.kr`,          // 2순위: 구버전 (stu_10101)
-                            `${idVal}@induk.hs.kr`               // 3순위: 극초기버전 (10101)
-                        ];
+                    if (currentMode === 'student' && /^\d{5}$/.test(idVal)) {
+                        // 🔥 1. [핵심] DB directory(전화번호부)에서 평생 고정 이메일을 찾아옵니다!
+                        btn.innerText = "계정 정보 찾는 중... 🔍";
+                        const dirSnap = await getDoc(doc(db, "directory", idVal));
+                        
+                        if (!dirSnap.exists()) {
+                            throw new Error("not_registered");
+                        }
+                        
+                        finalLoginEmail = dirSnap.data().authEmail;
+                        
                     } else if (idVal === 'admin') {
-                        // 🚨 2. 여기에 최고관리자 이메일을 꼭 다시 넣어주세요! 🚨
-                        emailsToTry = ['admin@naver.com']; 
+                        // 🚨 최고관리자 이메일 입력
+                        finalLoginEmail = 'admin@naver.com'; 
                     } else {
                         // 교사 아이디인 경우
-                        emailsToTry = [`${idVal}@induk.hs.kr`];
+                        finalLoginEmail = `${idVal}@induk.hs.kr`;
                     }
                 }
 
-                let userCredential = null;
-                let lastError = null;
-
-                // 만들어진 이메일 배열을 순회하며 로그인 시도 (눈에 보이지 않는 속도)
-                for (let email of emailsToTry) {
-                    try {
-                        userCredential = await signInWithEmailAndPassword(auth, email, pwVal);
-                        break; // 성공하면 루프 즉시 탈출!
-                    } catch (error) {
-                        lastError = error;
-                        // 실패하면 다음 이메일 포맷으로 묵묵히 재시도
-                    }
-                }
-
-                if (!userCredential) {
-                    throw lastError; // 3번 다 실패하면 최종 에러 발생
-                }
-
+                // 🔥 2. 찾아낸 진짜 이메일로 깔끔하게 1번만 파이어베이스 로그인 시도!
+                btn.innerText = "로그인 판독 중... ⏳";
+                const userCredential = await signInWithEmailAndPassword(auth, finalLoginEmail, pwVal);
+                
                 const uid = userCredential.user.uid;
                 btn.innerText = "권한 판별 중... 🔍";
 
-                // 2. 권한 판별 (관리자 -> 교사 -> 학생)
+                // 3. 권한 판별 (관리자 -> 교사 -> 학생)
                 const adminSnap = await getDoc(doc(db, "admin_users", uid));
                 if (adminSnap.exists()) {
                     sessionStorage.setItem('userRole', 'admin');
@@ -370,14 +351,16 @@
                 console.error("🚨 로그인 실패:", error);
                 errorMsg.style.display = 'block';
                 
-                if (error.message === "role_not_found") {
+                if (error.message === "not_registered") {
+                    errorMsg.innerText = "등록되지 않은 학번이거나, 아직 진급 처리가 완료되지 않았습니다.";
+                } else if (error.message === "role_not_found") {
                     errorMsg.innerText = "계정은 존재하나 시스템 권한이 부여되지 않았습니다.";
                 } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
                     errorMsg.innerText = "아이디 또는 비밀번호가 일치하지 않습니다.";
                 } else if (error.code === 'auth/too-many-requests') {
                     errorMsg.innerText = "로그인 실패가 반복되어 일시적으로 잠겼습니다. 잠시 후 다시 시도해주세요.";
                 } else {
-                    errorMsg.innerText = `로그인 오류: ${error.code}`;
+                    errorMsg.innerText = `로그인 오류: ${error.code || error.message}`;
                 }
                 
                 auth.signOut();
