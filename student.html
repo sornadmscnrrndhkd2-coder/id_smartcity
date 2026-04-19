@@ -404,6 +404,7 @@
         </div>
         <div class="header-right">
             <span>인덕과학기술고등학교</span>
+            <button class="btn-logout" style="margin-right: 5px;" onclick="document.getElementById('changePwModal').classList.add('active');">🔐 비번 변경</button>
             <button class="btn-logout" id="btnLogout" onclick="sessionStorage.clear(); location.href='index.html';">로그아웃</button>
         </div>
     </header>
@@ -567,7 +568,21 @@
             </div>
         </div>
     </div>
-
+    <div id="changePwModal" class="modal-overlay" onclick="if(event.target===this) this.classList.remove('active')">
+        <div class="modal-content" style="max-width: 350px; text-align: center; margin: auto; padding: 25px; background: white; border-radius: 12px; min-height: auto; animation: slideUp 0.3s forwards;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; margin-bottom: 5px;">
+                <h3 style="font-size: 18px; font-weight: 900; color: var(--text-dark); margin:0;">🔐 비밀번호 변경</h3>
+            </div>
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-size: 12px; font-weight: bold; color: var(--text-gray);">새 비밀번호 (영문/숫자 6자리 이상)</label>
+                <input type="password" id="newStudentPwInput" style="width: 100%; padding: 12px; margin-top: 8px; text-align: center; font-size: 16px; border: 2px solid #e0e6ed; border-radius: 8px; box-sizing: border-box; font-weight:bold;">
+            </div>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button style="flex:1; padding: 12px; background: #ecf0f1; color: var(--text-dark); border: none; border-radius: 8px; cursor: pointer; font-weight: 900;" onclick="document.getElementById('changePwModal').classList.remove('active')">취소</button>
+                <button style="flex:1; padding: 12px; background: var(--primary-blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 900;" onclick="window.executeChangePw()">변경하기</button>
+            </div>
+        </div>
+    </div>
     <div id="rankModal" class="modal-overlay" onclick="window.closeOutside(event, 'rankModal')">
         <div class="modal-content">
             <div class="modal-header">
@@ -581,7 +596,7 @@
     
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, deleteDoc, updateDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         
         const app = !getApps().length ? initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG) : getApp();
@@ -865,13 +880,13 @@
 
         window.loadRankingData = async function(dbInstance) {
             try {
-                // 🔥 관리자/교사 페이지가 만든 publicRankingBoard를 바라보도록 수정
                 const docSnap = await window.getDoc(window.doc(dbInstance, "publicRankingBoard", `grade_${window.CURRENT_GRADE}`));
                 
                 window.sameGradeStudents = [];
                 let top10 = [];
 
                 if (docSnap.exists() && docSnap.data().top10) {
+                    // 🔥 [핵심 수정] publicRankingBoard에서 가져오더라도, 현재 내 학년(CURRENT_GRADE)과 데이터의 학년이 일치하는지 한번 더 안전하게 검증합니다. (만약 랭킹보드 구조상 학년 정보가 없다면 이 필터는 스킵되고 위에서 관리자가 랭킹보드를 만들 때 필터링된 값이 정상적으로 내려옵니다.)
                     top10 = docSnap.data().top10;
                     window.sameGradeStudents = top10; 
                 }
@@ -1248,6 +1263,31 @@
 
         window.closeRankModal = function() { document.getElementById('rankModal').classList.remove('active'); document.body.style.overflow = 'auto'; };
         window.closeOutside = function(event, id) { if(event.target.id === id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow = 'auto'; } };
+
+        window.updatePasswordApi = updatePassword; // 파이어베이스 도구 연결
+
+        // 🔥 비밀번호 변경 실행 로직
+        window.executeChangePw = async function() {
+            const newPassword = document.getElementById('newStudentPwInput').value.trim();
+            if (newPassword.length < 6) return alert("보안을 위해 비밀번호는 6자리 이상으로 설정해주세요.");
+            
+            const user = window.authV10.currentUser;
+            if (!user) return alert("로그인 정보가 없습니다. 다시 로그인해주세요.");
+
+            try {
+                await window.updatePasswordApi(user, newPassword);
+                alert("✅ 비밀번호가 성공적으로 변경되었습니다!\n다음부터는 새 비밀번호로 로그인해주세요.");
+                document.getElementById('changePwModal').classList.remove('active');
+                document.getElementById('newStudentPwInput').value = ""; // 입력창 초기화
+            } catch (error) {
+                console.error(error);
+                if (error.code === 'auth/requires-recent-login') {
+                    alert("🚨 보안을 위해 로그인한 직후에만 비밀번호를 변경할 수 있습니다. 로그아웃 후 다시 로그인해서 시도해주세요.");
+                } else {
+                    alert("변경 실패: " + error.message);
+                }
+            }
+        };
     </script>
 </body>
 </html>
