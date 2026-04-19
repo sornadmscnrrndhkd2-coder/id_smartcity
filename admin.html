@@ -998,14 +998,29 @@
             document.getElementById('rankModal').style.display = 'flex'; document.body.style.overflow = 'hidden';
             try {
                 const qSnap = await window.getDocs(window.collection(window.db, "students")); let students = [];
-                qSnap.forEach(doc => { let data = doc.data(); if(data.current_grade === grade && data[`year_${grade}`]) students.push({ name: data.name, classStr: `${grade}-${parseInt(String(data.current_studentId).substring(1, 3), 10)}`, score: data[`year_${grade}`].total_score || 0, yearData: data[`year_${grade}`] }); });
+                qSnap.forEach(doc => { 
+                    let data = doc.data(); 
+                    // 🔥 [핵심 필터] '현재 학년'이 조회하려는 학년과 일치하는 학생의 해당 학년 점수만 가져옵니다!
+                    if(data.current_grade === grade && data[`year_${grade}`]) {
+                        students.push({ 
+                            name: data.name, 
+                            classStr: `${grade}-${parseInt(String(data.current_studentId).substring(1, 3), 10)}`, 
+                            score: data[`year_${grade}`].total_score || 0, 
+                            yearData: data[`year_${grade}`] 
+                        }); 
+                    }
+                });
                 students.sort((a, b) => {
                     if (b.score !== a.score) return b.score - a.score;
                     const getSc = (s, area) => (s.yearData && s.yearData.scores && s.yearData.scores[area]) ? s.yearData.scores[area] : 0;
-                    if (getSc(b, 'T') !== getSc(a, 'T')) return getSc(b, 'T') - getSc(a, 'T'); if (getSc(b, 'M') !== getSc(a, 'M')) return getSc(b, 'M') - getSc(a, 'M');
-                    if (getSc(b, 'Tr') !== getSc(a, 'Tr')) return getSc(b, 'Tr') - getSc(a, 'Tr'); if (getSc(b, 'S') !== getSc(a, 'S')) return getSc(b, 'S') - getSc(a, 'S');
-                    if (getSc(b, 'C') !== getSc(a, 'C')) return getSc(b, 'C') - getSc(a, 'C'); if (getSc(b, 'I') !== getSc(a, 'I')) return getSc(b, 'I') - getSc(a, 'I');
-                    if (getSc(b, 'R') !== getSc(a, 'R')) return getSc(b, 'R') - getSc(a, 'R'); if (getSc(b, 'A') !== getSc(a, 'A')) return getSc(b, 'A') - getSc(a, 'A');
+                    if (getSc(b, 'T') !== getSc(a, 'T')) return getSc(b, 'T') - getSc(a, 'T'); 
+                    if (getSc(b, 'M') !== getSc(a, 'M')) return getSc(b, 'M') - getSc(a, 'M');
+                    if (getSc(b, 'Tr') !== getSc(a, 'Tr')) return getSc(b, 'Tr') - getSc(a, 'Tr'); 
+                    if (getSc(b, 'S') !== getSc(a, 'S')) return getSc(b, 'S') - getSc(a, 'S');
+                    if (getSc(b, 'C') !== getSc(a, 'C')) return getSc(b, 'C') - getSc(a, 'C'); 
+                    if (getSc(b, 'I') !== getSc(a, 'I')) return getSc(b, 'I') - getSc(a, 'I');
+                    if (getSc(b, 'R') !== getSc(a, 'R')) return getSc(b, 'R') - getSc(a, 'R'); 
+                    if (getSc(b, 'A') !== getSc(a, 'A')) return getSc(b, 'A') - getSc(a, 'A');
                     return String(a.name).localeCompare(String(b.name));
                 });
                 let top10 = students.slice(0, 10); modalList.innerHTML = '';
