@@ -605,6 +605,7 @@
 
         window.db = db; 
         window.authV10 = auth; 
+        window.updatePasswordApi = updatePassword; // 🔥 올바른 방(module)으로 이사 완료!
         window.collection = collection; window.getDocs = getDocs; window.doc = doc; window.setDoc = setDoc;
         window.getDoc = getDoc; window.updateDoc = updateDoc; window.deleteDoc = deleteDoc; window.query = query;
         window.where = where; window.increment = increment; window.addDoc = addDoc;
@@ -1264,7 +1265,7 @@
         window.closeRankModal = function() { document.getElementById('rankModal').classList.remove('active'); document.body.style.overflow = 'auto'; };
         window.closeOutside = function(event, id) { if(event.target.id === id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow = 'auto'; } };
 
-        window.updatePasswordApi = updatePassword; // 파이어베이스 도구 연결
+        
 
         // 🔥 비밀번호 변경 실행 로직
         window.executeChangePw = async function() {
