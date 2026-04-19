@@ -1076,7 +1076,56 @@
                 await batch.commit(); alert("✅ 삭제 완료"); window.loadData();
             } catch(e) { alert("에러"); }
         };
+// 🔥 [데이터 보존형] 학생 비밀번호 초기화 (Auth 재생성 & 데이터 이관)
+window.resetStudentPassword = async function(studentId, name) {
+            if(!confirm(`${name}(${studentId}) 학생의 비밀번호를 '123456'으로 초기화하시겠습니까?\n\n(🚨잠깐! 파이어베이스 Auth 콘솔에서 해당 계정을 먼저 삭제하셨나요?)`)) return;
 
+            try {
+                // 1. 기존 장부(directory)에서 이전 UID와 이메일 찾기
+                const dirRef = window.doc(window.db, "directory", String(studentId));
+                const dirSnap = await window.getDoc(dirRef);
+                
+                if(!dirSnap.exists()) return alert("등록되지 않은 학생입니다.");
+                const oldUid = dirSnap.data().stableId;
+                const authEmail = dirSnap.data().authEmail;
+
+                // 2. 새 Auth 계정 생성 (초기비번 123456)
+                let newUid = null;
+                try {
+                    const cred = await window.createUserWithEmailAndPassword(window.shadowAuth, authEmail, "123456");
+                    newUid = cred.user.uid;
+                    await window.signOut(window.shadowAuth); // 보이지 않는 곳에서 생성 후 바로 로그아웃
+                } catch (authErr) {
+                    if(authErr.code === 'auth/email-already-in-use') {
+                        return alert(`🚨 중복 오류: 파이어베이스 Auth 메뉴에서 [ ${authEmail} ] 계정을 삭제하신 후 다시 눌러주세요.`);
+                    }
+                    throw authErr;
+                }
+
+                // 3. 데이터 이사하기 (Migration)
+                const oldDocRef = window.doc(window.db, "students", oldUid);
+                const newDocRef = window.doc(window.db, "students", newUid);
+                const oldDataSnap = await window.getDoc(oldDocRef);
+
+                if(oldDataSnap.exists()) {
+                    const batch = window.writeBatch(window.db);
+                    
+                    // 새 UID 방에 예전 점수/배지 복사
+                    batch.set(newDocRef, oldDataSnap.data());
+                    // directory 장부의 방 번호를 새 UID로 업데이트
+                    batch.update(dirRef, { stableId: newUid, updatedAt: window.serverTimestamp() });
+                    // 예전 UID 방 폐기
+                    batch.delete(oldDocRef);
+                    
+                    await batch.commit();
+                }
+
+                alert(`✅ 성공! ${name} 학생의 비밀번호가 123456으로 초기화되었으며, 기존 점수와 배지는 안전하게 보존되었습니다.`);
+                window.loadData();
+            } catch(e) {
+                alert("초기화 실패: " + e.message);
+            }
+        };
         document.getElementById("uploadTeacherExcelBtn").addEventListener("click", async () => {
             const fileInput = document.getElementById("teacherExcelInput"); if (!fileInput.files[0]) return alert("파일 선택");
             const btn = document.getElementById("uploadTeacherExcelBtn"); btn.innerText = "⏳ 생성 중..."; btn.disabled = true;
@@ -1256,7 +1305,7 @@
                 students.forEach(s => {
                     let sc = s.yearData.scores || {}; let p = s.yearData.pass || {}; let d = s.yearData.delivery_status || {};
                     let pHtml = s.photo ? `<img src="${s.photo}" class="profile-img" onclick="window.openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
-                    let rHtml = `<tr class="${(s.yearData.earned_badges||0)>=6?'certified-row':''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}"></td><td>${s.dept}</td><td>${s.id}</td><td style="text-align:left;display:flex;justify-content:space-between;"><div>${pHtml} <strong>${s.name}</strong></div><div onclick="window.openEditModal('${s.docId}', ${fGrade})" style="cursor:pointer;">✏️</div></td>`;
+                    let rHtml = `<tr class="${(s.yearData.earned_badges||0)>=6?'certified-row':''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}"></td><td>${s.dept}</td><td>${s.id}</td><td style="text-align:left;display:flex;justify-content:space-between;"><div>${pHtml} <strong>${s.name}</strong></div><div style="display:flex; gap:10px;"><div onclick="window.openEditModal('${s.docId}', ${fGrade})" style="cursor:pointer;" title="개별 점수 수정">✏️</div><div onclick="window.resetStudentPassword('${s.id}', '${s.name}')" style="cursor:pointer;" title="비밀번호 초기화">🔄</div></div></td>`;
                     window.AREAS.forEach(area => { let isD = d[area] === true; let cell = sc[area] || 0; if(p[area]) cell = `<span class="pass-star">★</span>${cell}<br><span class="badge-status ${isD?'status-done':'status-yet'}" onclick="window.toggleDelivery('${s.docId}', ${fGrade}, '${area}', ${isD})">${isD?'지급완료':'미지급'}</span>`; rHtml += `<td class="score-cell">${cell}</td>`; });
                     let cBtn = `<button class="btn ${fGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="window.printCertificate('${s.id}')">🖨️</button>`; 
                     rHtml += `<td style="color:#2980b9;font-weight:bold;">${s.yearData.total_score||0}점</td><td><strong>${s.yearData.earned_badges||0}개</strong></td><td style="color:#27ae60;font-weight:bold;">${s.yearData.title||'진행중'}</td><td>${cBtn}</td></tr>`; tbody.innerHTML += rHtml;
