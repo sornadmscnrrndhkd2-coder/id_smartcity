@@ -1093,10 +1093,8 @@
         };
 // 🔥 [데이터 보존형] 학생 비밀번호 초기화 (Auth 재생성 & 데이터 이관)
 window.resetStudentPassword = async function(studentId, name) {
-            if(!confirm(`${name}(${studentId}) 학생의 비밀번호를 '123456'으로 초기화하시겠습니까?\n\n(🚨잠깐! 파이어베이스 Auth 콘솔에서 해당 계정을 먼저 삭제하셨나요?)`)) return;
-
             try {
-                // 1. 기존 장부(directory)에서 이전 UID와 이메일 찾기
+                // 1. 팝업을 띄우기 '전'에 장부에서 먼저 고정 이메일을 찾아옵니다!
                 const dirRef = window.doc(window.db, "directory", String(studentId));
                 const dirSnap = await window.getDoc(dirRef);
                 
@@ -1104,7 +1102,10 @@ window.resetStudentPassword = async function(studentId, name) {
                 const oldUid = dirSnap.data().stableId;
                 const authEmail = dirSnap.data().authEmail;
 
-                // 2. 새 Auth 계정 생성 (초기비번 123456)
+                // 2. 선생님께 파이어베이스에서 지워야 할 '초기 이메일'을 친절하게 알려줍니다!
+                if(!confirm(`🚨 [필독] ${name}(${studentId}) 학생의 비번을 123456으로 초기화합니다.\n\n초기화 전, 파이어베이스 Auth 메뉴에서 아래 계정을 먼저 찾아 '삭제'해 주세요!\n\n👉 삭제할 계정: [ ${authEmail} ]\n\n파이어베이스에서 삭제를 완료하셨다면 [확인]을 눌러주세요.`)) return;
+
+                // 3. 새 Auth 계정 생성 (초기비번 123456)
                 let newUid = null;
                 try {
                     const cred = await window.createUserWithEmailAndPassword(window.shadowAuth, authEmail, "123456");
@@ -1112,30 +1113,25 @@ window.resetStudentPassword = async function(studentId, name) {
                     await window.signOut(window.shadowAuth); // 보이지 않는 곳에서 생성 후 바로 로그아웃
                 } catch (authErr) {
                     if(authErr.code === 'auth/email-already-in-use') {
-                        return alert(`🚨 중복 오류: 파이어베이스 Auth 메뉴에서 [ ${authEmail} ] 계정을 삭제하신 후 다시 눌러주세요.`);
+                        return alert(`🚨 중복 오류: 파이어베이스 Auth 메뉴에서 [ ${authEmail} ] 계정을 아직 지우지 않으셨습니다!\n삭제 후 다시 시도해 주세요.`);
                     }
                     throw authErr;
                 }
 
-                // 3. 데이터 이사하기 (Migration)
+                // 4. 데이터 이사하기 (Migration)
                 const oldDocRef = window.doc(window.db, "students", oldUid);
                 const newDocRef = window.doc(window.db, "students", newUid);
                 const oldDataSnap = await window.getDoc(oldDocRef);
 
                 if(oldDataSnap.exists()) {
                     const batch = window.writeBatch(window.db);
-                    
-                    // 새 UID 방에 예전 점수/배지 복사
                     batch.set(newDocRef, oldDataSnap.data());
-                    // directory 장부의 방 번호를 새 UID로 업데이트
                     batch.update(dirRef, { stableId: newUid, updatedAt: window.serverTimestamp() });
-                    // 예전 UID 방 폐기
                     batch.delete(oldDocRef);
-                    
                     await batch.commit();
                 }
 
-                alert(`✅ 성공! ${name} 학생의 비밀번호가 123456으로 초기화되었으며, 기존 점수와 배지는 안전하게 보존되었습니다.`);
+                alert(`✅ 성공! ${name} 학생의 비밀번호가 123456으로 초기화되었으며, 기존 점수는 완벽하게 보존되었습니다.`);
                 window.loadData();
             } catch(e) {
                 alert("초기화 실패: " + e.message);
