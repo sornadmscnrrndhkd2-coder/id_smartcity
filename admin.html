@@ -1288,7 +1288,8 @@ window.resetStudentPassword = async function(studentId, name) {
 
         window.updateTableHeaders = function() {
             const grade = document.getElementById("filterGrade").value; const cutoffs = window.PASS_CUTOFF[grade];
-            let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="window.toggleAllCheckboxes(this)"></th><th>학과</th><th>학번</th><th>이름</th>`; 
+            // 🔥 [추가됨] 체크박스 옆에 '연번' 헤더 추가
+            let headerHtml = `<th class="check-cell"><input type="checkbox" id="selectAllCheckbox" onclick="window.toggleAllCheckboxes(this)"></th><th style="width: 40px; color: #7f8c8d;">연번</th><th>학과</th><th>학번</th><th>이름</th>`; 
             window.AREAS.forEach(a => { headerHtml += `<th>[${a}]<br><span class="th-criteria">(${cutoffs[a]}점↑)</span></th>`; }); 
             headerHtml += `<th>총점</th><th>획득 배지</th><th>성장 칭호</th><th>출력</th>`; document.getElementById("tableHeaderRow").innerHTML = headerHtml;
         };
@@ -1296,7 +1297,8 @@ window.resetStudentPassword = async function(studentId, name) {
         window.toggleAllCheckboxes = function(source) { document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = source.checked); };
 
         window.loadData = async function() {
-            const tbody = document.getElementById("studentTableBody"); const fGrade = document.getElementById("filterGrade").value; const fDept = document.getElementById("filterDept").value; const fClass = document.getElementById("filterClass").value; const fCert = document.getElementById("filterCert").value; tbody.innerHTML = "<tr><td colspan='17'>불러오는 중...</td></tr>";
+            const tbody = document.getElementById("studentTableBody"); const fGrade = document.getElementById("filterGrade").value; const fDept = document.getElementById("filterDept").value; const fClass = document.getElementById("filterClass").value; const fCert = document.getElementById("filterCert").value; 
+            tbody.innerHTML = "<tr><td colspan='18'>불러오는 중...</td></tr>"; 
             try {
                 const qSnap = await window.getDocs(window.collection(window.db, "students")); let students = []; window.allStudentsData = []; let dbDepts = new Set();
                 qSnap.forEach(doc => {
@@ -1318,17 +1320,21 @@ window.resetStudentPassword = async function(studentId, name) {
                 if(dbDepts.has(cF)) fdEl.value = cF; if(dbDepts.has(cB)) bdEl.value = cB;
                 
                 students.sort((a,b) => String(a.id).localeCompare(String(b.id))); window.allStudentsData.sort((a,b) => String(a.id).localeCompare(String(b.id)));
-                tbody.innerHTML = students.length === 0 ? `<tr><td colspan='17' style='padding:30px;'>데이터 없음</td></tr>` : "";
+                tbody.innerHTML = students.length === 0 ? `<tr><td colspan='18' style='padding:30px;'>데이터 없음</td></tr>` : "";
                 
-                students.forEach(s => {
+                // 🔥 [추가됨] forEach에 index를 넣고 번호를 그려줍니다.
+                students.forEach((s, index) => {
                     let sc = s.yearData.scores || {}; let p = s.yearData.pass || {}; let d = s.yearData.delivery_status || {};
                     let pHtml = s.photo ? `<img src="${s.photo}" class="profile-img" onclick="window.openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
-                    let rHtml = `<tr class="${(s.yearData.earned_badges||0)>=6?'certified-row':''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}"></td><td>${s.dept}</td><td>${s.id}</td><td style="text-align:left;display:flex;justify-content:space-between;"><div>${pHtml} <strong>${s.name}</strong></div><div style="display:flex; gap:10px;"><div onclick="window.openEditModal('${s.docId}', ${fGrade})" style="cursor:pointer;" title="개별 점수 수정">✏️</div><div onclick="window.resetStudentPassword('${s.id}', '${s.name}')" style="cursor:pointer;" title="비밀번호 초기화">🔄</div></div></td>`;
+                    
+                    // 🔥 [추가됨] 체크박스 바로 옆에 연번 td 추가
+                    let rHtml = `<tr class="${(s.yearData.earned_badges||0)>=6?'certified-row':''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}"></td><td style="font-weight:bold; color:#7f8c8d; text-align:center;">${index + 1}</td><td>${s.dept}</td><td>${s.id}</td><td style="text-align:left;display:flex;justify-content:space-between;"><div>${pHtml} <strong>${s.name}</strong></div><div style="display:flex; gap:10px;"><div onclick="window.openEditModal('${s.docId}', ${fGrade})" style="cursor:pointer;" title="개별 점수 수정">✏️</div><div onclick="window.resetStudentPassword('${s.id}', '${s.name}')" style="cursor:pointer;" title="비밀번호 초기화">🔄</div></div></td>`;
+                    
                     window.AREAS.forEach(area => { let isD = d[area] === true; let cell = sc[area] || 0; if(p[area]) cell = `<span class="pass-star">★</span>${cell}<br><span class="badge-status ${isD?'status-done':'status-yet'}" onclick="window.toggleDelivery('${s.docId}', ${fGrade}, '${area}', ${isD})">${isD?'지급완료':'미지급'}</span>`; rHtml += `<td class="score-cell">${cell}</td>`; });
                     let cBtn = `<button class="btn ${fGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="window.printCertificate('${s.id}')">🖨️</button>`; 
                     rHtml += `<td style="color:#2980b9;font-weight:bold;">${s.yearData.total_score||0}점</td><td><strong>${s.yearData.earned_badges||0}개</strong></td><td style="color:#27ae60;font-weight:bold;">${s.yearData.title||'진행중'}</td><td>${cBtn}</td></tr>`; tbody.innerHTML += rHtml;
                 });
-            } catch(e) { tbody.innerHTML = `<tr><td colspan='17' style='color:red;'>오류</td></tr>`; }
+            } catch(e) { tbody.innerHTML = `<tr><td colspan='18' style='color:red;'>오류</td></tr>`; }
         };
 
         window.toggleEditMode = async function() {
@@ -1351,7 +1357,8 @@ window.resetStudentPassword = async function(studentId, name) {
             const grade = parseInt(document.getElementById('filterGrade').value);
             tbody.innerHTML = '';
             
-            window.allStudentsData.forEach((s) => {
+            // 🔥 [추가됨] index 추가
+            window.allStudentsData.forEach((s, index) => {
                 let y = s.yearData; let sc = y.scores || {}; let p = y.pass || {};
                 let bCount = y.earned_badges || 0;
                 let tClass = bCount >= 6 ? (grade === 1 ? 'tier-starter' : (grade === 2 ? 'tier-builder' : 'tier-pro')) : 'tier-none';
@@ -1361,7 +1368,8 @@ window.resetStudentPassword = async function(studentId, name) {
                 let tr = document.createElement('tr');
                 tr.dataset.uid = s.docId;
                 
-                let html = `<td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}"></td>`;
+                // 🔥 [추가됨] <td>${index + 1}</td> 추가
+                let html = `<td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}"></td><td style="font-weight:bold; color:#7f8c8d; text-align:center;">${index + 1}</td>`;
                 html += `<td>${s.dept}</td><td><strong>${s.id}</strong></td><td>${s.name}</td>`;
                 
                 window.AREAS.forEach(a => {
