@@ -1000,7 +1000,6 @@
                 const qSnap = await window.getDocs(window.collection(window.db, "students")); let students = [];
                 qSnap.forEach(doc => { 
                     let data = doc.data(); 
-                    // 🔥 [핵심 필터] '현재 학년'이 조회하려는 학년과 일치하는 학생의 해당 학년 점수만 가져옵니다!
                     if(data.current_grade === grade && data[`year_${grade}`]) {
                         students.push({ 
                             name: data.name, 
@@ -1010,6 +1009,36 @@
                         }); 
                     }
                 });
+
+                // 🔥 [동기화] 선생님의 완벽한 9단계 동점자 처리 로직 적용
+                students.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score; // 0순위: 총점
+                    
+                    const getSc = (s, area) => (s.yearData && s.yearData.scores && s.yearData.scores[area]) ? s.yearData.scores[area] : 0;
+                    
+                    // 1순위(T) ~ 9순위(Y) 순차적 비교
+                    if (getSc(b, 'T') !== getSc(a, 'T')) return getSc(b, 'T') - getSc(a, 'T'); 
+                    if (getSc(b, 'M') !== getSc(a, 'M')) return getSc(b, 'M') - getSc(a, 'M');
+                    if (getSc(b, 'Tr') !== getSc(a, 'Tr')) return getSc(b, 'Tr') - getSc(a, 'Tr'); 
+                    if (getSc(b, 'S') !== getSc(a, 'S')) return getSc(b, 'S') - getSc(a, 'S');
+                    if (getSc(b, 'C') !== getSc(a, 'C')) return getSc(b, 'C') - getSc(a, 'C'); 
+                    if (getSc(b, 'I') !== getSc(a, 'I')) return getSc(b, 'I') - getSc(a, 'I');
+                    if (getSc(b, 'R') !== getSc(a, 'R')) return getSc(b, 'R') - getSc(a, 'R'); 
+                    if (getSc(b, 'A') !== getSc(a, 'A')) return getSc(b, 'A') - getSc(a, 'A');
+                    if (getSc(b, 'Y') !== getSc(a, 'Y')) return getSc(b, 'Y') - getSc(a, 'Y');
+                    
+                    return String(a.name).localeCompare(String(b.name)); // 이름순
+                });
+
+                let top10 = students.slice(0, 10); modalList.innerHTML = '';
+                if(top10.length === 0) { modalList.innerHTML = '<div style="text-align:center; padding:40px;">데이터가 없습니다.</div>'; return; }
+                const medals = ['https://cdn-icons-png.flaticon.com/512/2583/2583344.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583319.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'];
+                top10.forEach((student, index) => {
+                    if(index < 3) modalList.innerHTML += `<div class="rank-card rank-${index+1}"><div class="rank-info"><div class="rare-medal"><img src="${medals[index]}"></div><div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr})</p></div></div><div class="rank-score">${student.score}점</div></div>`;
+                    else modalList.innerHTML += `<div class="normal-rank"><div class="normal-info"><div class="rank-num">${index + 1}</div><div class="normal-name">${student.name}<span class="normal-class">(${student.classStr})</span></div></div><div class="normal-score">${student.score}점</div></div>`;
+                });
+            } catch(e) { modalList.innerHTML = `<div style="text-align:center; padding:40px; color:red;">불러오기 실패</div>`; }
+        };
                 students.sort((a, b) => {
                     if (b.score !== a.score) return b.score - a.score;
                     const getSc = (s, area) => (s.yearData && s.yearData.scores && s.yearData.scores[area]) ? s.yearData.scores[area] : 0;
