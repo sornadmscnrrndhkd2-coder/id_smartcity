@@ -301,6 +301,14 @@
                 position: relative;
             }
         }
+        /* 🔥 모바일 헤더 UI 완벽 정렬 (student.html 용) */
+        @media (max-width: 850px) {
+            .header { flex-direction: column !important; padding: 15px !important; gap: 15px !important; align-items: center !important; }
+            .header-left { width: 100% !important; justify-content: center !important; }
+            .header-right { width: 100% !important; justify-content: center !important; flex-wrap: wrap !important; gap: 8px !important; margin: 0 !important; }
+            .header-right > span { display: none !important; } /* 좁은 모바일에서는 학교명 숨김 */
+            .header-right .btn-logout { flex: 1 !important; margin: 0 !important; padding: 12px !important; text-align: center !important; font-size: 13px !important; box-sizing: border-box !important; }
+        }
     </style>
 </head>
 <body>
