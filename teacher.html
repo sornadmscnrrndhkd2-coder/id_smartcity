@@ -584,17 +584,46 @@
                 let students = [];
                 snap.forEach(doc => {
                     let d = doc.data(); 
-                    // 🔥 [핵심 수정] 파이어베이스 쿼리로 한 번 거르지만, 이중 안전장치로 코드 상에서도 current_grade와 grade가 정확히 일치하는지 확인합니다. 그리고 해당 학년의(year_X) 총점을 가져옵니다.
                     if (d.current_grade === grade) {
-                        let score = (d[`year_${grade}`] || {}).total_score || 0;
+                        let yData = d[`year_${grade}`] || {};
+                        let score = yData.total_score || 0;
                         if (score > 0) { 
                             let maskName = d.name.length === 2 ? d.name[0] + '*' : d.name[0] + '*' + d.name.slice(2);
-                            students.push({ name: maskName, classStr: `${parseInt(String(d.current_studentId).substring(1,3))}`, score: score });
+                            // 🔥 동점자 비교를 위해 영역별 점수(yearData)를 같이 가져옵니다.
+                            students.push({ 
+                                name: maskName, 
+                                classStr: `${parseInt(String(d.current_studentId).substring(1,3))}`, 
+                                score: score, 
+                                yearData: yData 
+                            });
                         }
                     }
                 });
-                students.sort((a, b) => b.score - a.score);
-                await window.setDoc(window.doc(window.db, "publicRankingBoard", `grade_${grade}`), { top10: students.slice(0, 10), updatedAt: Date.now() });
+
+                // 🔥 선생님의 완벽한 9단계 동점자 처리 로직
+                students.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score; // 0순위: 총점
+                    
+                    const getSc = (s, area) => (s.yearData && s.yearData.scores && s.yearData.scores[area]) ? s.yearData.scores[area] : 0;
+                    
+                    // 1순위 ~ 9순위 순차적 비교
+                    if (getSc(b, 'T') !== getSc(a, 'T')) return getSc(b, 'T') - getSc(a, 'T'); 
+                    if (getSc(b, 'M') !== getSc(a, 'M')) return getSc(b, 'M') - getSc(a, 'M');
+                    if (getSc(b, 'Tr') !== getSc(a, 'Tr')) return getSc(b, 'Tr') - getSc(a, 'Tr'); 
+                    if (getSc(b, 'S') !== getSc(a, 'S')) return getSc(b, 'S') - getSc(a, 'S');
+                    if (getSc(b, 'C') !== getSc(a, 'C')) return getSc(b, 'C') - getSc(a, 'C'); 
+                    if (getSc(b, 'I') !== getSc(a, 'I')) return getSc(b, 'I') - getSc(a, 'I');
+                    if (getSc(b, 'R') !== getSc(a, 'R')) return getSc(b, 'R') - getSc(a, 'R'); 
+                    if (getSc(b, 'A') !== getSc(a, 'A')) return getSc(b, 'A') - getSc(a, 'A');
+                    if (getSc(b, 'Y') !== getSc(a, 'Y')) return getSc(b, 'Y') - getSc(a, 'Y');
+                    
+                    return String(a.name).localeCompare(String(b.name)); // 모든게 같으면 이름순
+                });
+
+                // DB에 저장할 때는 용량 차지를 막기 위해 필요한 정보만 10개 잘라서 저장!
+                let top10ToSave = students.slice(0, 10).map(s => ({ name: s.name, classStr: s.classStr, score: s.score }));
+                
+                await window.setDoc(window.doc(window.db, "publicRankingBoard", `grade_${grade}`), { top10: top10ToSave, updatedAt: Date.now() });
             } catch(e) {}
         };
 
