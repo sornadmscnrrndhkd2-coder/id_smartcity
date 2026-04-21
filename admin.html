@@ -1668,7 +1668,8 @@ window.resetStudentPassword = async function(studentId, name) {
                                     hasSpec = true;
                                     checkedIndices.forEach(idx => {
                                         let rawLabel = window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label;
-                                        let label = rawLabel.split('(')[0].trim();
+        // 🔥 점수(예: 10점) 글자만 정확히 제거하고, 이전학년/해당학년 라벨을 포트폴리오에 맞게 예쁘게 다듬습니다.
+        let label = rawLabel.replace(/\(\d+점\)/g, '').replace(/\(해당학년취득\)/g, '').replace(/\(해당학년\)/g, '').replace(/\(이전학년\)/g, '[이전학년 인정] ').trim();
                                         badgeListHtml += `
                                             <div class="timeline-badge-item">
                                                 <div class="timeline-badge-code">${area}</div>
