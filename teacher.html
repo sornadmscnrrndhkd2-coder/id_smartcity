@@ -190,13 +190,7 @@
     <script>
         // 🚨 실제 API 키를 입력하세요.
         window.MY_GLOBAL_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyDDdAUuybOEyV0-TSOuRCZbNJQaWwTA-kg",
-  authDomain: "induk-smartcity.firebaseapp.com",
-  projectId: "induk-smartcity",
-  storageBucket: "induk-smartcity.firebasestorage.app",
-  messagingSenderId: "836222545739",
-  appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD"  
+        
         };
     </script>
 
@@ -628,16 +622,17 @@
         };
 
         window.syncAllRankingsSilent = async function() {
-            let needsInit = false;
-            for(let g=1; g<=3; g++) {
-                try {
-                    const snap = await window.getDoc(window.doc(window.db, "publicRankingBoard", `grade_${g}`));
-                    if(!snap.exists() || !snap.data().top10) { needsInit = true; break; }
-                } catch(e) {}
-            }
-            if(needsInit) {
-                await window.updateGradeRanking(1); await window.updateGradeRanking(2); await window.updateGradeRanking(3);
-                await window.preloadAllGradesTop3();
+            // 🔥 DB에 예전 기록이 있든 없든, 교사가 접속하면 무조건 1~3학년 랭킹을 최신화하여 덮어씁니다!
+            try {
+                await window.updateGradeRanking(1); 
+                await window.updateGradeRanking(2); 
+                await window.updateGradeRanking(3);
+                
+                if(typeof window.preloadAllGradesTop3 === 'function') {
+                    await window.preloadAllGradesTop3();
+                }
+            } catch(e) { 
+                console.error("랭킹 동기화 에러:", e); 
             }
         };
 
