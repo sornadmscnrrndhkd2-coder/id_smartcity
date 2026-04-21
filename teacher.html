@@ -183,6 +183,14 @@
             .modal-overlay { align-items: center; }
             .modal-content { border-radius: 20px; padding-bottom: 50px;} 
         }
+        /* 🔥 모바일 헤더 UI 완벽 정렬 (teacher.html 용) */
+        @media (max-width: 850px) {
+            .header { flex-direction: column !important; padding: 15px 10px !important; gap: 12px !important; align-items: center !important; }
+            .header-left { width: 100% !important; justify-content: center !important; margin: 0 !important; }
+            .header-right { width: 100% !important; justify-content: center !important; flex-wrap: wrap !important; gap: 6px !important; margin: 0 !important; }
+            .header-right span { margin: 0 !important; font-size: 11px !important; }
+            .header-right .btn-logout { flex: 1 !important; min-width: 45% !important; margin: 0 !important; padding: 10px !important; font-size: 13px !important; text-align: center !important; box-sizing: border-box !important; }
+        }
     </style>
 </head>
 <body>
@@ -1154,7 +1162,8 @@
                                     hasSpec = true;
                                     checkedIndices.forEach(idx => {
                                         let rawLabel = window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label;
-                                        let label = rawLabel.split('(')[0].trim();
+        // 🔥 점수(예: 10점) 글자만 정확히 제거하고, 이전학년/해당학년 라벨을 포트폴리오에 맞게 예쁘게 다듬습니다.
+        let label = rawLabel.replace(/\(\d+점\)/g, '').replace(/\(해당학년취득\)/g, '').replace(/\(해당학년\)/g, '').replace(/\(이전학년\)/g, '[이전학년 인정] ').trim();
                                         badgeListHtml += `
                                             <div class="timeline-badge-item">
                                                 <div class="timeline-badge-code">${area}</div>
