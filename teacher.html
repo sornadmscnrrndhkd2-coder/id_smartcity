@@ -605,24 +605,24 @@
                 const getSc = (s, area) => (s.yearData && s.yearData.scores && s.yearData.scores[area]) ? s.yearData.scores[area] : 0;
 
                 students.sort((a, b) => {
-                    if (b.score !== a.score) return b.score - a.score; 
-                    if (getSc(b, 'T') !== getSc(a, 'T')) return getSc(b, 'T') - getSc(a, 'T'); 
-                    if (getSc(b, 'M') !== getSc(a, 'M')) return getSc(b, 'M') - getSc(a, 'M');
-                    if (getSc(b, 'Tr') !== getSc(a, 'Tr')) return getSc(b, 'Tr') - getSc(a, 'Tr'); 
-                    if (getSc(b, 'S') !== getSc(a, 'S')) return getSc(b, 'S') - getSc(a, 'S');
-                    if (getSc(b, 'C') !== getSc(a, 'C')) return getSc(b, 'C') - getSc(a, 'C'); 
-                    if (getSc(b, 'I') !== getSc(a, 'I')) return getSc(b, 'I') - getSc(a, 'I');
-                    if (getSc(b, 'R') !== getSc(a, 'R')) return getSc(b, 'R') - getSc(a, 'R'); 
-                    if (getSc(b, 'A') !== getSc(a, 'A')) return getSc(b, 'A') - getSc(a, 'A');
-                    if (getSc(b, 'Y') !== getSc(a, 'Y')) return getSc(b, 'Y') - getSc(a, 'Y');
+                    if (Number(b.score) !== Number(a.score)) return Number(b.score) - Number(a.score); 
+                    if (Number(getSc(b, 'T')) !== Number(getSc(a, 'T'))) return Number(getSc(b, 'T')) - Number(getSc(a, 'T')); 
+                    if (Number(getSc(b, 'M')) !== Number(getSc(a, 'M'))) return Number(getSc(b, 'M')) - Number(getSc(a, 'M'));
+                    if (Number(getSc(b, 'Tr')) !== Number(getSc(a, 'Tr'))) return Number(getSc(b, 'Tr')) - Number(getSc(a, 'Tr')); 
+                    if (Number(getSc(b, 'S')) !== Number(getSc(a, 'S'))) return Number(getSc(b, 'S')) - Number(getSc(a, 'S'));
+                    if (Number(getSc(b, 'C')) !== Number(getSc(a, 'C'))) return Number(getSc(b, 'C')) - Number(getSc(a, 'C')); 
+                    if (Number(getSc(b, 'I')) !== Number(getSc(a, 'I'))) return Number(getSc(b, 'I')) - Number(getSc(a, 'I'));
+                    if (Number(getSc(b, 'R')) !== Number(getSc(a, 'R'))) return Number(getSc(b, 'R')) - Number(getSc(a, 'R')); 
+                    if (Number(getSc(b, 'A')) !== Number(getSc(a, 'A'))) return Number(getSc(b, 'A')) - Number(getSc(a, 'A'));
+                    if (Number(getSc(b, 'Y')) !== Number(getSc(a, 'Y'))) return Number(getSc(b, 'Y')) - Number(getSc(a, 'Y'));
                     return String(a.name).localeCompare(String(b.name)); 
                 });
 
-                // 🔥 공동 순위 부여 및 DB 저장에 rank 정보 포함
+                // 🔥 강제 숫자 변환 비교로 완벽한 쌍둥이 감별
                 const isTied = (a, b) => {
-                    if (a.score !== b.score) return false;
+                    if (Number(a.score) !== Number(b.score)) return false;
                     const areas = ['T', 'M', 'Tr', 'S', 'C', 'I', 'R', 'A', 'Y'];
-                    for (let ar of areas) { if (getSc(a, ar) !== getSc(b, ar)) return false; }
+                    for (let ar of areas) { if (Number(getSc(a, ar)) !== Number(getSc(b, ar))) return false; }
                     return true;
                 };
 
@@ -631,8 +631,7 @@
                     else s.rank = i + 1;
                 });
 
-                let top10ToSave = students.slice(0, 10).map(s => ({ name: s.name, classStr: s.classStr, score: s.score, rank: s.rank })); // rank 저장 추가!
-                
+                let top10ToSave = students.slice(0, 10).map(s => ({ name: s.name, classStr: s.classStr, score: s.score, rank: s.rank })); 
                 await window.setDoc(window.doc(window.db, "publicRankingBoard", `grade_${grade}`), { top10: top10ToSave, updatedAt: Date.now() });
             } catch(e) {}
         };
@@ -889,25 +888,28 @@
                     const docSnap = await window.getDoc(window.doc(window.db, "publicRankingBoard", `grade_${g}`));
                     if (docSnap.exists() && docSnap.data().top10) {
                         let top3 = docSnap.data().top10.slice(0, 3); 
-                        const panels = document.querySelectorAll('.grade-ranking-panel');
-                        if(panels[g-1]) {
-                            // 1. 기존에 무조건 금,은,동으로 박혀있던 카드 3장을 싹 다 지웁니다.
-                            panels[g-1].querySelectorAll('.rank-card').forEach(el => el.remove());
+                        
+                        // 🔥 핵심: 기존 화면에 박혀있는 낡은 카드들을 힘으로 뜯어냅니다.
+                        const panels = document.querySelectorAll(`.grade-ranking-panel:nth-child(${g})`);
+                        if(panels.length > 0) {
+                            let panel = panels[0];
+                            // 기존 옛날 카드 싹 청소!
+                            panel.querySelectorAll('.rank-card').forEach(el => el.remove());
                             
-                            // 2. DB에 저장된 '진짜 등수(rank)'를 확인해서 공동 1위면 둘 다 금메달 카드로 그립니다!
                             let html = '';
-                            top3.forEach((student) => {
-                                let rNum = student.rank || 1; // DB에 저장된 진짜 등수
-                                let medalImg = medals[rNum - 1] || medals[2]; // 등수에 맞는 메달 이미지
-                                let rClass = rNum <= 3 ? rNum : 3; // 등수에 맞는 색상 (1:금, 2:은, 3:동)
+                            top3.forEach((student, index) => {
+                                let rNum = student.rank || (index + 1); // 공동 순위 확인
+                                let medalImg = medals[rNum - 1] || medals[2]; 
+                                let rClass = rNum <= 3 ? rNum : 3; 
                                 
                                 html += `<div class="rank-card rank-${rClass}"><div class="rank-info"><div class="rare-medal"><img src="${medalImg}"></div><div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr}반)</p></div></div><div class="rank-score">${student.score}점</div></div>`;
                             });
-                            panels[g-1].insertAdjacentHTML('beforeend', html);
+                            // 새 카드 강제 부착!
+                            panel.insertAdjacentHTML('beforeend', html);
                         }
                     }
                 }
-            } catch(e) {}
+            } catch(e) { console.error(e); }
         };
 
         window.downloadTeacherExcelTemplate = function() { 
