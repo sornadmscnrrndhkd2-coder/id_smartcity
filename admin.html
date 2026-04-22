@@ -1001,21 +1001,17 @@
                     let data = doc.data(); 
                     if(data.current_grade === grade && data[`year_${grade}`]) {
                         students.push({ 
-                            name: data.name, 
-                            classStr: `${grade}-${parseInt(String(data.current_studentId).substring(1, 3), 10)}`, 
-                            score: data[`year_${grade}`].total_score || 0, 
-                            yearData: data[`year_${grade}`] 
+                            name: data.name, classStr: `${grade}-${parseInt(String(data.current_studentId).substring(1, 3), 10)}`, 
+                            score: data[`year_${grade}`].total_score || 0, yearData: data[`year_${grade}`] 
                         }); 
                     }
                 });
 
-                // 🔥 [동기화] 선생님의 완벽한 9단계 동점자 처리 로직 적용
+                const getSc = (s, area) => (s.yearData && s.yearData.scores && s.yearData.scores[area]) ? s.yearData.scores[area] : 0;
+
+                // 1. 기존처럼 9단계 + 가나다순으로 정렬 먼저 싹 해놓습니다.
                 students.sort((a, b) => {
-                    if (b.score !== a.score) return b.score - a.score; // 0순위: 총점
-                    
-                    const getSc = (s, area) => (s.yearData && s.yearData.scores && s.yearData.scores[area]) ? s.yearData.scores[area] : 0;
-                    
-                    // 1순위(T) ~ 9순위(Y) 순차적 비교
+                    if (b.score !== a.score) return b.score - a.score; 
                     if (getSc(b, 'T') !== getSc(a, 'T')) return getSc(b, 'T') - getSc(a, 'T'); 
                     if (getSc(b, 'M') !== getSc(a, 'M')) return getSc(b, 'M') - getSc(a, 'M');
                     if (getSc(b, 'Tr') !== getSc(a, 'Tr')) return getSc(b, 'Tr') - getSc(a, 'Tr'); 
@@ -1025,16 +1021,34 @@
                     if (getSc(b, 'R') !== getSc(a, 'R')) return getSc(b, 'R') - getSc(a, 'R'); 
                     if (getSc(b, 'A') !== getSc(a, 'A')) return getSc(b, 'A') - getSc(a, 'A');
                     if (getSc(b, 'Y') !== getSc(a, 'Y')) return getSc(b, 'Y') - getSc(a, 'Y');
-                    
-                    return String(a.name).localeCompare(String(b.name)); // 이름순
+                    return String(a.name).localeCompare(String(b.name));
+                });
+
+                // 🔥 2. [핵심] 완벽한 동점자 검사 및 공동 순위(Rank) 부여 로직
+                const isTied = (a, b) => {
+                    if (a.score !== b.score) return false;
+                    const areas = ['T', 'M', 'Tr', 'S', 'C', 'I', 'R', 'A', 'Y'];
+                    for (let ar of areas) { if (getSc(a, ar) !== getSc(b, ar)) return false; }
+                    return true;
+                };
+
+                students.forEach((s, i) => {
+                    // 앞사람과 100% 동점이면 앞사람의 등수를 그대로 복사, 아니면 내 위치(i+1)가 내 등수!
+                    if (i > 0 && isTied(s, students[i-1])) s.rank = students[i-1].rank;
+                    else s.rank = i + 1;
                 });
 
                 let top10 = students.slice(0, 10); modalList.innerHTML = '';
                 if(top10.length === 0) { modalList.innerHTML = '<div style="text-align:center; padding:40px;">데이터가 없습니다.</div>'; return; }
                 const medals = ['https://cdn-icons-png.flaticon.com/512/2583/2583344.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583319.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'];
-                top10.forEach((student, index) => {
-                    if(index < 3) modalList.innerHTML += `<div class="rank-card rank-${index+1}"><div class="rank-info"><div class="rare-medal"><img src="${medals[index]}"></div><div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr})</p></div></div><div class="rank-score">${student.score}점</div></div>`;
-                    else modalList.innerHTML += `<div class="normal-rank"><div class="normal-info"><div class="rank-num">${index + 1}</div><div class="normal-name">${student.name}<span class="normal-class">(${student.classStr})</span></div></div><div class="normal-score">${student.score}점</div></div>`;
+                
+                top10.forEach((student) => {
+                    let rNum = student.rank; // index 대신 진짜 등수(rank) 사용
+                    if(rNum <= 3) {
+                        modalList.innerHTML += `<div class="rank-card rank-${rNum}"><div class="rank-info"><div class="rare-medal"><img src="${medals[rNum-1]}"></div><div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr})</p></div></div><div class="rank-score">${student.score}점</div></div>`;
+                    } else {
+                        modalList.innerHTML += `<div class="normal-rank"><div class="normal-info"><div class="rank-num">${rNum}</div><div class="normal-name">${student.name}<span class="normal-class">(${student.classStr})</span></div></div><div class="normal-score">${student.score}점</div></div>`;
+                    }
                 });
             } catch(e) { modalList.innerHTML = `<div style="text-align:center; padding:40px; color:red;">불러오기 실패</div>`; }
         };
