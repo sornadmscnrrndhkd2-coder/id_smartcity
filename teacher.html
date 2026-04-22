@@ -884,11 +884,27 @@
 
         window.preloadAllGradesTop3 = async function() {
             try {
+                const medals = ['https://cdn-icons-png.flaticon.com/512/2583/2583344.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583319.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'];
                 for(let g = 1; g <= 3; g++) {
                     const docSnap = await window.getDoc(window.doc(window.db, "publicRankingBoard", `grade_${g}`));
                     if (docSnap.exists() && docSnap.data().top10) {
-                        let top3 = docSnap.data().top10.slice(0, 3); const panels = document.querySelectorAll(`.grade-ranking-panel:nth-child(${g}) .rank-card`);
-                        top3.forEach((student, index) => { if(panels[index]) { panels[index].querySelector('h4').innerText = student.name; panels[index].querySelector('p').innerText = `(${student.classStr}반)`; panels[index].querySelector('.rank-score').innerText = `${student.score}점`; } });
+                        let top3 = docSnap.data().top10.slice(0, 3); 
+                        const panels = document.querySelectorAll('.grade-ranking-panel');
+                        if(panels[g-1]) {
+                            // 1. 기존에 무조건 금,은,동으로 박혀있던 카드 3장을 싹 다 지웁니다.
+                            panels[g-1].querySelectorAll('.rank-card').forEach(el => el.remove());
+                            
+                            // 2. DB에 저장된 '진짜 등수(rank)'를 확인해서 공동 1위면 둘 다 금메달 카드로 그립니다!
+                            let html = '';
+                            top3.forEach((student) => {
+                                let rNum = student.rank || 1; // DB에 저장된 진짜 등수
+                                let medalImg = medals[rNum - 1] || medals[2]; // 등수에 맞는 메달 이미지
+                                let rClass = rNum <= 3 ? rNum : 3; // 등수에 맞는 색상 (1:금, 2:은, 3:동)
+                                
+                                html += `<div class="rank-card rank-${rClass}"><div class="rank-info"><div class="rare-medal"><img src="${medalImg}"></div><div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr}반)</p></div></div><div class="rank-score">${student.score}점</div></div>`;
+                            });
+                            panels[g-1].insertAdjacentHTML('beforeend', html);
+                        }
                     }
                 }
             } catch(e) {}
