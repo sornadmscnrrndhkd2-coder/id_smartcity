@@ -191,6 +191,21 @@
             .header-right span { margin: 0 !important; font-size: 11px !important; }
             .header-right .btn-logout { flex: 1 !important; min-width: 45% !important; margin: 0 !important; padding: 10px !important; font-size: 13px !important; text-align: center !important; box-sizing: border-box !important; }
         }
+        /* 교사 페이지 모바일 버튼 중앙 정렬 */
+        @media (max-width: 850px) {
+            /* 버튼을 감싸고 있는 영역을 강제로 가운데 정렬합니다 */
+            .student-list-header > div,
+            .card-header > div,
+            button.btn-primary.shadow,
+            button.btn-dark.shadow {
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                margin: 0 auto !important;
+                flex-wrap: wrap !important;
+                gap: 10px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1125,7 +1140,7 @@
                     </head><body>
                         <div class="print-container">
                             <div class="print-header">
-                                <h1>🏆 ${window.homeroomGrade}학년 ${window.homeroomClass}반 스마트시티 학급 포트폴리오</h1>
+                                <h1>🏆 ${window.homeroomGrade}학년 ${window.homeroomClass}반 스마트시티 역량 인증제 학급 포트폴리오</h1>
                             </div>
                             <div class="grid-container">
                                 ${cardsHtml}
