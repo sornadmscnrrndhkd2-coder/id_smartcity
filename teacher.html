@@ -596,7 +596,7 @@
                         let yData = d[`year_${grade}`] || {};
                         let score = yData.total_score || 0;
                         if (score > 0) { 
-                            let maskName = d.name.length === 2 ? d.name[0] + '*' : d.name[0] + '*' + d.name.slice(2);
+                            let maskName = d.name.length === 2 ? d.name[0] + '○' : d.name[0] + '○' + d.name.slice(2);
                             students.push({ name: maskName, classStr: `${parseInt(String(d.current_studentId).substring(1,3))}`, score: score, yearData: yData });
                         }
                     }
