@@ -293,6 +293,23 @@
             .log-table td:nth-child(2) { font-size: 14px; font-weight: 900; color: #2980b9; margin-bottom: 4px; }
             .log-table td:nth-child(3) { font-size: 13px; color: #2c3e50; line-height: 1.4; }
         }
+        /* 관리자 모바일 상단 버튼 짤림 방지 */
+        @media (max-width: 850px) {
+            .header-right { 
+                flex-wrap: wrap !important; 
+                justify-content: center !important; 
+                width: 100% !important;
+                gap: 8px !important;
+                margin-top: 10px !important;
+            }
+            .header-right > div, .header-right > button, .header-right > span {
+                flex: 1 1 45% !important; /* 화면을 반으로 쪼개서 두 개씩 배치 */
+                font-size: 12px !important;
+                padding: 10px 5px !important;
+                text-align: center !important;
+                box-sizing: border-box !important;
+            }
+        }
     </style>
 </head>
 <body>
