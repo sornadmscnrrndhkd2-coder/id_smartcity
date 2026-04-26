@@ -439,7 +439,7 @@
 
             <div class="menu-group g-student">🧑‍🎓 학생 데이터 관리</div>
             <div class="menu-item" id="nav-studentList" onclick="window.showSection('studentList')">📋 학생 관리 & 비번초기화</div>
-            <div class="menu-item" id="nav-uploadData" onclick="window.showSection('uploadData')">📁 엑셀 데이터 업로드</div>
+            <div class="menu-item" id="nav-uploadData" onclick="window.showSection('uploadData')">📁 학생 데이터 업로드</div>
             <div class="menu-item" id="nav-photoUpload" onclick="window.showSection('photoUpload')">📸 학생 사진 일괄 등록</div>
             <div class="menu-item" id="nav-badgeManagement" onclick="window.showSection('badgeManagement')">🎁 월별 배지 결산</div>
             <div class="menu-item" id="nav-promotion" onclick="window.showSection('promotion')">🎓 연말 진급 및 백업</div>
@@ -548,9 +548,9 @@
             </div>
 
             <div id="uploadData" style="display:none;">
-                <h2>📁 9대 역량 엑셀 업로드 (스마트 자동 입학연도 부여)</h2>
+                <h2>📁 학생 데이터 일괄괄 업로드 (스마트 자동 입학연도 부여)</h2>
                 <div class="summary-box"><strong>💡 안내</strong><br>업로드 시 학년과 현재 년도를 계산하여 <b>stu입학년도_학번</b>(예: stu26_10101)으로 아이디가 자동 생성됩니다. 기존 유령 계정이 있어도 중복 가입 에러를 무시하고 진행합니다.</div>
-                <button onclick="window.downloadTemplate()" class="btn btn-dark" style="margin-bottom: 20px;">📄 엑셀 빈 양식 다운로드</button>
+                <button onclick="window.downloadTemplate()" class="btn btn-dark" style="margin-bottom: 20px;">📄 학생 명단 업로드 양식 다운로드</button>
                 <div style="background: #fff; padding: 20px; border: 1px dashed #bdc3c7; border-radius: 8px;">
                     <input type="file" id="excelFileInput" accept=".xlsx" /><br><br>
                     <button id="uploadExcelBtn" class="btn btn-orange">🚀 자동 계산 및 DB 업로드 실행</button><h4 id="uploadStatus"></h4>
