@@ -891,17 +891,68 @@
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_grade", "==", 3)));
                 if (qSnap.empty) return alert("졸업 처리할 3학년이 없습니다.");
                 let backupData = [];
+
+                // 🔥 [마법 주문] 학년별로 체크했던 자격증/대회 항목을 텍스트로 예쁘게 뽑아주는 도우미 함수
+                const getItemsText = (yData, grade) => {
+                    if (!yData || !yData.checked_items) return "";
+                    let texts = [];
+                    window.AREAS.forEach(area => {
+                        let indices = yData.checked_items[area] || [];
+                        indices.forEach(idx => {
+                            if(window.EVAL_ITEMS_BY_GRADE[grade] && window.EVAL_ITEMS_BY_GRADE[grade][area] && window.EVAL_ITEMS_BY_GRADE[grade][area][idx]) {
+                                let rawLabel = window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label;
+                                // 점수 글자(예: 10점) 지우고 깔끔하게 정리
+                                let label = rawLabel.replace(/\(\d+점\)/g, '').replace(/\(해당학년취득\)/g, '').replace(/\(해당학년\)/g, '').replace(/\(이전학년\)/g, '[이전학년 인정] ').trim();
+                                texts.push(`[${area}] ${label}`);
+                            }
+                        });
+                    });
+                    return texts.join(", "); // 쉼표로 연결해서 한 칸에 쏙!
+                };
+
                 qSnap.forEach(doc => {
                     let d = doc.data();
-                    backupData.push({ "학번": d.current_studentId, "이름": d.name, "학과": d.department, "최종총점": d.year_3 ? (d.year_3.total_score || 0) : 0, "최종배지개수": d.year_3 ? (d.year_3.earned_badges || 0) : 0 });
+                    let y1 = d.year_1 || {}; let sc1 = y1.scores || {};
+                    let y2 = d.year_2 || {}; let sc2 = y2.scores || {};
+                    let y3 = d.year_3 || {}; let sc3 = y3.scores || {};
+                    
+                    backupData.push({
+                        "학번": d.current_studentId || "",
+                        "이름": d.name || "",
+                        "학과": d.department || "미지정",
+                        "최종 칭호": y3.title || "진행중",
+                        "최종 배지수": y3.earned_badges || 0,
+                        "최종 총점": y3.total_score || 0,
+                        
+                        // 🟢 1학년 상세 기록
+                        "1학년 총점": y1.total_score || 0,
+                        "1_S": sc1.S || 0, "1_M": sc1.M || 0, "1_A": sc1.A || 0, "1_R": sc1.R || 0, "1_T": sc1.T || 0, "1_C": sc1.C || 0, "1_I": sc1.I || 0, "1_Tr": sc1.Tr || 0, "1_Y": sc1.Y || 0,
+                        "1학년 취득내역": getItemsText(y1, 1),
+                        
+                        // 🔵 2학년 상세 기록
+                        "2학년 총점": y2.total_score || 0,
+                        "2_S": sc2.S || 0, "2_M": sc2.M || 0, "2_A": sc2.A || 0, "2_R": sc2.R || 0, "2_T": sc2.T || 0, "2_C": sc2.C || 0, "2_I": sc2.I || 0, "2_Tr": sc2.Tr || 0, "2_Y": sc2.Y || 0,
+                        "2학년 취득내역": getItemsText(y2, 2),
+
+                        // 🟣 3학년 상세 기록
+                        "3학년 총점": y3.total_score || 0,
+                        "3_S": sc3.S || 0, "3_M": sc3.M || 0, "3_A": sc3.A || 0, "3_R": sc3.R || 0, "3_T": sc3.T || 0, "3_C": sc3.C || 0, "3_I": sc3.I || 0, "3_Tr": sc3.Tr || 0, "3_Y": sc3.Y || 0,
+                        "3학년 취득내역": getItemsText(y3, 3)
+                    });
                 });
+                
                 backupData.sort((a,b) => String(a.학번).localeCompare(String(b.학번)));
-                const ws = XLSX.utils.json_to_sheet(backupData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "졸업백업");
-                XLSX.writeFile(wb, `스마트시티_3학년_졸업백업_${new Date().toISOString().slice(0,10).replace(/-/g, "")}.xlsx`);
+                const ws = XLSX.utils.json_to_sheet(backupData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "졸업포트폴리오_백업");
+                
+                // 열 너비 살짝 조절 (내역이 기니까)
+                ws['!cols'] = [{wch:10}, {wch:10}, {wch:15}, {wch:15}, {wch:12}, {wch:10}, {wch:10}, {wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}, {wch:40}, {wch:10}, {wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}, {wch:40}, {wch:10}, {wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}, {wch:40}];
+                
+                XLSX.writeFile(wb, `스마트시티_3학년_졸업완벽백업_${new Date().toISOString().slice(0,10).replace(/-/g, "")}.xlsx`);
+                
                 const batch = window.writeBatch(window.db);
                 qSnap.forEach(doc => { batch.delete(window.doc(window.db, "students", doc.id)); batch.delete(window.doc(window.db, "directory", doc.data().current_studentId)); });
                 await batch.commit();
-                alert("✅ 백업 및 삭제 완료"); window.loadData(); window.loadDashboard();
+                alert("✅ 1~3학년 통합 상세 백업 및 삭제가 완료되었습니다."); window.loadData(); window.loadDashboard();
             } catch(e) { alert("에러: " + e.message); }
         };
 
