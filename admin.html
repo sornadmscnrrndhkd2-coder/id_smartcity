@@ -295,19 +295,24 @@
         }
         /* 관리자 모바일 상단 버튼 짤림 방지 */
         @media (max-width: 850px) {
-            .header-right { 
+            .header-controls { 
                 flex-wrap: wrap !important; 
                 justify-content: center !important; 
                 width: 100% !important;
                 gap: 8px !important;
                 margin-top: 10px !important;
             }
-            .header-right > div, .header-right > button, .header-right > span {
-                flex: 1 1 45% !important; /* 화면을 반으로 쪼개서 두 개씩 배치 */
+            .header-controls > div, .header-controls > button, .header-controls > span {
+                flex: 1 1 45% !important; 
                 font-size: 12px !important;
                 padding: 10px 5px !important;
                 text-align: center !important;
                 box-sizing: border-box !important;
+                /* 👇👇 이 세 줄이 핵심입니다! 빠져있었어요! 👇👇 */
+                white-space: normal !important; 
+                word-break: keep-all !important; 
+                height: auto !important; 
+                /* 👆👆 👆👆 */
             }
         }
     </style>
@@ -1350,8 +1355,9 @@ window.resetStudentPassword = async function(studentId, name) {
                 fdEl.innerHTML = oHtml; bdEl.innerHTML = oHtml; edEl.innerHTML = eHtml;
                 if(dbDepts.has(cF)) fdEl.value = cF; if(dbDepts.has(cB)) bdEl.value = cB;
                 
-                students.sort((a,b) => String(a.id).localeCompare(String(b.id))); window.allStudentsData.sort((a,b) => String(a.id).localeCompare(String(b.id)));
-                tbody.innerHTML = students.length === 0 ? `<tr><td colspan='18' style='padding:30px;'>데이터 없음</td></tr>` : "";
+                students.sort((a,b) => String(a.id).localeCompare(String(b.id))); 
+window.allStudentsData = students; // 👈 화면에 보이는 필터링된 명단만 프린트용 데이터로 덮어쓰기!
+tbody.innerHTML = students.length === 0 ? `<tr><td colspan='18' style='padding:30px;'>데이터 없음</td></tr>` : "";
                 
                 // 🔥 [추가됨] forEach에 index를 넣고 번호를 그려줍니다.
                 students.forEach((s, index) => {
@@ -1999,6 +2005,72 @@ window.resetStudentPassword = async function(studentId, name) {
             window.isSystemLocked = !window.isSystemLocked;
             try { await window.setDoc(window.doc(window.db, "settings", "config"), { isLocked: window.isSystemLocked }, { merge: true }); updateLockButtonUI(); alert(`성공적으로 처리되었습니다.`); } catch(e) { console.error("잠금 토글 에러:", e); alert("DB 에러"); }
         }
+       // 👇👇 [여기에 프린트 함수 추가] 👇👇
+       window.printBadgeBarChart = function() {
+            if (!window.allStudentsData || window.allStudentsData.length === 0) {
+                return alert("출력할 데이터가 없습니다. 먼저 [조회]를 눌러주세요!");
+            }
+
+            const grade = document.getElementById('filterGrade').value;
+            const classText = document.getElementById('filterClass').options[document.getElementById('filterClass').selectedIndex].text;
+            const printTitle = classText === '전체 반' ? `${grade}학년 전체 배지 획득 현황` : `${grade}학년 ${classText} 배지 획득 현황`;
+
+            const names = window.allStudentsData.map(s => s.name);
+            const badgeCounts = window.allStudentsData.map(s => s.yearData.earned_badges || 0);
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html><head><title>${printTitle} 출력</title>
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+                <style>
+                    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+                    body { font-family: 'Pretendard', sans-serif; text-align: center; padding: 20px; }
+                    h2 { color: #2c3e50; margin-bottom: 20px; font-size: 24px; font-weight: 800; }
+                    .chart-container { width: 95%; max-width: 1100px; height: 500px; margin: 0 auto; }
+                    @page { size: landscape; margin: 10mm; }
+                </style>
+                </head><body>
+                    <h2>📊 ${printTitle}</h2>
+                    <div class="chart-container">
+                        <canvas id="printCanvas"></canvas>
+                    </div>
+                    <script>
+                        // 🔥 타이머 마법 주문 추가됨 (에러 방지용!) 🔥
+                        window.onload = function() {
+                            const ctx = document.getElementById('printCanvas').getContext('2d');
+                            new Chart(ctx, {
+                                type: 'bar',
+                                data: {
+                                    labels: ${JSON.stringify(names)},
+                                    datasets: [{
+                                        label: '획득 배지 수',
+                                        data: ${JSON.stringify(badgeCounts)},
+                                        backgroundColor: '#f49400',
+                                        borderRadius: 5
+                                    }]
+                                },
+                                options: {
+                                    maintainAspectRatio: false,
+                                    scales: { 
+                                        y: { 
+                                            beginAtZero: true, 
+                                            max: 9, 
+                                            ticks: { stepSize: 1 } 
+                                        } 
+                                    },
+                                    plugins: { legend: { display: false } },
+                                    animation: false
+                                }
+                            });
+                            // 차트를 그린 후 약간 기다렸다가 프린트 창 띄우기
+                            setTimeout(() => { window.print(); }, 800);
+                        };
+                    <\/script>
+                </body></html>
+            `);
+            printWindow.document.close();
+        };
+        // 👆👆 [여기까지 추가] 👆👆
     </script>
 </body>
 </html>
