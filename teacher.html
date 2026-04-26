@@ -1158,8 +1158,8 @@
             } catch(e) { alert("출력 에러: " + e.message); }
         };
 
-        // 🔥 [A4 1장 핏 완벽 최적화] 3단 가로 누적 포트폴리오
-        window.printCertificate = async function(studentId) {
+       // 🔥 [A4 1장 핏 완벽 최적화] 3단 가로 개인 누적 포트폴리오 (최고 칭호 보존)
+       window.printCertificate = async function(studentId) {
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId)));
                 if(qSnap.empty) return alert("학생 데이터를 찾을 수 없습니다.");
@@ -1167,7 +1167,9 @@
                 const sData = qSnap.docs[0].data();
                 const studentGrade = sData.current_grade || 1; 
                 
-                let grandTotalScore = 0; let finalBadges = 0; let finalTier = "🌱 CITY 스타터";
+                let grandTotalScore = 0; let finalBadges = 0; 
+                let finalTier = "진행중"; // 👈 기본값을 진행중으로 설정
+                
                 let sumScores = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
                 let sumCaps = {S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0};
                 let timelineHtml = '';
@@ -1186,7 +1188,11 @@
 
                         if(yData.total_score !== undefined) grandTotalScore += yData.total_score;
                         if(yData.earned_badges !== undefined) finalBadges += yData.earned_badges;
-                        if(grade === studentGrade && yData.title) finalTier = yData.title;
+                        
+                        // 🔥 [핵심 수정] 학년이 올라가며 '진행중'이 아닌 진짜 칭호가 있다면 계속 최고 칭호로 덮어쓰기! 🔥
+                        if(yData.title && yData.title !== "진행중") {
+                            finalTier = yData.title; 
+                        }
 
                         let badgeListHtml = '';
                         let hasSpec = false;
@@ -1197,8 +1203,7 @@
                                     hasSpec = true;
                                     checkedIndices.forEach(idx => {
                                         let rawLabel = window.EVAL_ITEMS_BY_GRADE[grade][area][idx].label;
-        // 🔥 점수(예: 10점) 글자만 정확히 제거하고, 이전학년/해당학년 라벨을 포트폴리오에 맞게 예쁘게 다듬습니다.
-        let label = rawLabel.replace(/\(\d+점\)/g, '').replace(/\(해당학년취득\)/g, '').replace(/\(해당학년\)/g, '').replace(/\(이전학년\)/g, '[이전학년 인정] ').trim();
+                                        let label = rawLabel.replace(/\(\d+점\)/g, '').replace(/\(해당학년취득\)/g, '').replace(/\(해당학년\)/g, '').replace(/\(이전학년\)/g, '[이전학년 인정] ').trim();
                                         badgeListHtml += `
                                             <div class="timeline-badge-item">
                                                 <div class="timeline-badge-code">${area}</div>
@@ -1223,6 +1228,9 @@
                         </div>
                     `;
                 }
+                
+                // 만약 3년 내내 아무것도 못 따서 여전히 '진행중'이면 기본 이름표 달아주기
+                if (finalTier === "진행중") finalTier = "🌱 CITY 스타터 도전중";
 
                 let radarData = [
                     (sumCaps['M'] + sumCaps['T']) > 0 ? Math.min(100, Math.round(((sumScores['M'] + sumScores['T']) / (sumCaps['M'] + sumCaps['T'])) * 100)) : 0,
@@ -1268,7 +1276,7 @@
 
     .portfolio-page {
       width: 194mm; height: 281mm; margin: 0 auto; padding: 5mm 6mm 4mm 6mm;
-      display: flex; flex-direction: column; gap: 3.5mm; background: #fff;
+      display: grid; grid-template-rows: auto auto auto 1fr auto; row-gap: 3.5mm; background: #fff;
     }
 
     .top-meta { font-size: 10px; color: #222; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1mm; }
@@ -1292,7 +1300,7 @@
 
     .summary-wrap {
       display: grid; grid-template-columns: 54mm 1fr; gap: 7mm; align-items: stretch;
-      height: 95mm; margin-top: 4mm; margin-bottom: 6mm; flex-shrink: 0;
+      height: 75mm; margin-top: 5mm; margin-bottom: 5mm;
     }
     .summary-left { display: flex; flex-direction: column; justify-content: center; gap: 8mm; }
     .score-box, .badge-box { background: #f8f9fa; border: 1px solid #edf0f2; border-radius: 12px; height: 25mm; padding: 4mm 2mm; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -1301,14 +1309,12 @@
     .box-value strong { font-size: 32px; line-height: 1; letter-spacing: -0.5px; }
     .box-value span { font-size: 14px; margin-left: 2px; color: #2c3e50; }
     
-    /* 🔥 [핵심 1] 차트가 삐져나오지 못하게 position: relative 로 꽉 가둬버림 */
-    .chart-col { position: relative; width: 100%; height: 100%; }
-    .radar-frame { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; border: 1px solid #edf0f2; border-radius: 12px; padding: 2mm; display: flex; align-items: center; justify-content: center; }
+    .chart-col { display: flex; align-items: stretch; justify-content: stretch; }
+    .radar-frame { width: 100%; height: 100%; background: #fff; border: 1px solid #edf0f2; border-radius: 12px; padding: 5mm; display: flex; align-items: center; justify-content: center; }
     .radar-frame canvas { width: 100% !important; height: 100% !important; }
 
     .timeline-title { font-size: 13px; font-weight: 800; color: #111827; padding-bottom: 2mm; border-bottom: 2px solid #3b6edc; margin-top: 0; display: inline-block; width: fit-content; }
     
-    /* 🔥 [핵심 2] flex: 1 속성을 주어서 타임라인이 남은 A4 종이 밑부분을 알맞게 채우도록 수정 */
     .timeline-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; flex: 1; min-height: 0; }
     .timeline-col { background: #fafbfc; border: 1px solid #edf0f2; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; }
     .timeline-col-title { text-align: center; font-size: 12px; font-weight: 800; color: #111827; padding-bottom: 6px; border-bottom: 1px dashed #d8dee8; margin-bottom: 8px; flex-shrink: 0; }
@@ -1319,7 +1325,7 @@
     .timeline-badge-code { width: 20px; height: 20px; border-radius: 4px; background: #eef3ff; color: #3b6edc; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
     .timeline-badge-text { font-size: 10px; font-weight: 700; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .footer { text-align: center; padding-top: 2mm; margin-top: auto; }
+    .footer { text-align: center; padding-top: 2mm; }
     .proof-text { font-size: 9px; color: #7b8794; margin-bottom: 1.5mm; }
     .principal { font-size: 16px; font-weight: 800; letter-spacing: 2px; color: #1a252f; }
   </style>
@@ -1382,8 +1388,8 @@
             labels: ['전공직무', 'AI역량', '기초학업', '어학능력', '건강체력', '바른인성'],
             datasets: [{
                 data: [${radarData.join(',')}],
-                backgroundColor: 'rgba(59, 113, 202, 0.25)',
-                borderColor: '#3b71ca',
+                backgroundColor: 'rgba(47, 103, 216, 0.25)',
+                borderColor: '#2f67d8',
                 borderWidth: 2,
                 pointRadius: 2,
                 pointBackgroundColor: '#2c3e50'
