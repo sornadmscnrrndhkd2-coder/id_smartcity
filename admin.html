@@ -1073,8 +1073,18 @@
                             batch.set(window.doc(window.db, "directory", studentId), { stableId: targetDocId, authEmail: authEmail || null, updatedAt: window.serverTimestamp() }, { merge: true });
                             if (prevStudentId && prevStudentId !== studentId) batch.delete(window.doc(window.db, "directory", prevStudentId));
                             successCount++; statusEl.textContent = `⏳ 진행중... (성공 ${successCount})`;
-                        } catch (err) { failCount++; } finally { try { await window.signOut(window.shadowAuth); } catch (_) {} }
-                    }
+                        } catch (err) { 
+                            failCount++; 
+                            // 💡 3단계: 실패 시 정확한 원인을 화면에 띄워줍니다.
+                            alert("❌ " + row["이름"] + " 업로드 실패 원인: " + err.message);
+                        } finally { 
+                            try { await window.signOut(window.shadowAuth); } catch (_) {} 
+                        }
+                        
+                        // 🔥 2단계: 구글 스팸 방어 피하기! 한 명 올리고 '2초(2000ms)' 숨 고르기 🔥
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        
+                    } // <-- for 반복문이 끝나는 괄호
                     await batch.commit(); alert(`✅ 성공: ${successCount}\n실패: ${failCount}`); statusEl.textContent = `✅ 완료`; window.loadData(); window.loadDashboard();
                 } catch (e) { statusEl.textContent = "❌ 에러"; alert(e.message); } finally { fileInput.value = ""; }
             }; reader.readAsArrayBuffer(fileInput.files[0]);
