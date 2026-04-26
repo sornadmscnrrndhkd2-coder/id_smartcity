@@ -720,8 +720,12 @@
             <input type="hidden" id="editGrade">
             
             <div class="edit-profile-header">
-                <div class="edit-photo-box">
-                    <img id="edit-PhotoImg" src="" alt="사진">
+                <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;" onclick="window.triggerPhotoUploadInModal()" title="사진 변경">
+                    <div class="edit-photo-box" style="position: relative;">
+                        <img id="edit-PhotoImg" src="" alt="사진">
+                        <div style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.6); padding: 4px; border-radius: 50%; font-size: 14px; line-height: 1;">📷</div>
+                    </div>
+                    <span style="font-size: 10px; color: #7f8c8d; margin-top: 5px;">사진 클릭하여 변경</span>
                 </div>
                 <div class="info-grid">
                     <div><label>이름</label><input type="text" id="edit-Name"></div>
@@ -2155,6 +2159,51 @@ tbody.innerHTML = students.length === 0 ? `<tr><td colspan='18' style='padding:3
             printWindow.document.close();
         };
         // 👆👆 [여기까지 추가] 👆👆
+        // 📸 팝업창에서 사진 클릭 시 실행되는 즉시 업로드 함수
+        window.triggerPhotoUploadInModal = function() {
+            // 선생님이 이미 만들어둔 숨겨진 input에서 학생 고유 ID를 가져옵니다! (천재적인 설계👍)
+            const studentDocId = document.getElementById("editDocId").value;
+            if (!studentDocId) return alert("학생 정보가 없습니다.");
+
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            
+            fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // 용량 체크 (DB 부하 방지용: 500KB 제한)
+                if (file.size > 500 * 1024) {
+                    alert("🚨 사진 용량이 너무 큽니다! (500KB 이하 권장)\n화면 캡처나 카톡으로 나에게 보내기 후 저장하여 용량을 줄여주세요.");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const base64String = event.target.result;
+                    try {
+                        // 1. 파이어베이스 DB 즉시 업데이트
+                        const studentRef = window.doc(window.db, "students", studentDocId);
+                        await window.updateDoc(studentRef, { photoUrl: base64String });
+
+                        // 2. 팝업창 안의 사진 즉시 변경
+                        document.getElementById('edit-PhotoImg').src = base64String;
+                        
+                        // 3. 뒤에 깔려있는 메인 명단 표의 사진도 새로고침
+                        if(typeof window.loadData === "function") window.loadData(); 
+
+                        alert("✅ 학생 사진이 변경되었습니다.");
+                    } catch (err) {
+                        alert("사진 저장 실패: " + err.message);
+                    }
+                };
+                reader.readAsDataURL(file);
+            };
+            
+            // 숨겨진 파일 선택 창 강제 열기
+            fileInput.click();
+        };
     </script>
 </body>
 </html>
