@@ -886,7 +886,7 @@
         
         window.graduateSeniors = async function() {
             if (!window.isSystemLocked) return alert("🚨 '마감(🔒)' 처리해야 졸업 처리가 가능합니다.");
-            if (!confirm("3학년 데이터를 백업하고 DB에서 삭제하시겠습니까?\n학년별 칭호(스타터/빌더 등)를 포함하여 백업합니다.")) return; 
+            if (!confirm("3학년 데이터를 백업하고 DB에서 삭제하시겠습니까?")) return; 
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_grade", "==", 3)));
                 if (qSnap.empty) return alert("졸업 처리할 3학년이 없습니다.");
