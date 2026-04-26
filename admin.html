@@ -302,31 +302,34 @@
                 gap: 8px !important;
                 margin-top: 10px !important;
             }
-            .header-controls > div, .header-controls > button, .header-controls > span {
+            .header-controls > div, .header-controls > button, .header-controls > span { 
                 flex: 1 1 45% !important; 
                 font-size: 12px !important;
                 padding: 10px 5px !important;
                 text-align: center !important;
                 box-sizing: border-box !important;
-                /* 👇👇 이 세 줄이 핵심입니다! 빠져있었어요! 👇👇 */
                 white-space: normal !important; 
                 word-break: keep-all !important; 
                 height: auto !important; 
-                /* 👆👆 👆👆 */
             }
-          /* 👇👇 [여기에 TOP 10 버튼 3등분 정렬 코드 추가] 👇👇 */
-          .top-btn-wrapper {
-                width: 100% !important; /* 모바일에서 무조건 가로 100% 꽉 채우기 */
+
+            /* 👇👇 [비율에 맞춰 고무줄처럼 늘어나는 TOP 10 버튼] 👇👇 */
+            .top-btn-wrapper {
+                width: 100% !important; /* 가로 공간 100% 확보 */
+                display: grid !important; /* 👈 아래 카드들과 똑같은 그리드 시스템 적용! */
+                grid-template-columns: 1fr 1fr 1fr !important; /* 화면을 정확히 1:1:1 비율로 3등분 */
+                gap: 10px !important; /* 아래 카드들 사이 간격과 완벽 일치 */
             }
             .top-btn-wrapper button {
-                flex: 1 !important; /* 3개의 버튼이 1:1:1 비율로 너비 똑같이 나눠 갖기 */
-                padding: 10px 0 !important; /* 글씨 안 짤리게 좌우 여백 없애기 */
+                width: 100% !important; /* 배정받은 3등분 칸을 꽉 채움 */
+                margin: 0 !important;
+                padding: 10px 0 !important; 
+                font-size: 12px !important; /* 모바일용 글자 크기 최적화 */
+                box-sizing: border-box !important;
                 text-align: center !important;
-                white-space: nowrap !important;
             }
-            /* 👆👆 [여기까지 추가] 👆👆 */
-        }  
-    
+            /* 👆👆 [여기까지] 👆👆 */
+        }
     </style>
 </head>
 <body>
