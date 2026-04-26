@@ -314,7 +314,19 @@
                 height: auto !important; 
                 /* 👆👆 👆👆 */
             }
-        }
+          /* 👇👇 [여기에 TOP 10 버튼 3등분 정렬 코드 추가] 👇👇 */
+          .top-btn-wrapper {
+                width: 100% !important; /* 모바일에서 무조건 가로 100% 꽉 채우기 */
+            }
+            .top-btn-wrapper button {
+                flex: 1 !important; /* 3개의 버튼이 1:1:1 비율로 너비 똑같이 나눠 갖기 */
+                padding: 10px 0 !important; /* 글씨 안 짤리게 좌우 여백 없애기 */
+                text-align: center !important;
+                white-space: nowrap !important;
+            }
+            /* 👆👆 [여기까지 추가] 👆👆 */
+        }  
+    
     </style>
 </head>
 <body>
@@ -436,14 +448,15 @@
 
         <div class="content">
             <div id="dashboard">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin:0;">📈 스마트시티 인증제 실시간 현황</h2>
-                    <div style="display: flex; gap: 8px;">
+                    
+                    <div class="top-btn-wrapper" style="display: flex; gap: 10px;">
                         <button class="btn btn-dark" style="padding:8px 12px; font-size:12px;" onclick="window.openAdminRankModal(1)">🏆 1학년 TOP 10</button>
                         <button class="btn btn-dark" style="padding:8px 12px; font-size:12px;" onclick="window.openAdminRankModal(2)">🏆 2학년 TOP 10</button>
                         <button class="btn btn-dark" style="padding:8px 12px; font-size:12px;" onclick="window.openAdminRankModal(3)">🏆 3학년 TOP 10</button>
                     </div>
-                </div>
+                    </div>
 
                 <div class="dashboard-grid">
                     <div class="dash-card card-blue" onclick="window.openPendingModal()">
