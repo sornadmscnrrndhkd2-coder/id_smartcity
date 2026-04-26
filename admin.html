@@ -886,7 +886,8 @@
         
         window.graduateSeniors = async function() {
             if (!window.isSystemLocked) return alert("🚨 '마감(🔒)' 처리해야 졸업 처리가 가능합니다.");
-            if (!confirm("3학년 데이터를 백업하고 DB에서 삭제하시겠습니까?\n학년별 칭호(스타터/빌더 등)를 포함하여 백업합니다."));
+            // 👇 취소 눌렀을 때 멈추게 하는 return 추가!
+            if (!confirm("3학년 데이터를 백업하고 DB에서 삭제하시겠습니까?\n학년별 칭호(스타터/빌더 등)를 포함하여 백업합니다.")) return; 
             try {
                 const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_grade", "==", 3)));
                 if (qSnap.empty) return alert("졸업 처리할 3학년이 없습니다.");
@@ -918,7 +919,7 @@
                         "학번": d.current_studentId || "",
                         "이름": d.name || "",
                         "학과": d.department || "미지정",
-                        "최종_칭호(3학년)": y3.title || "진행중", // 요약용
+                        "최종_칭호(3학년)": y3.title || "진행중",
                         "총_누적점수": (y1.total_score || 0) + (y2.total_score || 0) + (y3.total_score || 0),
 
                         // 🟢 1학년 상세 (칭호 포함)
@@ -943,6 +944,32 @@
                 
                 backupData.sort((a,b) => String(a.학번).localeCompare(String(b.학번)));
                 const ws = XLSX.utils.json_to_sheet(backupData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "상세졸업백업");
+                
+                // 🔥 [마법 주문] 엑셀 열 너비 강제 확장 (다닥다닥 붙는 현상 완벽 해결) 🔥
+                ws['!cols'] = [
+                    // 기본 정보 구역
+                    {wch: 8},  // 학번
+                    {wch: 10}, // 이름
+                    {wch: 22}, // 학과
+                    {wch: 18}, // 최종_칭호
+                    {wch: 12}, // 총_누적점수
+                    
+                    // 1학년 구역
+                    {wch: 15}, {wch: 12}, // 1학년_칭호, 1학년_총점
+                    {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, // S~Y 점수칸 (넉넉하게 7로)
+                    {wch: 80}, // 1학년_취득내역 (글씨가 기니까 80칸으로 아주 넓게 쫙 펴줌!)
+
+                    // 2학년 구역
+                    {wch: 15}, {wch: 12}, 
+                    {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7},
+                    {wch: 80}, // 2학년_취득내역
+
+                    // 3학년 구역
+                    {wch: 15}, {wch: 12}, 
+                    {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, {wch: 7}, 
+                    {wch: 80}  // 3학년_취득내역
+                ];
+
                 XLSX.writeFile(wb, `스마트시티_졸업생_전학년_상세백업_${new Date().toISOString().slice(0,10).replace(/-/g, "")}.xlsx`);
                 
                 const batch = window.writeBatch(window.db);
