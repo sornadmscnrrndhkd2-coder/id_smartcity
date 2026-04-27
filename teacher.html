@@ -191,17 +191,36 @@
             .header-right span { margin: 0 !important; font-size: 11px !important; }
             .header-right .btn-logout { flex: 1 !important; min-width: 45% !important; margin: 0 !important; padding: 10px !important; font-size: 13px !important; text-align: center !important; box-sizing: border-box !important; }
         }
-        /* 교사 페이지 모바일 버튼 중앙 정렬 */
-        @media (max-width: 850px) {
-            /* 버튼을 감싸고 있는 영역을 강제로 가운데 정렬합니다 */
-            .student-list-header > div,
-            .card-header > div,
-            button.btn-primary.shadow,
+       /* 🔥 교사 페이지 모바일 최적화 (버튼 크기 고정 및 중앙 정렬) 🔥 */
+       @media (max-width: 850px) {
+            /* 1. 상단 버튼 영역 중앙 정렬 */
+            .header-controls {
+                display: flex !important;
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                margin-top: 10px !important;
+            }
+
+            /* 2. 버튼이 무식하게 커지는 것 방지 (가장 중요 ⭐️) */
+            .header-controls button, 
+            button.btn-primary.shadow, 
             button.btn-dark.shadow {
+                flex: 0 0 auto !important; /* 자기 크기만큼만 차지하게 고정 */
+                width: auto !important;
+                min-width: 90px !important; /* 너무 작아지지 않게 최소 폭만 지정 */
+                padding: 8px 15px !important; /* 날씬한 버튼 패딩 */
+                font-size: 12px !important;
+                border-radius: 20px !important;
+                margin: 0 !important; /* 멋대로 생기는 여백 제거 */
+            }
+
+            /* 3. 기타 헤더 영역 정렬 유지 */
+            .student-list-header > div,
+            .card-header > div {
                 display: flex !important;
                 justify-content: center !important;
                 align-items: center !important;
-                margin: 0 auto !important;
                 flex-wrap: wrap !important;
                 gap: 10px !important;
             }
