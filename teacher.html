@@ -183,44 +183,43 @@
             .modal-overlay { align-items: center; }
             .modal-content { border-radius: 20px; padding-bottom: 50px;} 
         }
-        /* 🔥 모바일 UI 완벽 정렬 및 버튼 크기 고정 (teacher.html 용) */
-        @media (max-width: 850px) {
-            .header { flex-direction: column !important; padding: 15px 10px !important; gap: 12px !important; align-items: center !important; }
-            .header-left { width: 100% !important; justify-content: center !important; margin: 0 !important; }
-            .header-right { width: 100% !important; justify-content: center !important; flex-wrap: wrap !important; gap: 10px !important; margin: 0 !important; }
-            .header-right span { margin: 0 !important; font-size: 11px !important; }
-            
-            /* ✅ 상단 버튼 뚱뚱해지는 원인(45% 강제 할당) 제거 및 예쁘게 고정 */
-            .header-right button, 
-            .header-right .btn-logout { 
-                flex: 0 0 auto !important; 
-                width: auto !important; 
-                min-width: 0 !important; 
-                margin: 0 !important; 
-                padding: 8px 16px !important; 
-                font-size: 12px !important; 
-                text-align: center !important; 
-                border-radius: 20px !important;
-            }
+      /* 🔥 모바일 헤더 버튼 & 레이아웃 깔끔 정리 */
+@media (max-width: 850px) {
+  /* 이름 / 뱃지 먼저 위쪽으로 깔끔하게 줄 정리 */
+  .header-left,
+  #teacherNameDisplay,
+  #roleBadgeDisplay,
+  #systemLockBadge {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 5px;
+    display: block;
+  }
 
-            /* ✅ 교사 페이지 학생 리스트/카드 헤더 중앙 정렬 유지 */
-            .student-list-header > div,
-            .card-header > div {
-                display: flex !important;
-                justify-content: center !important;
-                align-items: center !important;
-                margin: 0 auto !important;
-                flex-wrap: wrap !important;
-                gap: 10px !important;
-            }
-            
-            /* 하단 액션 버튼들도 너무 늘어나지 않게 제어 */
-            button.btn-primary.shadow,
-            button.btn-dark.shadow {
-                flex: 0 0 auto !important;
-                margin: 0 auto !important;
-            }
-        }
+  /* 버튼 두 개는 아래줄에 나란히 배치 */
+  .header-right {
+    width: 100%;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important; /* 버튼 한 줄에 딱 붙이기 */
+    margin-top: 10px;
+  }
+
+  /* 버튼 뚱뚱해짐 방지 및 예쁜 사이즈 고정 */
+  .header-right button,
+  .header-right .btn-logout {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 120px !important;
+    height: 40px !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+    margin: 0 !important;
+  }
+}
     </style>
 </head>
 <body>
