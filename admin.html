@@ -1459,11 +1459,7 @@ window.resetStudentPassword = async function(studentId, name) {
                     students.push(sInfo); window.allStudentsData.push(sInfo);
                 });
                 
-                const fdEl = document.getElementById("filterDept"); const bdEl = document.getElementById("badgeFilterDept"); const edEl = document.getElementById("edit-Dept");
-                let cF = fdEl.value, cB = bdEl.value; let oHtml = `<option value="ALL">전체 학과</option>`, eHtml = `<option value="미지정">미지정</option>`;
-                Array.from(dbDepts).sort().forEach(dept => { oHtml += `<option value="${dept}">${dept}</option>`; eHtml += `<option value="${dept}">${dept}</option>`; });
-                fdEl.innerHTML = oHtml; bdEl.innerHTML = oHtml; edEl.innerHTML = eHtml;
-                if(dbDepts.has(cF)) fdEl.value = cF; if(dbDepts.has(cB)) bdEl.value = cB;
+               
                 
                 students.sort((a,b) => String(a.id).localeCompare(String(b.id))); 
                 window.allStudentsData = students; 
@@ -2070,38 +2066,82 @@ window.resetStudentPassword = async function(studentId, name) {
 
         window.loadDashboard = async function() {
             try {
-                let dToday = new Date(new Date().getTime() + 9*60*60*1000); let todayStr = dToday.toISOString().slice(0,10);
-                try { const todaySnap = await window.getDoc(window.doc(window.db, "system_stats", todayStr)); document.getElementById('visitorCount').innerText = todaySnap.exists() ? todaySnap.data().visitors : 0; } catch(e) { document.getElementById('visitorCount').innerText = 0; }
-                const appSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중"))); document.getElementById('dashPendingApprove').innerText = appSnap.size + "건";
+                // 💡 1. 오늘 방문자 및 결재 대기 건수 가져오기 (이건 빠릅니다)
+                let dToday = new Date(new Date().getTime() + 9*60*60*1000); 
+                let todayStr = dToday.toISOString().slice(0,10);
+                try { 
+                    const todaySnap = await window.getDoc(window.doc(window.db, "system_stats", todayStr)); 
+                    document.getElementById('visitorCount').innerText = todaySnap.exists() ? todaySnap.data().visitors : 0; 
+                } catch(e) { document.getElementById('visitorCount').innerText = 0; }
+                
+                const appSnap = await window.getDocs(window.query(window.collection(window.db, "applications"), window.where("status", "==", "대기중"))); 
+                document.getElementById('dashPendingApprove').innerText = appSnap.size + "건";
 
+                // 💡 2. 전교생 데이터 가져오기 (여기서 학과 목록도 함께 추출합니다)
                 const querySnapshot = await window.getDocs(window.collection(window.db, "students"));
-                let totalBadges = 0, topAchievers = 0, pendingAlerts = 0; let badgeCounts = { S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0 }; let dynamicDeptCounts = {}; 
-                
+                let totalBadges = 0, topAchievers = 0, pendingAlerts = 0; 
+                let badgeCounts = { S:0, M:0, A:0, R:0, T:0, C:0, I:0, Tr:0, Y:0 }; 
+                let dynamicDeptCounts = {}; 
+                let globalDepts = new Set(); // 🔥 학교의 모든 학과를 담을 바구니
+
                 querySnapshot.forEach(doc => { 
-                    let d = doc.data(); if(!d.current_grade) return; let g = d.current_grade; let yData = d[`year_${g}`]; if(!yData) return; 
-                    let dept = d.department && d.department !== "-" ? d.department : "미지정"; if(!dynamicDeptCounts[dept]) dynamicDeptCounts[dept] = 0;
+                    let d = doc.data(); 
+                    if(d.department && d.department !== "-" && d.department !== "미지정") globalDepts.add(d.department);
+                    
+                    if(!d.current_grade) return; 
+                    let g = d.current_grade; 
+                    let yData = d[`year_${g}`]; 
+                    if(!yData) return; 
+                    
+                    let dept = d.department && d.department !== "-" ? d.department : "미지정"; 
+                    if(!dynamicDeptCounts[dept]) dynamicDeptCounts[dept] = 0;
                     if(yData.earned_badges >= 6) { topAchievers++; dynamicDeptCounts[dept]++; } 
-                    window.AREAS.forEach(a => { if(yData.pass && yData.pass[a]) { badgeCounts[a]++; totalBadges++; } if(yData.pass && yData.pass[a] === true && (!yData.delivery_status || yData.delivery_status[a] !== true)) { pendingAlerts++; } }); 
+                    
+                    window.AREAS.forEach(a => { 
+                        if(yData.pass && yData.pass[a]) { badgeCounts[a]++; totalBadges++; } 
+                        if(yData.pass && yData.pass[a] === true && (!yData.delivery_status || yData.delivery_status[a] !== true)) { pendingAlerts++; } 
+                    }); 
                 });
-                
-                document.getElementById('dashMonthlyBadges').innerText = totalBadges + "개"; document.getElementById('dashTopAchievers').innerText = topAchievers + "명"; document.getElementById('dashPendingAlert').innerText = pendingAlerts + "건";
+
+                // 🔥 [중요] 조회하기 전에도 학과 목록이 보이도록 선택창(Select) 미리 채우기 🔥
+                const fdEl = document.getElementById("filterDept"); 
+                const bdEl = document.getElementById("badgeFilterDept"); 
+                const edEl = document.getElementById("edit-Dept");
+                let oHtml = `<option value="ALL">전체 학과</option>`, eHtml = `<option value="미지정">미지정</option>`;
+                Array.from(globalDepts).sort().forEach(dept => { 
+                    oHtml += `<option value="${dept}">${dept}</option>`; 
+                    eHtml += `<option value="${dept}">${dept}</option>`; 
+                });
+                fdEl.innerHTML = oHtml; bdEl.innerHTML = oHtml; edEl.innerHTML = eHtml;
+
+                // 💡 3. 대시보드 숫자 및 차트 업데이트
+                document.getElementById('dashMonthlyBadges').innerText = totalBadges + "개"; 
+                document.getElementById('dashTopAchievers').innerText = topAchievers + "명"; 
+                document.getElementById('dashPendingAlert').innerText = pendingAlerts + "건";
                 if(dynamicDeptCounts["미지정"] === 0) delete dynamicDeptCounts["미지정"];
 
-                const chartLabels = Object.keys(dynamicDeptCounts).map(name => name.length > 5 ? [name.substring(0, 4), name.substring(4)] : name); const chartData = Object.values(dynamicDeptCounts);
-                const safeChartLabels = chartLabels.length > 0 ? chartLabels : ["데이터 없음"]; const safeChartData = chartData.length > 0 ? chartData : [0];
+                const chartLabels = Object.keys(dynamicDeptCounts).map(name => name.length > 5 ? [name.substring(0, 4), name.substring(4)] : name); 
+                const chartData = Object.values(dynamicDeptCounts);
+                
+                const ctxDept = document.getElementById('deptChart').getContext('2d'); 
+                if(window.myDeptChart) window.myDeptChart.destroy(); 
+                window.myDeptChart = new Chart(ctxDept, { type: 'bar', data: { labels: chartLabels.length > 0 ? chartLabels : ["데이터 없음"], datasets: [{ label: '인증 달성자', data: chartData.length > 0 ? chartData : [0], backgroundColor: '#3498db' }] } });
 
-                const ctxDept = document.getElementById('deptChart').getContext('2d'); if(window.myDeptChart) window.myDeptChart.destroy(); 
-                window.myDeptChart = new Chart(ctxDept, { type: 'bar', data: { labels: safeChartLabels, datasets: [{ label: '인증 달성자', data: safeChartData, backgroundColor: '#3498db' }] } });
-
-                const ctxBadge = document.getElementById('badgeChart').getContext('2d'); if(window.myBadgeChart) window.myBadgeChart.destroy(); 
+                const ctxBadge = document.getElementById('badgeChart').getContext('2d'); 
+                if(window.myBadgeChart) window.myBadgeChart.destroy(); 
                 window.myBadgeChart = new Chart(ctxBadge, { type: 'doughnut', data: { labels: window.AREAS.map(a => window.AREA_NAMES[a]), datasets: [{ data: window.AREAS.map(a => badgeCounts[a]), backgroundColor: ['#1abc9c', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c', '#2ecc71', '#95a5a6'] }] }, options: { plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } } } } });
 
+                // 💡 4. 방문자 추이 (최근 7일)
                 let dates = []; let visitors = [];
                 for(let i=6; i>=0; i--) {
-                    let d = new Date(new Date().getTime() + 9*60*60*1000 - (i*24*60*60*1000)); let dStr = d.toISOString().slice(0,10); dates.push(dStr.slice(5));
+                    let d = new Date(new Date().getTime() + 9*60*60*1000 - (i*24*60*60*1000)); 
+                    let dStr = d.toISOString().slice(0,10); dates.push(dStr.slice(5));
                     try { const snap = await window.getDoc(window.doc(window.db, "system_stats", dStr)); visitors.push(snap.exists() ? snap.data().visitors : 0); } catch(e) { visitors.push(0); }
                 }
-                const ctxVis = document.getElementById('visitorChart').getContext('2d'); if(window.myVisitorChart) window.myVisitorChart.destroy(); window.myVisitorChart = new Chart(ctxVis, { type: 'line', data: { labels: dates, datasets: [{ label: '방문자', data: visitors, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)', fill: true, tension: 0.3 }] }, options: { maintainAspectRatio: false } });
+                const ctxVis = document.getElementById('visitorChart').getContext('2d'); 
+                if(window.myVisitorChart) window.myVisitorChart.destroy(); 
+                window.myVisitorChart = new Chart(ctxVis, { type: 'line', data: { labels: dates, datasets: [{ label: '방문자', data: visitors, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.2)', fill: true, tension: 0.3 }] }, options: { maintainAspectRatio: false } });
+                
             } catch(e) { console.error("대시보드 로드 오류:", e); }
         };
 
