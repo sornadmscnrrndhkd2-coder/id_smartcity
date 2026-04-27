@@ -1386,23 +1386,56 @@ window.resetStudentPassword = async function(studentId, name) {
             prog.innerText = `✅ 완료! (성공: ${sCnt}명)`; document.getElementById("photoFilesInput").value = ""; window.loadData(); 
         });
         
-        window.loadBadgeData = async function() { 
-            const tbody = document.getElementById("badgeTableBody"); const fGrade = document.getElementById("badgeFilterGrade").value; const fDept = document.getElementById("badgeFilterDept").value; tbody.innerHTML = ""; 
-            try { 
-                const qSnap = await window.getDocs(window.collection(window.db, "students")); 
-                qSnap.forEach(doc => { 
-                    let d = doc.data(); 
-                    if (d.current_grade == fGrade && d[`year_${fGrade}`]) { 
-                        if (fDept !== "ALL" && (d.department || "미지정") !== fDept) return; 
-                        let pass = d[`year_${fGrade}`].pass || {}; let dev = d[`year_${fGrade}`].delivery_status || {}; let newB = window.AREAS.filter(a => pass[a] === true && dev[a] !== true); 
-                        if (newB.length > 0) { 
-                            let bHtml = newB.map(a => `<span style="background:#e74c3c; color:white; padding:3px 6px; border-radius:4px; margin:2px; display:inline-block;">[${a}] ${window.AREA_NAMES[a]}</span>`).join(""); 
-                            tbody.innerHTML += `<tr><td>${d.department||"-"}</td><td>${d.current_studentId}</td><td><strong>${d.name}</strong></td><td>${bHtml}</td><td><button class="btn btn-blue" onclick="window.deliverSpecificBadges('${doc.id}', ${fGrade}, '${newB.join(",")}')">지급 완료</button></td></tr>`; 
-                        } 
-                    } 
-                }); 
-                if(tbody.innerHTML === "") tbody.innerHTML = "<tr><td colspan='5'>지급 대상 없음</td></tr>"; 
-            } catch(e) { tbody.innerHTML = "<tr><td colspan='5'>오류</td></tr>"; } 
+        window.loadBadgeData = async function() {
+            const tbody = document.getElementById("badgeTableBody"); 
+            const fGrade = document.getElementById("badgeFilterGrade").value; 
+            const fDept = document.getElementById("badgeFilterDept").value; 
+            
+            // 💡 로딩 중 안내 띄우기
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px; font-weight:bold; color:#3498db;'>데이터 분석 및 중복 제거 중입니다... ⏳</td></tr>"; 
+            
+            try {
+                const qSnap = await window.getDocs(window.collection(window.db, "students"));
+                
+                // 🔥 [핵심 마법] 학번을 기준으로 겹치는 학생들을 걸러낼 똑똑한 바구니!
+                let uniqueStudents = {}; 
+
+                qSnap.forEach(doc => {
+                    let d = doc.data();
+                    if (d.current_grade == fGrade && d[`year_${fGrade}`]) {
+                        if (fDept !== "ALL" && (d.department || "미지정") !== fDept) return;
+                        
+                        let pass = d[`year_${fGrade}`].pass || {}; 
+                        let dev = d[`year_${fGrade}`].delivery_status || {}; 
+                        let newB = window.AREAS.filter(a => pass[a] === true && dev[a] !== true);
+                        
+                        if (newB.length > 0) {
+                            // 💡 학번(current_studentId)이 바구니에 없으면 새로 담고, 이미 있으면 무시(중복 제거)!
+                            if (!uniqueStudents[d.current_studentId]) {
+                                uniqueStudents[d.current_studentId] = {
+                                    docId: doc.id,
+                                    dept: d.department || "-",
+                                    studentId: d.current_studentId,
+                                    name: d.name,
+                                    badges: newB
+                                };
+                            }
+                        }
+                    }
+                });
+
+                tbody.innerHTML = "";
+                let count = 0;
+                
+                // 🔥 중복이 제거된 '진짜 1명씩'의 데이터만 화면에 예쁘게 그립니다.
+                Object.values(uniqueStudents).forEach(s => {
+                    let bHtml = s.badges.map(a => `<span style="background:#e74c3c; color:white; padding:3px 6px; border-radius:4px; margin:2px; display:inline-block;">[${a}] ${window.AREA_NAMES[a]}</span>`).join("");
+                    tbody.innerHTML += `<tr><td>${s.dept}</td><td>${s.studentId}</td><td><strong>${s.name}</strong></td><td>${bHtml}</td><td><button class="btn btn-blue" onclick="window.deliverSpecificBadges('${s.docId}', ${fGrade}, '${s.badges.join(",")}')">지급 완료</button></td></tr>`;
+                    count++;
+                });
+
+                if(count === 0) tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>지급 대상 없음</td></tr>";
+            } catch(e) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red;'>오류 발생</td></tr>"; }
         };
         
         window.deliverSpecificBadges = async function(id, grade, areas) { if(!confirm("지급 완료 처리?")) return; let upd = {}; areas.split(",").forEach(a => upd[`year_${grade}.delivery_status.${a}`] = true); await window.updateDoc(window.doc(window.db, "students", id), upd); window.loadBadgeData(); window.loadDashboard(); };
