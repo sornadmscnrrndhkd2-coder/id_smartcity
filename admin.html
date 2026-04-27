@@ -875,7 +875,11 @@
                 const activeNav = document.getElementById('nav-' + id); if(activeNav) activeNav.classList.add('menu-active');
                 
                 if(id === 'dashboard' && typeof window.loadDashboard === 'function') window.loadDashboard();
-                if(id === 'studentList') { if(typeof window.updateTableHeaders === 'function') window.updateTableHeaders(); if(typeof window.loadData === 'function') window.loadData(); }
+                if(id === 'studentList') { 
+    if(typeof window.updateTableHeaders === 'function') window.updateTableHeaders(); 
+    // 🔥 자동 로딩을 빼고 친절한 안내 메시지를 띄웁니다.
+    document.getElementById("studentTableBody").innerHTML = "<tr><td colspan='18' style='padding:50px; text-align:center; font-size:14px; color:#7f8c8d;'>👆 위에서 학년/학과를 선택한 후 <b>[🔄 조회]</b> 버튼을 눌러주세요.</td></tr>"; 
+}
                 if(id === 'teacherManage' && typeof window.loadTeachers === 'function') window.loadTeachers();
                 if(id === 'systemLog' && typeof window.loadLogs === 'function') window.loadLogs();
                 if(id === 'badgeManagement' && typeof window.loadBadgeData === 'function') window.loadBadgeData();
@@ -1424,20 +1428,35 @@ window.resetStudentPassword = async function(studentId, name) {
         window.toggleAllCheckboxes = function(source) { document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = source.checked); };
 
         window.loadData = async function() {
-            const tbody = document.getElementById("studentTableBody"); const fGrade = document.getElementById("filterGrade").value; const fDept = document.getElementById("filterDept").value; const fClass = document.getElementById("filterClass").value; const fCert = document.getElementById("filterCert").value; 
-            tbody.innerHTML = "<tr><td colspan='18'>불러오는 중...</td></tr>"; 
+            const tbody = document.getElementById("studentTableBody"); 
+            const fGrade = document.getElementById("filterGrade").value; 
+            const fDept = document.getElementById("filterDept").value; 
+            const fClass = document.getElementById("filterClass").value; 
+            const fCert = document.getElementById("filterCert").value; 
+            
+            // 💡 [안내] 로딩 중 메시지
+            tbody.innerHTML = "<tr><td colspan='18' style='padding:50px; text-align:center; font-size:14px; color:#3498db; font-weight:bold;'>데이터를 빠르고 안전하게 불러오는 중입니다... 🚀</td></tr>"; 
+            
             try {
-                const qSnap = await window.getDocs(window.collection(window.db, "students")); let students = []; window.allStudentsData = []; let dbDepts = new Set();
+                // 🔥 1. 속도 광속 최적화: 파이어베이스에서 '선택한 학년' 명단만 쏙 빼오기!
+                const q = window.query(window.collection(window.db, "students"), window.where("current_grade", "==", Number(fGrade)));
+                const qSnap = await window.getDocs(q); 
+                
+                let students = []; window.allStudentsData = []; let dbDepts = new Set();
+                
                 qSnap.forEach(doc => {
-                    let d = doc.data(); if(d.department && d.department !== "-" && d.department !== "미지정") dbDepts.add(d.department);
+                    let d = doc.data(); 
+                    if(d.department && d.department !== "-" && d.department !== "미지정") dbDepts.add(d.department);
                     let yD = d[`year_${fGrade}`] || {};
-                    if (d.current_grade == fGrade && d[`year_${fGrade}`]) {
-                        if (fDept !== "ALL" && (d.department || "미지정") !== fDept) return;
-                        let cNum = parseInt(String(d.current_studentId).substring(1, 3), 10); if (fClass !== "ALL" && !isNaN(cNum) && cNum !== Number(fClass)) return;
-                        if (fCert === 'PASS' && (yD.earned_badges || 0) < 6) return;
-                        let sInfo = { docId: doc.id, id: d.current_studentId, name: d.name, dept: d.department || "-", photo: d.photoUrl || null, yearData: yD };
-                        students.push(sInfo); window.allStudentsData.push(sInfo);
-                    }
+                    
+                    // 🔥 2. 완벽한 자유 필터링 로직 🔥
+                    if (fDept !== "ALL" && (d.department || "미지정") !== fDept) return;
+                    let cNum = parseInt(String(d.current_studentId).substring(1, 3), 10); 
+                    if (fClass !== "ALL" && !isNaN(cNum) && cNum !== Number(fClass)) return;
+                    if (fCert === 'PASS' && (yD.earned_badges || 0) < 6) return;
+                    
+                    let sInfo = { docId: doc.id, id: d.current_studentId, name: d.name, dept: d.department || "-", photo: d.photoUrl || null, yearData: yD };
+                    students.push(sInfo); window.allStudentsData.push(sInfo);
                 });
                 
                 const fdEl = document.getElementById("filterDept"); const bdEl = document.getElementById("badgeFilterDept"); const edEl = document.getElementById("edit-Dept");
@@ -1447,22 +1466,20 @@ window.resetStudentPassword = async function(studentId, name) {
                 if(dbDepts.has(cF)) fdEl.value = cF; if(dbDepts.has(cB)) bdEl.value = cB;
                 
                 students.sort((a,b) => String(a.id).localeCompare(String(b.id))); 
-window.allStudentsData = students; // 👈 화면에 보이는 필터링된 명단만 프린트용 데이터로 덮어쓰기!
-tbody.innerHTML = students.length === 0 ? `<tr><td colspan='18' style='padding:30px;'>데이터 없음</td></tr>` : "";
+                window.allStudentsData = students; 
+                tbody.innerHTML = students.length === 0 ? `<tr><td colspan='18' style='padding:30px; text-align:center;'>조건에 맞는 학생 데이터가 없습니다.</td></tr>` : "";
                 
-                // 🔥 [추가됨] forEach에 index를 넣고 번호를 그려줍니다.
                 students.forEach((s, index) => {
                     let sc = s.yearData.scores || {}; let p = s.yearData.pass || {}; let d = s.yearData.delivery_status || {};
                     let pHtml = s.photo ? `<img src="${s.photo}" class="profile-img" onclick="window.openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
                     
-                    // 🔥 [추가됨] 체크박스 바로 옆에 연번 td 추가
                     let rHtml = `<tr class="${(s.yearData.earned_badges||0)>=6?'certified-row':''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}"></td><td style="font-weight:bold; color:#7f8c8d; text-align:center;">${index + 1}</td><td>${s.dept}</td><td>${s.id}</td><td style="text-align:left;display:flex;justify-content:space-between;"><div>${pHtml} <strong>${s.name}</strong></div><div style="display:flex; gap:10px;"><div onclick="window.openEditModal('${s.docId}', ${fGrade})" style="cursor:pointer;" title="개별 점수 수정">✏️</div><div onclick="window.resetStudentPassword('${s.id}', '${s.name}')" style="cursor:pointer;" title="비밀번호 초기화">🔄</div></div></td>`;
                     
                     window.AREAS.forEach(area => { let isD = d[area] === true; let cell = sc[area] || 0; if(p[area]) cell = `<span class="pass-star">★</span>${cell}<br><span class="badge-status ${isD?'status-done':'status-yet'}" onclick="window.toggleDelivery('${s.docId}', ${fGrade}, '${area}', ${isD})">${isD?'지급완료':'미지급'}</span>`; rHtml += `<td class="score-cell">${cell}</td>`; });
                     let cBtn = `<button class="btn ${fGrade == 3 ? 'btn-purple' : 'btn-blue'}" onclick="window.printCertificate('${s.id}')">🖨️</button>`; 
                     rHtml += `<td style="color:#2980b9;font-weight:bold;">${s.yearData.total_score||0}점</td><td><strong>${s.yearData.earned_badges||0}개</strong></td><td style="color:#27ae60;font-weight:bold;">${s.yearData.title||'진행중'}</td><td>${cBtn}</td></tr>`; tbody.innerHTML += rHtml;
                 });
-            } catch(e) { tbody.innerHTML = `<tr><td colspan='18' style='color:red;'>오류</td></tr>`; }
+            } catch(e) { tbody.innerHTML = `<tr><td colspan='18' style='color:red; text-align:center;'>오류가 발생했습니다: ${e.message}</td></tr>`; }
         };
 
         window.toggleEditMode = async function() {
