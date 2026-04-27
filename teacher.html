@@ -1492,8 +1492,12 @@
             let rawHomeroom = sessionStorage.getItem('homeroom') || sessionStorage.getItem('assignment');
             if (!rawHomeroom || rawHomeroom === 'null' || rawHomeroom === 'undefined' || rawHomeroom === '-') rawHomeroom = "";
 
+           // 🔥 [추가/수정] 담임 여부에 따라 역할 텍스트 결정 및 'undefined' 에러 방지
+           let finalName = (loginName === "undefined" || !loginName) ? "교사" : loginName;
+            let roleText = rawHomeroom !== "" ? rawHomeroom + " 담임" : subjectStr + " 담당";
+
             const tNameDisplay = document.getElementById('teacherNameDisplay');
-            if(tNameDisplay) tNameDisplay.innerText = `${loginName} (담임: ${rawHomeroom ? rawHomeroom : '없음'})`;
+            if(tNameDisplay) tNameDisplay.innerHTML = `${finalName} 선생님 <span style="font-size: 14px; color: #f1c40f;">(${roleText})</span>`;
             
             const roleBadge = document.getElementById('roleBadgeDisplay');
             if(roleBadge) roleBadge.innerText = subjectStr !== "일반" ? subjectStr + " 전담" : "일반교사";
