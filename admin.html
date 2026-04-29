@@ -1384,14 +1384,50 @@ window.resetStudentPassword = async function(studentId, name) {
         window.closePhotoView = function() { document.getElementById("photoViewModal").style.display = "none"; }
         window.toggleDelivery = async function(id, grade, area, currentStatus) { if(!confirm(`상태를 변경할까요?`)) return; await window.updateDoc(window.doc(window.db, "students", id), { [`year_${grade}.delivery_status.${area}`]: !currentStatus }); window.loadData(); window.loadDashboard(); };
         
+        // 📸 학생 증명사진 일괄 등록 (강력 압축 버전)
         document.getElementById("uploadPhotosBtn").addEventListener("click", async () => { 
-            const files = document.getElementById("photoFilesInput").files; const prog = document.getElementById("photoUploadProgress"); 
-            if (files.length === 0) return alert("선택!"); if (!confirm(`업로드 하시겠습니까까?`)) return; prog.style.display = "block"; prog.innerText = "⏳ 처리 중..."; let sCnt = 0;
+            const files = document.getElementById("photoFilesInput").files; 
+            const prog = document.getElementById("photoUploadProgress"); 
+            if (files.length === 0) return alert("사진을 선택해주세요!"); 
+            if (!confirm(`선택한 사진을 압축하여 업로드 하시겠습니까?`)) return; 
+            
+            prog.style.display = "block"; prog.innerText = "⏳ 사진 압축 및 처리 중..."; 
+            let sCnt = 0;
+
             for (let i = 0; i < files.length; i++) { 
-                let studentId = files[i].name.split('.')[0]; const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId))); 
-                if (!qSnap.empty) { const reader = new FileReader(); await new Promise((res) => { reader.onload = async function(e) { await window.updateDoc(window.doc(window.db, "students", qSnap.docs[0].id), { photoUrl: e.target.result }); sCnt++; res(); }; reader.readAsDataURL(files[i]); }); } 
+                let studentId = files[i].name.split('.')[0]; 
+                const qSnap = await window.getDocs(window.query(window.collection(window.db, "students"), window.where("current_studentId", "==", studentId))); 
+                
+                if (!qSnap.empty) { 
+                    await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const img = new Image();
+                            img.onload = async () => {
+                                // 이미지 압축 마법!
+                                const canvas = document.createElement('canvas');
+                                let width = img.width; let height = img.height;
+                                if (width > height) { if (width > 150) { height *= 150 / width; width = 150; } } 
+                                else { if (height > 200) { width *= 200 / height; height = 200; } }
+                                canvas.width = width; canvas.height = height;
+                                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                                
+                                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                                // DB 업데이트
+                                await window.updateDoc(window.doc(window.db, "students", qSnap.docs[0].id), { photoUrl: compressedBase64 }); 
+                                sCnt++; 
+                                resolve(); 
+                            };
+                            img.src = event.target.result;
+                        };
+                        reader.readAsDataURL(files[i]);
+                    });
+                } 
             } 
-            prog.innerText = `✅ 완료! (성공: ${sCnt}명)`; document.getElementById("photoFilesInput").value = ""; window.loadData(); 
+            prog.innerText = `✅ 압축 업로드 완료! (성공: ${sCnt}명)`; 
+            document.getElementById("photoFilesInput").value = ""; 
+            window.loadData(); 
         });
         
         window.loadBadgeData = async function() {
@@ -1508,7 +1544,7 @@ window.resetStudentPassword = async function(studentId, name) {
                 
                 students.forEach((s, index) => {
                     let sc = s.yearData.scores || {}; let p = s.yearData.pass || {}; let d = s.yearData.delivery_status || {};
-                    let pHtml = s.photo ? `<img src="${s.photo}" class="profile-img" onclick="window.openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
+                    let pHtml = s.photo ? `<img src="${s.photo}" class="profile-img" loading="lazy" onclick="window.openPhotoView('${s.photo}', '${s.name}', '${s.id}', '${s.dept}')">` : `<div class="profile-placeholder"></div>`;
                     
                     let rHtml = `<tr class="${(s.yearData.earned_badges||0)>=6?'certified-row':''}"><td class="check-cell"><input type="checkbox" class="student-checkbox" value="${s.docId}"></td><td style="font-weight:bold; color:#7f8c8d; text-align:center;">${index + 1}</td><td>${s.dept}</td><td>${s.id}</td><td style="text-align:left;display:flex;justify-content:space-between;"><div>${pHtml} <strong>${s.name}</strong></div><div style="display:flex; gap:10px;"><div onclick="window.openEditModal('${s.docId}', ${fGrade})" style="cursor:pointer;" title="개별 점수 수정">✏️</div><div onclick="window.resetStudentPassword('${s.id}', '${s.name}')" style="cursor:pointer;" title="비밀번호 초기화">🔄</div></div></td>`;
                     
@@ -2268,8 +2304,8 @@ window.resetStudentPassword = async function(studentId, name) {
         };
         // 👆👆 [여기까지 추가] 👆👆
         // 📸 팝업창에서 사진 클릭 시 실행되는 즉시 업로드 함수
+        // 📸 팝업창에서 사진 클릭 시 실행되는 즉시 업로드 (강력 압축 버전)
         window.triggerPhotoUploadInModal = function() {
-            // 선생님이 이미 만들어둔 숨겨진 input에서 학생 고유 ID를 가져옵니다! (천재적인 설계👍)
             const studentDocId = document.getElementById("editDocId").value;
             if (!studentDocId) return alert("학생 정보가 없습니다.");
 
@@ -2281,35 +2317,47 @@ window.resetStudentPassword = async function(studentId, name) {
                 const file = e.target.files[0];
                 if (!file) return;
 
-                // 용량 체크 (DB 부하 방지용: 500KB 제한)
-                if (file.size > 500 * 1024) {
-                    alert("🚨 사진 용량이 너무 큽니다! (500KB 이하 권장)\n화면 캡처나 카톡으로 나에게 보내기 후 저장하여 용량을 줄여주세요.");
-                    return;
-                }
-
                 const reader = new FileReader();
-                reader.onload = async (event) => {
-                    const base64String = event.target.result;
-                    try {
-                        // 1. 파이어베이스 DB 즉시 업데이트
-                        const studentRef = window.doc(window.db, "students", studentDocId);
-                        await window.updateDoc(studentRef, { photoUrl: base64String });
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = async () => {
+                        // 1. 도화지(Canvas)를 만들어서 사진 크기를 증명사진용으로 확 줄입니다.
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 150; // 최대 가로 픽셀
+                        const MAX_HEIGHT = 200; // 최대 세로 픽셀
+                        let width = img.width;
+                        let height = img.height;
 
-                        // 2. 팝업창 안의 사진 즉시 변경
-                        document.getElementById('edit-PhotoImg').src = base64String;
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
                         
-                        // 3. 뒤에 깔려있는 메인 명단 표의 사진도 새로고침
-                        if(typeof window.loadData === "function") window.loadData(); 
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
 
-                        alert("✅ 학생 사진이 변경되었습니다.");
-                    } catch (err) {
-                        alert("사진 저장 실패: " + err.message);
-                    }
+                        // 2. 화질을 70%로 살짝 낮춰서 JPEG로 압축 (용량 10분의 1로 감소!)
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                        try {
+                            // 3. 압축된 가벼운 데이터를 파이어베이스에 저장
+                            const studentRef = window.doc(window.db, "students", studentDocId);
+                            await window.updateDoc(studentRef, { photoUrl: compressedBase64 });
+
+                            document.getElementById('edit-PhotoImg').src = compressedBase64;
+                            if(typeof window.loadData === "function") window.loadData(); 
+
+                            alert("✅ 사진이 가볍게 압축되어 저장되었습니다!");
+                        } catch (err) {
+                            alert("사진 저장 실패: " + err.message);
+                        }
+                    };
+                    img.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
             };
-            
-            // 숨겨진 파일 선택 창 강제 열기
             fileInput.click();
         };
     </script>
