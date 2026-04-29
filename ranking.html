@@ -1,3 +1,14 @@
+<!--[저작권 경고 및 지적재산권 안내 / Copyright and Intellectual Property Notice]
+
+Copyright 2026. 원작자(Original Author) All rights reserved.
+
+본 '스마트시티 역량 인증제 평가 시스템'의 모든 소스 코드 및 디자인, 시스템 구조에 대한 모든 저작권과 지적재산권은 원작자에게 있습니다.
+본 저장소가 공개(Public)로 설정되어 있더라도, 이는 호스팅 목적일 뿐 누구나 마음대로 쓸 수 있는 무료 오픈소스가 아닙니다.
+원작자의 사전 승인 없는 소스 코드 무단 복제, 수정, 배포 및 타 기관에서의 무단 사용을 엄격히 금지합니다. 이를 무시하고 도용할 경우 관련 법령에 따라 법적 책임을 물을 수 있습니다.
+
+All copyrights and intellectual property rights for the source code, design, and system architecture of this 'Smart City Competency Certification System' belong to the original author.
+Although this repository is public, it is strictly for hosting purposes and is NOT a free open-source project.
+Unauthorized copying, modification, distribution, or use of this source code by other institutions without prior approval from the author is strictly prohibited. Any violation of this may result in civil and criminal legal liabilities under applicable copyright laws.-->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -18,33 +29,32 @@
             font-family: 'Pretendard', sans-serif;
             background-color: var(--bg-main);
             color: var(--dark-blue);
-            /* TV 송출을 위해 화면에 꽉 차게 설정 */
             height: 100vh; overflow: hidden; 
             display: flex; flex-direction: column;
         }
 
-        /* 상단 전광판 헤더 */
+        /* 1. 상단 전광판 헤더 (가로형 기본) */
         .tv-header {
             background: linear-gradient(135deg, var(--dark-blue), #2c3e50);
-            color: white; padding: 20px 50px;
+            color: white; padding: 15px 40px; 
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             position: relative; z-index: 10;
         }
         .header-logo { display: flex; align-items: center; gap: 20px; }
-        .header-icon { width: 50px; height: 50px; background: white; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 30px; }
-        .header-text h1 { margin: 0; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);}
-        .header-text p { margin: 5px 0 0 0; font-size: 16px; color: #bdc3c7; font-weight: bold;}
+        .header-icon { width: 45px; height: 45px; background: white; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 26px; }
+        .header-text h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);}
+        .header-text p { margin: 5px 0 0 0; font-size: 15px; color: #bdc3c7; font-weight: bold;}
         
         .header-time { text-align: right; }
-        .live-badge { display: inline-block; background: #e74c3c; color: white; padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: 900; margin-bottom: 5px; animation: blink 1.5s infinite;}
+        .live-badge { display: inline-block; background: #e74c3c; color: white; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 900; margin-bottom: 5px; animation: blink 1.5s infinite;}
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .clock { font-size: 24px; font-weight: 900; font-family: monospace;}
+        .clock { font-size: 22px; font-weight: 900; font-family: monospace;}
 
-        /* 3기둥(학년별) 레이아웃 */
+        /* 2. 3기둥 레이아웃 (가로형 기본) */
         .ranking-container {
-            display: flex; flex: 1; gap: 30px; padding: 30px 50px;
-            box-sizing: border-box;
+            display: flex; flex: 1; gap: 20px; padding: 20px 40px; 
+            box-sizing: border-box; flex-direction: row; /* 기본은 가로 나열 */
         }
 
         .grade-column {
@@ -55,23 +65,22 @@
         }
 
         .grade-title {
-            text-align: center; padding: 25px 0; background: #fff;
+            text-align: center; padding: 18px 0; background: #fff;
             border-bottom: 2px solid #f1f2f6; position: relative;
         }
-        .grade-title h2 { margin: 0; font-size: 28px; font-weight: 900; color: var(--dark-blue);}
+        .grade-title h2 { margin: 0; font-size: 24px; font-weight: 900; color: var(--dark-blue);}
         
-        /* 학년별 포인트 컬러 */
         .col-1 .grade-title h2 { color: #27ae60; }
         .col-2 .grade-title h2 { color: var(--primary-blue); }
         .col-3 .grade-title h2 { color: #8e44ad; }
 
-        .ranking-list { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 10px;}
+        .ranking-list { padding: 15px 20px; flex: 1; display: flex; flex-direction: column; gap: 8px;}
 
-        /* TOP 1, 2, 3 랭킹 카드 */
+        /* 3. 랭킹 카드 디자인 (가로형 기본) */
         .top-card {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 15px 20px; border-radius: 16px; color: white;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15); margin-bottom: 5px;
+            padding: 12px 18px; border-radius: 14px; color: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); margin-bottom: 2px;
             animation: slideIn 0.4s ease-out forwards;
         }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
@@ -80,35 +89,70 @@
         .top-2 { background: linear-gradient(135deg, #bdc3c7, #95a5a6); color: #2c3e50;}
         .top-3 { background: linear-gradient(135deg, #e67e22, #d35400); }
 
-        .rank-info { display: flex; align-items: center; gap: 15px; }
-        .medal-img { width: 40px; height: 40px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+        .rank-info { display: flex; align-items: center; gap: 12px; }
+        .medal-img { width: 35px; height: 35px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
         
         .student-detail { display: flex; flex-direction: column; }
-        .student-detail h4 { margin: 0 0 2px 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;}
-        .student-detail p { margin: 0; font-size: 13px; opacity: 0.9; font-weight: 600;}
+        .student-detail h4 { margin: 0 0 2px 0; font-size: 19px; font-weight: 900; letter-spacing: -0.5px;}
+        .student-detail p { margin: 0; font-size: 12px; opacity: 0.9; font-weight: 600;}
         
         .score-display { text-align: right; }
-        .score-display h3 { margin: 0; font-size: 26px; font-weight: 900;}
+        .score-display h3 { margin: 0; font-size: 22px; font-weight: 900;}
 
-        /* 4등 ~ 10등 리스트 */
         .normal-rank {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 15px; background: #f8f9fa; border-radius: 12px;
+            padding: 10px 15px; background: #f8f9fa; border-radius: 10px;
             border: 1px solid #edf0f2;
             animation: fadeIn 0.4s ease-out forwards;
         }
         .normal-rank:nth-child(even) { background: #fff; }
 
-        .normal-info { display: flex; align-items: center; gap: 15px; }
-        .rank-num { font-size: 18px; font-weight: 900; color: #7f8c8d; width: 30px; text-align: center;}
-        .normal-name { font-size: 18px; font-weight: 900; color: var(--dark-blue);}
+        .normal-info { display: flex; align-items: center; gap: 12px; }
+        .rank-num { font-size: 16px; font-weight: 900; color: #7f8c8d; width: 25px; text-align: center;}
+        .normal-name { font-size: 16px; font-weight: 900; color: var(--dark-blue);}
         .normal-class { font-size: 12px; color: var(--text-gray); font-weight: bold; margin-left: 5px;}
-        
-        .normal-score { font-size: 18px; font-weight: 900; color: var(--primary-blue);}
+        .normal-score { font-size: 16px; font-weight: 900; color: var(--primary-blue);}
 
-        /* 로딩 텍스트 애니메이션 */
         .loading-msg { text-align: center; padding: 50px; font-size: 18px; color: var(--text-gray); font-weight: bold; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        /* =========================================================
+           🔥 [핵심 마법] TV가 '세로형'으로 회전했을 때 (Portrait Mode)
+           ========================================================= */
+        @media screen and (orientation: portrait) {
+            /* 1. 헤더 다이어트 */
+            .tv-header { padding: 15px 20px; }
+            .header-text h1 { font-size: 22px; }
+            .header-text p { font-size: 12px; }
+            .header-icon { width: 35px; height: 35px; font-size: 20px; }
+            .clock { font-size: 16px; }
+            .live-badge { font-size: 11px; padding: 3px 8px; margin-bottom: 2px;}
+
+            /* 2. 3기둥을 세로 3단 케이크 층쌓기로 변경 */
+            .ranking-container {
+                flex-direction: column; /* 세로로 쌓기 */
+                gap: 15px; 
+                padding: 15px 20px; 
+            }
+
+            /* 3. 각 학년 박스 높이 조절 및 여백 다이어트 */
+            .grade-title { padding: 10px 0; }
+            .grade-title h2 { font-size: 18px; }
+            .ranking-list { padding: 8px 12px; gap: 4px;}
+
+            /* 4. 카드 두께와 글씨 크기를 팍 줄여서 한 화면에 다 들어가게 압축 */
+            .top-card { padding: 8px 12px; margin-bottom: 0px;}
+            .medal-img { width: 28px; height: 28px; }
+            .student-detail h4 { font-size: 16px; }
+            .student-detail p { font-size: 11px; }
+            .score-display h3 { font-size: 18px; }
+
+            .normal-rank { padding: 6px 12px; border-radius: 8px; }
+            .rank-num { font-size: 14px; width: 20px; }
+            .normal-name { font-size: 14px; }
+            .normal-class { font-size: 11px; }
+            .normal-score { font-size: 14px; }
+        }
     </style>
 </head>
 <body>
