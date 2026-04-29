@@ -830,7 +830,7 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                     let tierClass = badges >= 6 ? (window.homeroomGrade === 1 ? "tier-starter" : (window.homeroomGrade === 2 ? "tier-builder" : "tier-pro")) : "tier-none";
                     let photoUrl = s.photoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
                     
-                    tbody.innerHTML += `<tr><td style="text-align:center;"><img src="${photoUrl}" onclick="window.viewStudentPhoto('${photoUrl}', '${s.name}')" style="width:36px; height:36px; border-radius:8px; object-fit:cover; border:1px solid #edf0f2; cursor:pointer;"></td><td><strong>${s.current_studentId}</strong></td><td>${s.name}</td><td style="color:var(--primary-blue); font-weight:bold;">${totalScore}점</td><td><strong>${badges}개</strong></td><td><span class="tier-tag ${tierClass}">${title}</span></td><td><button class="btn-view" onclick="window.viewStudentDetails('${s.current_studentId}')">상세보기 ❯</button></td></tr>`;
+                    tbody.innerHTML += `<tr><td style="text-align:center;"><img src="${photoUrl}" loading="lazy" onclick="window.viewStudentPhoto('${photoUrl}', '${s.name}')" style="width:36px; height:36px; border-radius:8px; object-fit:cover; border:1px solid #edf0f2; cursor:pointer;"></td><td><strong>${s.current_studentId}</strong></td><td>${s.name}</td><td style="color:var(--primary-blue); font-weight:bold;">${totalScore}점</td><td><strong>${badges}개</strong></td><td><span class="tier-tag ${tierClass}">${title}</span></td><td><button class="btn-view" onclick="window.viewStudentDetails('${s.current_studentId}')">상세보기 ❯</button></td></tr>`;
                 });
 
                 if(stuCount > 0) {
