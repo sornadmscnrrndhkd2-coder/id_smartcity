@@ -515,7 +515,7 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                         <button onclick="window.downloadExcelReport('studentTable', '스마트시티_전체데이터_보고서')" class="btn btn-dark" style="font-size: 14px; padding: 10px 15px;">⬇️ 표 엑셀 다운로드</button>
                     </div>
                 </div>
-
+            
                 <div id="addStudentBox" style="background: #fff; padding: 15px; border: 1px solid #f39c12; border-radius: 8px; margin-bottom: 15px; display: none;">
                     <h3 style="margin-top: 0; color: #d35400;">➕ 개별 학생 (전학생) 즉시 추가</h3>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
@@ -545,6 +545,10 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                         <option value="PASS">인증 통과자(6개↑)</option>
                     </select>
                     <button onclick="window.loadData()" class="btn btn-green" style="padding: 8px 20px;">🔄 조회</button>
+                    
+                    <div class="action-group">
+                        <button onclick="window.deleteSelectedStudents()" class="btn btn-red">🗑️ 선택 삭제</button>
+                    </div>
                 </div>
                 
                 <div style="overflow-x: auto; width: 100%;">
