@@ -528,27 +528,24 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                 </div>
                 
                 <div class="filter-group">
-                    <select id="filterGrade" onchange="window.updateTableHeaders(); window.loadData();">
+                    <select id="filterGrade" onchange="window.updateTableHeaders();">
                         <option value="1" selected>1학년</option>
                         <option value="2">2학년</option>
                         <option value="3">3학년</option>
                     </select>
-                    <select id="filterDept" onchange="window.loadData()">
+                    <select id="filterDept">
                         <option value="ALL">전체 학과</option>
                     </select>
-                    <select id="filterClass" onchange="window.loadData()">
+                    <select id="filterClass">
                         <option value="ALL">전체 반</option>
                         <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option><option value="7">7반</option><option value="8">8반</option><option value="9">9반</option><option value="10">10반</option>
                     </select>
-                    <select id="filterCert" onchange="window.loadData()">
+                    <select id="filterCert">
                         <option value="ALL">모든 학생</option>
                         <option value="PASS">인증 통과자(6개↑)</option>
                     </select>
                     <button onclick="window.loadData()" class="btn btn-green" style="padding: 8px 20px;">🔄 조회</button>
-                    
-                    <div class="action-group">
-                        <button onclick="window.deleteSelectedStudents()" class="btn btn-red">🗑️ 선택 삭제</button>
-                    </div>
+                </div>
                 </div>
                 
                 <div style="overflow-x: auto; width: 100%;">
