@@ -737,11 +737,12 @@ Unauthorized copying, modification, distribution, or use of this source code by 
             document.getElementById('proofModal').classList.add('active'); document.body.style.overflow = 'hidden';
         };
 
+        // 📸 담임 학급 명단에서 사진 클릭 시 (아담한 전용 프레임으로 띄우기!)
         window.viewStudentPhoto = function(photoUrl, studentName) {
-            const contentBox = document.getElementById('proofContent');
-            document.getElementById('proofModalTitle').innerText = `🖼️ ${studentName} 학생 사진`; 
-            contentBox.innerHTML = `<img src="${photoUrl}" style="max-width:100%; max-height:55vh; border-radius:8px; object-fit:contain;">`;
-            document.getElementById('proofModal').classList.add('active'); document.body.style.overflow = 'hidden';
+            document.getElementById("photoViewImg").src = photoUrl; 
+            document.getElementById("photoViewName").innerText = studentName; 
+            document.getElementById("photoViewInfo").innerText = "학생 증명사진"; 
+            document.getElementById("photoViewModal").style.display = "flex";
         };
 
         window.deriveCheckedIndicesFromScore = function(grade, area, targetScore) {
