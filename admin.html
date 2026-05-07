@@ -458,6 +458,7 @@ Unauthorized copying, modification, distribution, or use of this source code by 
             <div class="menu-group g-system">⚙️ 시스템 및 권한 관리</div>
             <div class="menu-item" id="nav-teacherManage" onclick="window.showSection('teacherManage')">👨‍🏫 교사 계정 관리</div>
             <div class="menu-item" id="nav-systemLog" onclick="window.showSection('systemLog')">🔍 시스템 로그 (CCTV)</div>
+            <div class="menu-item" id="nav-loginLog" onclick="window.showSection('loginLog')">🚪 로그인 접속 기록</div>
         </div>
 
         <div class="content">
@@ -512,6 +513,7 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button onclick="document.getElementById('addStudentBox').style.display='block'" class="btn btn-orange" style="font-size: 14px; padding: 10px 15px;">➕ 개별 학생 추가</button>
                         <button onclick="window.printClassSummary()" class="btn btn-green" style="font-size: 14px; padding: 10px 15px;">🖨️ 학급 포트폴리오</button>
+                        <button onclick="window.printBadgeBarChart()" class="btn btn-blue" style="font-size: 14px; padding: 10px 15px;">📊 배지 획득 현황</button>
                         <button onclick="window.downloadExcelReport('studentTable', '스마트시티_전체데이터_보고서')" class="btn btn-dark" style="font-size: 14px; padding: 10px 15px;">⬇️ 표 엑셀 다운로드</button>
                     </div>
                 </div>
@@ -681,6 +683,21 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                     <table class="log-table" id="logTable">
                         <thead><tr><th style="width: 180px;">발생 일시</th><th style="width: 150px;">수행자 (유형)</th><th>상세 작업 내역</th></tr></thead>
                         <tbody id="logTableBody"></tbody>
+                    </table>
+                </div>
+            </div><div id="loginLog" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap:10px;">
+                    <h2>🚪 시스템 로그인 접속 기록 (출입 명부)</h2>
+                    <button onclick="window.downloadExcelReport('loginLogTable', '스마트시티_로그인기록')" class="btn btn-dark">⬇️ 엑셀 다운로드</button>
+                </div>
+                <div class="summary-box" style="border-left-color: #2c3e50;">
+                    <strong>💡 투명한 출입 관리</strong><br>누가 언제 시스템에 로그인했는지 기록됩니다. (최근 300건 표시)
+                </div>
+                <button onclick="window.loadLoginLogs()" class="btn btn-blue" style="margin-bottom: 10px;">🔄 접속 기록 새로고침</button>
+                <div style="max-height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; overflow-x: auto;">
+                    <table class="log-table" id="loginLogTable">
+                        <thead><tr><th style="width: 180px;">접속 일시</th><th style="width: 150px;">접속자</th><th>활동 내역</th></tr></thead>
+                        <tbody id="loginLogTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -878,7 +895,7 @@ Unauthorized copying, modification, distribution, or use of this source code by 
 
         window.showSection = function(id) {
             try {
-                ['dashboard', 'studentList', 'uploadData', 'photoUpload', 'teacherManage', 'badgeManagement', 'promotion', 'systemLog'].forEach(s => { 
+                ['dashboard', 'studentList', 'uploadData', 'photoUpload', 'teacherManage', 'badgeManagement', 'promotion', 'systemLog', 'loginLog'].forEach(s => { 
                     const el = document.getElementById(s); if(el) el.style.display = 'none'; 
                     const nav = document.getElementById('nav-' + s); if(nav) nav.classList.remove('menu-active'); 
                 });
@@ -887,12 +904,12 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                 
                 if(id === 'dashboard' && typeof window.loadDashboard === 'function') window.loadDashboard();
                 if(id === 'studentList') { 
-    if(typeof window.updateTableHeaders === 'function') window.updateTableHeaders(); 
-    // 🔥 자동 로딩을 빼고 친절한 안내 메시지를 띄웁니다.
-    document.getElementById("studentTableBody").innerHTML = "<tr><td colspan='18' style='padding:50px; text-align:center; font-size:14px; color:#7f8c8d;'>👆 위에서 학년/학과를 선택한 후 <b>[🔄 조회]</b> 버튼을 눌러주세요.</td></tr>"; 
-}
+                    if(typeof window.updateTableHeaders === 'function') window.updateTableHeaders(); 
+                    document.getElementById("studentTableBody").innerHTML = "<tr><td colspan='18' style='padding:50px; text-align:center; font-size:14px; color:#7f8c8d;'>👆 위에서 학년/학과를 선택한 후 <b>[🔄 조회]</b> 버튼을 눌러주세요.</td></tr>"; 
+                }
                 if(id === 'teacherManage' && typeof window.loadTeachers === 'function') window.loadTeachers();
                 if(id === 'systemLog' && typeof window.loadLogs === 'function') window.loadLogs();
+                if(id === 'loginLog' && typeof window.loadLoginLogs === 'function') window.loadLoginLogs();
                 if(id === 'badgeManagement' && typeof window.loadBadgeData === 'function') window.loadBadgeData();
             } catch(e) { console.error("메뉴 에러:", e); }
         };
@@ -1495,6 +1512,19 @@ window.resetStudentPassword = async function(studentId, name) {
                 logs.slice(0, 200).forEach(log => { let ic = "👤"; if(log.user.includes("학생")) ic = "🧑🎓"; else if(log.user.includes("교사")) ic = "👨🏫"; else if(log.user.includes("관리자")||log.user.includes("Admin")) ic = "👑"; tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${ic} ${log.user}</td><td>${log.action}</td></tr>`; }); 
                 if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>로그 없음</td></tr>"; 
             } catch(e) { tbody.innerHTML = "<tr><td colspan='3'>오류</td></tr>"; }
+        };
+        // 👇 [추가됨] 접속 기록 (출입 명부) 전용 불러오기 함수
+        window.loadLoginLogs = async function() {
+            const tbody = document.getElementById("loginLogTableBody"); tbody.innerHTML = "<tr><td colspan='3'>불러오는 중...</td></tr>";
+            try { 
+                const qSnap = await window.getDocs(window.collection(window.db, "login_logs")); let logs = []; 
+                qSnap.forEach(doc => logs.push(doc.data())); logs.sort((a, b) => b.timestamp - a.timestamp); tbody.innerHTML = ""; 
+                logs.slice(0, 300).forEach(log => { 
+                    let ic = "👤"; if(log.user.includes("학생")) ic = "🧑‍🎓"; else if(log.user.includes("교사")) ic = "👨‍🏫"; else if(log.user.includes("관리자")||log.user.includes("Admin")) ic = "👑"; 
+                    tbody.innerHTML += `<tr><td class="log-time">${log.timeString}</td><td class="log-user">${ic} ${log.user}</td><td style="color:#2ecc71; font-weight:bold;">${log.action}</td></tr>`; 
+                }); 
+                if(logs.length === 0) tbody.innerHTML = "<tr><td colspan='3'>접속 기록이 없습니다.</td></tr>"; 
+            } catch(e) { tbody.innerHTML = "<tr><td colspan='3'>오류 발생</td></tr>"; }
         };
 
         window.updateTableHeaders = function() {
