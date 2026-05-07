@@ -227,7 +227,8 @@ Unauthorized copying, modification, distribution, or use of this source code by 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        // 🔥 도장 쾅쾅을 위해 collection과 addDoc을 새로 수입해왔습니다!
+        import { getFirestore, doc, getDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // 🚨 1. 여기에 선생님의 실제 firebaseConfig 객체를 꽉 채워 넣어주세요! 🚨
         const firebaseConfig = {
@@ -237,7 +238,7 @@ Unauthorized copying, modification, distribution, or use of this source code by 
   storageBucket: "induk-smartcity.firebasestorage.app",
   messagingSenderId: "836222545739",
   appId: "1:836222545739:web:d370e05c68300ce6e202ce",
-  measurementId: "G-3SL84TXVHD" // API KEY 등 복붙!
+  measurementId: "G-3SL84TXVHD"
         };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app); 
@@ -328,6 +329,11 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                 if (adminSnap.exists()) {
                     sessionStorage.setItem('userRole', 'admin');
                     sessionStorage.setItem('loginName', adminSnap.data().name || '최고관리자');
+                    
+                    // 🚨 [여기가 추가된 부분!] 로그인 명부 작성 (관리자)
+                    const kstTime = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+                    await addDoc(collection(db, "login_logs"), { timestamp: kstTime.getTime(), timeString: kstTime.toISOString().replace('T', ' ').substring(0, 19), user: (adminSnap.data().name || '최고관리자') + " (관리자)", action: "시스템 접속" });
+
                     window.location.replace('admin.html');
                     return; 
                 }
@@ -341,6 +347,11 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                     sessionStorage.setItem('assignment', tData.assignment || '-');
                     sessionStorage.setItem('subject', tData.subject || '일반');
                     sessionStorage.setItem('homeroom', tData.homeroom || '');
+                    
+                    // 🚨 [여기가 추가된 부분!] 로그인 명부 작성 (교사)
+                    const kstTime = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+                    await addDoc(collection(db, "login_logs"), { timestamp: kstTime.getTime(), timeString: kstTime.toISOString().replace('T', ' ').substring(0, 19), user: (tData.name || '교사') + " (교사)", action: "시스템 접속" });
+
                     window.location.replace('teacher.html'); 
                     return;
                 }
@@ -352,6 +363,11 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                     sessionStorage.setItem('loginName', sData.name || '학생');
                     sessionStorage.setItem('studentId', sData.current_studentId || '');
                     sessionStorage.setItem('grade', sData.current_grade || '');
+                    
+                    // 🚨 [여기가 추가된 부분!] 로그인 명부 작성 (학생)
+                    const kstTime = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+                    await addDoc(collection(db, "login_logs"), { timestamp: kstTime.getTime(), timeString: kstTime.toISOString().replace('T', ' ').substring(0, 19), user: (sData.name || '학생') + " (학생)", action: "시스템 접속" });
+
                     window.location.replace('student.html'); 
                     return;
                 }
