@@ -332,8 +332,8 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                     
                     // 🚨 [여기가 추가된 부분!] 로그인 명부 작성 (관리자)
                     const kstTime = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
-                    await addDoc(collection(db, "login_logs"), { timestamp: kstTime.getTime(), timeString: kstTime.toISOString().replace('T', ' ').substring(0, 19), user: (adminSnap.data().name || '최고관리자') + " (관리자)", action: "시스템 접속" });
-
+                    await addDoc(collection(db, "login_logs"), { timestamp: kstTime.getTime(), timeString: kstTime.toISOString().replace('T', ' ').substring(0, 19), user: (adminSnap.data().name || '최고관리자') + " (관리자)", action: "시스템 접속", uid: uid });
+                    
                     window.location.replace('admin.html');
                     return; 
                 }
@@ -350,8 +350,8 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                     
                     // 🚨 [여기가 추가된 부분!] 로그인 명부 작성 (교사)
                     const kstTime = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
-                    await addDoc(collection(db, "login_logs"), { timestamp: kstTime.getTime(), timeString: kstTime.toISOString().replace('T', ' ').substring(0, 19), user: (tData.name || '교사') + " (교사)", action: "시스템 접속" });
-
+                    await addDoc(collection(db, "login_logs"), { timestamp: kstTime.getTime(), timeString: kstTime.toISOString().replace('T', ' ').substring(0, 19), user: (tData.name || '교사') + " (교사)", action: "시스템 접속", uid: uid });
+                    
                     window.location.replace('teacher.html'); 
                     return;
                 }
@@ -366,8 +366,8 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                     
                     // 🚨 [여기가 추가된 부분!] 로그인 명부 작성 (학생)
                     const kstTime = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
-                    await addDoc(collection(db, "login_logs"), { timestamp: kstTime.getTime(), timeString: kstTime.toISOString().replace('T', ' ').substring(0, 19), user: (sData.name || '학생') + " (학생)", action: "시스템 접속" });
-
+                    await addDoc(collection(db, "login_logs"), { timestamp: kstTime.getTime(), timeString: kstTime.toISOString().replace('T', ' ').substring(0, 19), user: (sData.name || '학생') + " (학생)", action: "시스템 접속", uid: uid });
+                    
                     window.location.replace('student.html'); 
                     return;
                 }
