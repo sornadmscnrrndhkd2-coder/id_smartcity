@@ -231,25 +231,31 @@ Unauthorized copying, modification, distribution, or use of this source code by 
             'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'
         ];
 
-        // 2. 단 3개의 문서(grade_1, 2, 3)만 감시하여 요금 0원 유지
-        for(let g = 1; g <= 3; g++) {
+       // 2. 단 3개의 문서(grade_1, 2, 3)만 감시하여 요금 0원 유지
+       for(let g = 1; g <= 3; g++) {
             onSnapshot(doc(db, "publicRankingBoard", `grade_${g}`), (docSnap) => {
                 const listEl = document.getElementById(`list-grade-${g}`);
                 listEl.innerHTML = '';
                 
-                if(docSnap.exists() && docSnap.data().top10 && docSnap.data().top10.length > 0) {
-                    // 🔥 [핵심 추가] 0점인 학생은 아예 명단에서 걸러냅니다(filter)!
+                // 데이터가 있고, top10 배열이 존재한다면
+                if(docSnap.exists() && docSnap.data().top10) {
+                    
+                    // 🔥 [핵심 1] 0점인 학생은 아예 명단에서 투명하게 지워버립니다!
                     const top10 = docSnap.data().top10.filter(student => student.score > 0);
                     
-                    // 0점짜리 다 빼고 났더니 진짜 점수 있는 학생이 1명이라도 남았다면 그리기
-                    if (top10.length > 0) {
+                    // 0점짜리를 빼고 나서도 명단이 존재한다면 그리기 시작
+                    if(top10.length > 0) {
                         top10.forEach((student, index) => {
-                            // 1, 2, 3등은 특별한 카드 디자인
-                            if (index < 3) {
+                            // 🔥 [핵심 2] 줄 선 순서(index)가 아니라, DB에 저장된 진짜 등수(rank)를 사용!
+                            let rNum = student.rank || (index + 1); 
+                            
+                            // 1, 2, 3등(공동 포함)은 메달 카드 디자인
+                            if (rNum <= 3) {
+                                let medalImg = medals[rNum - 1]; // 1위면 금, 2위면 은, 3위면 동메달 매칭
                                 listEl.innerHTML += `
-                                    <div class="top-card top-${index + 1}" style="animation-delay: ${index * 0.1}s">
+                                    <div class="top-card top-${rNum}" style="animation-delay: ${index * 0.1}s">
                                         <div class="rank-info">
-                                            <img src="${medals[index]}" class="medal-img" alt="${index+1}등">
+                                            <img src="${medalImg}" class="medal-img" alt="${rNum}등">
                                             <div class="student-detail">
                                                 <h4>${student.name}</h4>
                                                 <p>${student.classStr}반</p>
@@ -261,12 +267,12 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                                     </div>
                                 `;
                             } 
-                            // 4등부터 10등은 일반 리스트 디자인
+                            // 4등부터는 일반 리스트 디자인
                             else {
                                 listEl.innerHTML += `
                                     <div class="normal-rank" style="animation-delay: ${index * 0.1}s">
                                         <div class="normal-info">
-                                            <div class="rank-num">${index + 1}</div>
+                                            <div class="rank-num">${rNum}</div>
                                             <div class="normal-name">${student.name} <span class="normal-class">(${student.classStr}반)</span></div>
                                         </div>
                                         <div class="normal-score">${student.score}점</div>
@@ -275,11 +281,10 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                             }
                         });
                     } else {
-                        // 0점짜리 빼고 나니 아무도 없을 때
+                        // 0점짜리 빼고 났더니 아무도 없을 때
                         listEl.innerHTML = '<div class="loading-msg" style="animation:none;">아직 점수를 획득한 학생이 없습니다.</div>';
                     }
                 } else {
-                    // 데이터 자체가 아예 없을 때
                     listEl.innerHTML = '<div class="loading-msg" style="animation:none;">아직 랭킹에 등록된 학생이 없습니다.</div>';
                 }
             });
