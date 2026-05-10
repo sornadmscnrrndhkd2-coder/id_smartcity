@@ -919,15 +919,24 @@ Unauthorized copying, modification, distribution, or use of this source code by 
 
             try {
                 const docSnap = await window.getDoc(window.doc(window.db, "publicRankingBoard", `grade_${grade}`));
-                let top10 = []; if (docSnap.exists() && docSnap.data().top10) top10 = docSnap.data().top10;
+                let top10 = []; 
+                if (docSnap.exists() && docSnap.data().top10) {
+                    // 🔥 0점 걸러내기
+                    top10 = docSnap.data().top10.filter(s => s.score > 0);
+                }
 
                 modalList.innerHTML = '';
-                if(top10.length === 0) { modalList.innerHTML = '<div style="text-align:center; padding:40px;">데이터가 없습니다.</div>'; return; }
+                if(top10.length === 0) { modalList.innerHTML = '<div style="text-align:center; padding:40px;">아직 점수를 획득한 학생이 없습니다.</div>'; return; }
                 const medals = ['https://cdn-icons-png.flaticon.com/512/2583/2583344.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583319.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'];
-                const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
+                
                 top10.forEach((student, index) => {
-                    if(index < 3) { modalList.innerHTML += `<div class="rank-card ${rankClasses[index]}"><div class="rank-info"><div class="rare-medal"><img src="${medals[index]}"></div><div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr}반)</p></div></div><div class="rank-score">${student.score}점</div></div>`; }
-                    else { modalList.innerHTML += `<div class="normal-rank"><div class="normal-info"><div class="rank-num">${index + 1}</div><div class="normal-name">${student.name}<span class="normal-class">(${student.classStr}반)</span></div></div><div class="normal-score">${student.score}점</div></div>`; }
+                    // 🔥 진짜 등수 반영 및 클래스 수정
+                    let rNum = student.rank || (index + 1); 
+                    if(rNum <= 3) { 
+                        modalList.innerHTML += `<div class="rank-card rank-${rNum}"><div class="rank-info"><div class="rare-medal"><img src="${medals[rNum-1]}"></div><div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr}반)</p></div></div><div class="rank-score">${student.score}점</div></div>`; 
+                    } else { 
+                        modalList.innerHTML += `<div class="normal-rank"><div class="normal-info"><div class="rank-num">${rNum}</div><div class="normal-name">${student.name}<span class="normal-class">(${student.classStr}반)</span></div></div><div class="normal-score">${student.score}점</div></div>`; 
+                    }
                 });
             } catch(e) {}
         };
@@ -940,24 +949,26 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                 for(let g = 1; g <= 3; g++) {
                     const docSnap = await window.getDoc(window.doc(window.db, "publicRankingBoard", `grade_${g}`));
                     if (docSnap.exists() && docSnap.data().top10) {
-                        let top3 = docSnap.data().top10.slice(0, 3); 
+                        // 🔥 0점 걸러내고 상위 3명만 추출
+                        let top3 = docSnap.data().top10.filter(s => s.score > 0).slice(0, 3); 
                         
-                        // 🔥 핵심: 기존 화면에 박혀있는 낡은 카드들을 힘으로 뜯어냅니다.
                         const panels = document.querySelectorAll(`.grade-ranking-panel:nth-child(${g})`);
                         if(panels.length > 0) {
                             let panel = panels[0];
-                            // 기존 옛날 카드 싹 청소!
                             panel.querySelectorAll('.rank-card').forEach(el => el.remove());
                             
                             let html = '';
-                            top3.forEach((student, index) => {
-                                let rNum = student.rank || (index + 1); // 공동 순위 확인
-                                let medalImg = medals[rNum - 1] || medals[2]; 
-                                let rClass = rNum <= 3 ? rNum : 3; 
-                                
-                                html += `<div class="rank-card rank-${rClass}"><div class="rank-info"><div class="rare-medal"><img src="${medalImg}"></div><div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr}반)</p></div></div><div class="rank-score">${student.score}점</div></div>`;
-                            });
-                            // 새 카드 강제 부착!
+                            if (top3.length === 0) {
+                                html = '<div style="text-align:center; padding:20px; font-size:12px; color:#7f8c8d;">아직 점수 획득자 없음</div>';
+                            } else {
+                                top3.forEach((student, index) => {
+                                    let rNum = student.rank || (index + 1); 
+                                    let medalImg = medals[rNum - 1] || medals[2]; 
+                                    let rClass = rNum <= 3 ? rNum : 3; 
+                                    
+                                    html += `<div class="rank-card rank-${rClass}"><div class="rank-info"><div class="rare-medal"><img src="${medalImg}"></div><div class="rank-details"><h4>${student.name}</h4><p>(${student.classStr}반)</p></div></div><div class="rank-score">${student.score}점</div></div>`;
+                                });
+                            }
                             panel.insertAdjacentHTML('beforeend', html);
                         }
                     }
