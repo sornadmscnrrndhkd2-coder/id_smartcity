@@ -221,7 +221,7 @@ Unauthorized copying, modification, distribution, or use of this source code by 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // 1. 파이어베이스 초기화 (로그인 모듈 아예 삭제!)
+        // 1. 파이어베이스 초기화
         const app = initializeApp(window.MY_GLOBAL_FIREBASE_CONFIG);
         const db = getFirestore(app);
 
@@ -237,43 +237,49 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                 const listEl = document.getElementById(`list-grade-${g}`);
                 listEl.innerHTML = '';
                 
-                // 데이터가 있고, top10 배열이 비어있지 않다면 화면에 그리기
                 if(docSnap.exists() && docSnap.data().top10 && docSnap.data().top10.length > 0) {
-                    const top10 = docSnap.data().top10;
+                    // 🔥 [핵심 추가] 0점인 학생은 아예 명단에서 걸러냅니다(filter)!
+                    const top10 = docSnap.data().top10.filter(student => student.score > 0);
                     
-                    top10.forEach((student, index) => {
-                        // 1, 2, 3등은 특별한 카드 디자인
-                        if (index < 3) {
-                            listEl.innerHTML += `
-                                <div class="top-card top-${index + 1}" style="animation-delay: ${index * 0.1}s">
-                                    <div class="rank-info">
-                                        <img src="${medals[index]}" class="medal-img" alt="${index+1}등">
-                                        <div class="student-detail">
-                                            <h4>${student.name}</h4>
-                                            <p>${student.classStr}반</p>
+                    // 0점짜리 다 빼고 났더니 진짜 점수 있는 학생이 1명이라도 남았다면 그리기
+                    if (top10.length > 0) {
+                        top10.forEach((student, index) => {
+                            // 1, 2, 3등은 특별한 카드 디자인
+                            if (index < 3) {
+                                listEl.innerHTML += `
+                                    <div class="top-card top-${index + 1}" style="animation-delay: ${index * 0.1}s">
+                                        <div class="rank-info">
+                                            <img src="${medals[index]}" class="medal-img" alt="${index+1}등">
+                                            <div class="student-detail">
+                                                <h4>${student.name}</h4>
+                                                <p>${student.classStr}반</p>
+                                            </div>
+                                        </div>
+                                        <div class="score-display">
+                                            <h3>${student.score}점</h3>
                                         </div>
                                     </div>
-                                    <div class="score-display">
-                                        <h3>${student.score}점</h3>
+                                `;
+                            } 
+                            // 4등부터 10등은 일반 리스트 디자인
+                            else {
+                                listEl.innerHTML += `
+                                    <div class="normal-rank" style="animation-delay: ${index * 0.1}s">
+                                        <div class="normal-info">
+                                            <div class="rank-num">${index + 1}</div>
+                                            <div class="normal-name">${student.name} <span class="normal-class">(${student.classStr}반)</span></div>
+                                        </div>
+                                        <div class="normal-score">${student.score}점</div>
                                     </div>
-                                </div>
-                            `;
-                        } 
-                        // 4등부터 10등은 일반 리스트 디자인
-                        else {
-                            listEl.innerHTML += `
-                                <div class="normal-rank" style="animation-delay: ${index * 0.1}s">
-                                    <div class="normal-info">
-                                        <div class="rank-num">${index + 1}</div>
-                                        <div class="normal-name">${student.name} <span class="normal-class">(${student.classStr}반)</span></div>
-                                    </div>
-                                    <div class="normal-score">${student.score}점</div>
-                                </div>
-                            `;
-                        }
-                    });
+                                `;
+                            }
+                        });
+                    } else {
+                        // 0점짜리 빼고 나니 아무도 없을 때
+                        listEl.innerHTML = '<div class="loading-msg" style="animation:none;">아직 점수를 획득한 학생이 없습니다.</div>';
+                    }
                 } else {
-                    // 데이터가 비어있을 때
+                    // 데이터 자체가 아예 없을 때
                     listEl.innerHTML = '<div class="loading-msg" style="animation:none;">아직 랭킹에 등록된 학생이 없습니다.</div>';
                 }
             });
