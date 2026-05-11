@@ -341,7 +341,7 @@ Unauthorized copying, modification, distribution, or use of this source code by 
             }
             /* 👆👆 [여기까지] 👆👆 */
         }
-        /* 🔥 명예의 전당 이름/반 캡슐 디자인 강제 적용 🔥 */
+        /* 🔥 명예의 전당 이름/반 캡슐 디자인 강제 적용 (크기 확대 버전) 🔥 */
         .student-detail, .rank-details { 
             display: flex !important; 
             flex-direction: row !important; 
@@ -351,20 +351,22 @@ Unauthorized copying, modification, distribution, or use of this source code by 
         
         .student-detail h4, .rank-details h4 { 
             margin: 0 !important; 
-            font-size: 16px !important; 
+            font-size: 19px !important; /* 👈 16px에서 19px로 시원하게 확대! */
             font-weight: 900 !important; 
             letter-spacing: -0.5px !important;
+            white-space: nowrap !important; /* 👈 모바일에서 절대 줄바꿈 안 되게 방어 */
         }
         
         .student-detail p, .rank-details p { 
             margin: 0 !important; 
-            font-size: 11px !important; 
+            font-size: 13px !important; /* 👈 11px에서 13px로 또렷하게 확대! */
             font-weight: 800 !important; 
             color: #ffffff !important;
             background: rgba(0, 0, 0, 0.25) !important; 
-            padding: 4px 8px !important; 
+            padding: 5px 9px !important; /* 글자가 커진 만큼 캡슐 공간도 살짝 여유있게 */
             border-radius: 6px !important; 
             line-height: 1 !important;
+            white-space: nowrap !important; /* 👈 모바일에서 절대 줄바꿈 안 되게 방어 */
         }
     </style>
 </head>
