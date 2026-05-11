@@ -341,6 +341,31 @@ Unauthorized copying, modification, distribution, or use of this source code by 
             }
             /* 👆👆 [여기까지] 👆👆 */
         }
+        /* 🔥 명예의 전당 이름/반 캡슐 디자인 강제 적용 🔥 */
+        .student-detail, .rank-details { 
+            display: flex !important; 
+            flex-direction: row !important; 
+            align-items: center !important; 
+            gap: 8px !important; 
+        }
+        
+        .student-detail h4, .rank-details h4 { 
+            margin: 0 !important; 
+            font-size: 16px !important; 
+            font-weight: 900 !important; 
+            letter-spacing: -0.5px !important;
+        }
+        
+        .student-detail p, .rank-details p { 
+            margin: 0 !important; 
+            font-size: 11px !important; 
+            font-weight: 800 !important; 
+            color: #ffffff !important;
+            background: rgba(0, 0, 0, 0.25) !important; 
+            padding: 4px 8px !important; 
+            border-radius: 6px !important; 
+            line-height: 1 !important;
+        }
     </style>
 </head>
 <body>
@@ -1145,18 +1170,16 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                 qSnap.forEach(doc => { 
                     let data = doc.data(); 
                     if(data.current_grade === grade && data[`year_${grade}`]) {
-                        // 🔥 0점은 배열에 애초에 안 넣도록 원천 차단!
-                        if(data[`year_${grade}`].total_score > 0) {
-                            students.push({ 
-                                name: data.name, classStr: `${grade}-${parseInt(String(data.current_studentId).substring(1, 3), 10)}`, 
-                                score: data[`year_${grade}`].total_score || 0, yearData: data[`year_${grade}`] 
-                            }); 
-                        }
+                        students.push({ 
+                            name: data.name, classStr: `${grade}-${parseInt(String(data.current_studentId).substring(1, 3), 10)}`, 
+                            score: data[`year_${grade}`].total_score || 0, yearData: data[`year_${grade}`] 
+                        }); 
                     }
                 });
 
                 const getSc = (s, area) => (s.yearData && s.yearData.scores && s.yearData.scores[area]) ? s.yearData.scores[area] : 0;
 
+                // 1. 기존처럼 9단계 + 가나다순으로 정렬 먼저 싹 해놓습니다.
                 students.sort((a, b) => {
                     if (b.score !== a.score) return b.score - a.score; 
                     if (getSc(b, 'T') !== getSc(a, 'T')) return getSc(b, 'T') - getSc(a, 'T'); 
@@ -1171,6 +1194,7 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                     return String(a.name).localeCompare(String(b.name));
                 });
 
+                // 🔥 2. [핵심] 완벽한 동점자 검사 및 공동 순위(Rank) 부여 로직
                 const isTied = (a, b) => {
                     if (a.score !== b.score) return false;
                     const areas = ['T', 'M', 'Tr', 'S', 'C', 'I', 'R', 'A', 'Y'];
@@ -1179,12 +1203,13 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                 };
 
                 students.forEach((s, i) => {
+                    // 앞사람과 100% 동점이면 앞사람의 등수를 그대로 복사, 아니면 내 위치(i+1)가 내 등수!
                     if (i > 0 && isTied(s, students[i-1])) s.rank = students[i-1].rank;
                     else s.rank = i + 1;
                 });
 
                 let top10 = students.slice(0, 10); modalList.innerHTML = '';
-                if(top10.length === 0) { modalList.innerHTML = '<div style="text-align:center; padding:40px;">아직 점수를 획득한 학생이 없습니다.</div>'; return; }
+                if(top10.length === 0) { modalList.innerHTML = '<div style="text-align:center; padding:40px;">데이터가 없습니다.</div>'; return; }
                 const medals = ['https://cdn-icons-png.flaticon.com/512/2583/2583344.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583319.png', 'https://cdn-icons-png.flaticon.com/512/2583/2583434.png'];
                 
                 top10.forEach((student) => {
