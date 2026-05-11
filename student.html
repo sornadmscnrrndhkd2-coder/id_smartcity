@@ -1119,6 +1119,29 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                 });
             }
             
+            // 🔥 [학생용 스마트 중복 경고 시스템] 🔥
+            let currentSelectedArea = document.getElementById('areaSelect').value;
+            if (checkbox.checked && currentSelectedArea === 'T') {
+                let checkedLabels = [];
+                document.querySelectorAll('#checkboxContainer input:checked').forEach(box => {
+                    let labelEl = document.getElementById(`sLabel-${box.dataset.index}`).querySelector('span');
+                    if(labelEl) checkedLabels.push(labelEl.innerText);
+                });
+
+                let hasFullCert = checkedLabels.some(l => l.includes('취득') && (l.includes('기능사') || l.includes('민간자격증') || l.includes('민간 자격증')));
+                let hasWrittenCert = checkedLabels.some(l => l.includes('필기합격') || l.includes('필기 합격'));
+
+                if (hasFullCert && hasWrittenCert) {
+                    let confirmDouble = confirm("🚨 [중복 신청 주의]\n\n'자격증 최종 취득'과 '필기 합격'이 동시에 체크되었습니다!\n\n같은 자격증(예: 용접 취득+용접 필기)이면 중복 신청이 불가능합니다. [취소]를 누르세요.\n\n서로 다른 자격증(예: 용접 취득+선반 필기)일 경우에만 [확인]을 눌러주세요.");
+                    
+                    if (!confirmDouble) {
+                        checkbox.checked = false;
+                        document.getElementById(`sLabel-${checkbox.dataset.index}`).classList.remove('selected');
+                        return;
+                    }
+                }
+            }
+
             const lbl = document.getElementById(`sLabel-${checkbox.dataset.index}`);
             if(checkbox.checked) {
                 lbl.classList.add('selected'); 
@@ -1131,7 +1154,6 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                 total += Number(box.value); 
             });
             
-            let currentSelectedArea = document.getElementById('areaSelect').value;
             let finalScore = Math.min(total, window.CAPS[window.CURRENT_GRADE][currentSelectedArea]);
             
             document.getElementById('currentPoint').innerText = finalScore;
@@ -1245,24 +1267,20 @@ Unauthorized copying, modification, distribution, or use of this source code by 
             const list = document.getElementById('rankModalList'); 
             list.innerHTML = '';
             
-            // 🔥 [핵심] 0점인 학생을 걸러내고 최대 10명까지만 자름
-            const top10 = (window.sameGradeStudents || []).filter(s => s.score > 0).slice(0, 10);
+            const top10 = (window.sameGradeStudents || []).slice(0,10);
             
             if(top10.length === 0) { 
-                list.innerHTML = '<div style="text-align:center; padding:40px; font-weight:bold; color:var(--text-gray);">아직 점수를 획득한 학생이 없습니다.</div>'; 
+                list.innerHTML = '<div style="text-align:center; padding:40px; font-weight:bold; color:var(--text-gray);">등록된 랭킹 데이터가 없습니다.</div>'; 
             } else {
-                top10.forEach((s, index) => {
-                    // 🔥 [핵심] 진짜 등수 사용!
-                    let rNum = s.rank || (index + 1);
-                    
-                    if(rNum <= 3) {
-                        const medal = ['https://cdn-icons-png.flaticon.com/512/2583/2583344.png','https://cdn-icons-png.flaticon.com/512/2583/2583319.png','https://cdn-icons-png.flaticon.com/512/2583/2583434.png'][rNum - 1];
+                top10.forEach((s, i) => {
+                    if(i < 3) {
+                        const medal = ['https://cdn-icons-png.flaticon.com/512/2583/2583344.png','https://cdn-icons-png.flaticon.com/512/2583/2583319.png','https://cdn-icons-png.flaticon.com/512/2583/2583434.png'][i];
                         list.innerHTML += `
-                            <div class="rank-card rank-${rNum}">
+                            <div class="rank-card rank-${i+1}">
                                 <div class="rank-info">
                                     <div class="rare-medal"><img src="${medal}"></div>
                                     <div class="rank-details">
-                                        <h4>${s.name}</h4><p>(${s.classStr}반)</p>
+                                        <h4>${s.name}</h4><p>(${s.classStr})</p>
                                     </div>
                                 </div>
                                 <div class="rank-score">${s.score}점</div>
@@ -1272,8 +1290,8 @@ Unauthorized copying, modification, distribution, or use of this source code by 
                         list.innerHTML += `
                             <div class="normal-rank">
                                 <div class="normal-info">
-                                    <div class="rank-num">${rNum}</div>
-                                    <div class="normal-name">${s.name} <span class="normal-class">(${s.classStr}반)</span></div>
+                                    <div class="rank-num">${i+1}</div>
+                                    <div class="normal-name">${s.name} <span class="normal-class">(${s.classStr})</span></div>
                                 </div>
                                 <div class="normal-score">${s.score}점</div>
                             </div>
